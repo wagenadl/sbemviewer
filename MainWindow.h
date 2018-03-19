@@ -1,0 +1,23 @@
+// MainWindow.h
+
+#ifndef MAINWINDOW_H
+
+#define MAINWINDOW_H
+
+#include <QMainWindow>
+
+class MainWindow: public QMainWindow {
+  Q_OBJECT;
+public:
+  MainWindow(class TileCache *cache, class ServerInfo *info);
+  virtual ~MainWindow();
+protected:
+  void resizeEvent(QResizeEvent *);
+public:
+  void aboutAct();
+private:
+  class Ui_MainWindow *ui;
+  class MWData *d;
+};
+
+#endif
