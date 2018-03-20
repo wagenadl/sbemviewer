@@ -8,7 +8,7 @@
 #include <cmath>
 #include "ServerInfo.h"
 
-#include "../1000/Gray.h"
+#include "../../1000/Gray.h"
 
 struct ViewInfo {
   int w, h;
@@ -327,8 +327,11 @@ void TileViewer::keyPressEvent(QKeyEvent *e) {
     int yc = y_ + (height()<<a) / 2;
     a--;
     enforceA();
+    emit scaleChanged(a);
     x_ = xc - (width()<<a) / 2;
     y_ = yc - (height()<<a) / 2;
+
+    
     update();
   } break;
   case Qt::Key_Minus: {
@@ -336,6 +339,7 @@ void TileViewer::keyPressEvent(QKeyEvent *e) {
     int yc = y_ + (height()<<a) / 2;
     a++;
     enforceA();
+    emit scaleChanged(a);
     x_ = xc - (width()<<a) / 2;
     y_ = yc - (height()<<a) / 2;
     update();
