@@ -2,7 +2,7 @@
 	
 
 TEMPLATE = app
-TARGET = sbemviewer
+TARGET = ../sbemviewer
 INCLUDEPATH += .
 QT += gui widgets network
 
