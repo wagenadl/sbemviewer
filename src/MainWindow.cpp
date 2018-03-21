@@ -79,11 +79,13 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   connect(ui->actionAbout, &QAction::triggered,
           this, &MainWindow::aboutAct);
 
-  ui->nav->ui->zoom->setText(QString("2<sup>–%1</sup>")
-                             .arg(ui->tileviewer->scale()));
+  //ui->nav->ui->zoom->setText(QString("2<sup>–%1</sup>")
+  //                           .arg(ui->tileviewer->scale()));
+  ui->nav->ui->zoom->setText(QString("1/%1")
+                             .arg(1<<ui->tileviewer->scale()));
   connect(ui->tileviewer, &TileViewer::scaleChanged,
 	  [this](int a) {
-	    ui->nav->ui->zoom->setText(QString("2<sup>–%1</sup>").arg(a));
+	    ui->nav->ui->zoom->setText(QString("1/%1").arg(1<<a));
 	  });
   
   connect(ui->tileviewer, &TileViewer::viewChanged,
