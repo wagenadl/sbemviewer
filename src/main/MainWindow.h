@@ -11,6 +11,7 @@ class MainWindow: public QMainWindow {
 public:
   MainWindow(class TileCache *cache, class ServerInfo *info);
   virtual ~MainWindow();
+  class SBEMDB *db();
 protected:
   void resizeEvent(QResizeEvent *);
 public:

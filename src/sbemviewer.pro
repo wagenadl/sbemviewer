@@ -4,9 +4,10 @@
 TEMPLATE = app
 TARGET = ../sbemviewer
 INCLUDEPATH += .
+INCLUDEPATH += main
 INCLUDEPATH += view
 INCLUDEPATH += db
-QT += gui widgets network
+QT += gui widgets network sql
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
@@ -14,9 +15,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 HEADERS += view/TiffLoader.h    view/TileCache.h    view/TileViewer.h    
 SOURCES += view/TiffLoader.cpp  view/TileCache.cpp  view/TileViewer.cpp
 HEADERS += view/TileID.h  view/TileCacheData.h
-SOURCES += view/simpleclient.cpp
-HEADERS += view/MainWindow.h    view/Navigation.h    view/ServerInfo.h    view/Curves.h
-SOURCES += view/MainWindow.cpp  view/Navigation.cpp  view/ServerInfo.cpp  view/Curves.cpp
-FORMS += view/MainWindow.ui view/Navigation.ui view/Curves.ui
-
+SOURCES += main/sbemviewer.cpp
+HEADERS += main/MainWindow.h    view/Navigation.h    view/Curves.h
+SOURCES += main/MainWindow.cpp  view/Navigation.cpp  view/Curves.cpp
+FORMS += main/MainWindow.ui view/Navigation.ui view/Curves.ui main/ModeDlg.ui
+HEADERS += view/ServerInfo.h    main/ModeDlg.h
+SOURCES += view/ServerInfo.cpp  main/ModeDlg.cpp
+HEADERS += db/Database.h    db/PDebug.h    db/SqlFile.h
+SOURCES += db/Database.cpp  db/PDebug.cpp  db/SqlFile.cpp
+HEADERS += db/SBEMDB.h
+SOURCES += db/SBEMDB.cpp
+RESOURCES += db/sbemdb.qrc
 LIBS += -lopencv_core -lopencv_imgcodecs

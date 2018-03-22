@@ -7,16 +7,26 @@
 #include <QDockWidget>
 #include <QMessageBox>
 #include "ServerInfo.h"
+#include "SBEMDB.h"
+
 #include <QDoubleValidator>
 #include <QDebug>
+#include <QFileDialog>
 #include <cmath>
 
 class MWData {
 public:
-  MWData() { }
+  MWData() {
+    db = new SBEMDB;
+  }
+  ~MWData() {
+    db->close();
+    delete db;
+  }
 public:
-  ServerInfo *info;
-  Ui_MainWindow *ui;
+  ServerInfo *info; // provided
+  Ui_MainWindow *ui; // created by MainWindow
+  SBEMDB *db; // we create
 public:
   double xscale() {
     return info->contains("dx") ? info->real("dx") : 0.0055;
@@ -64,6 +74,25 @@ public:
     ui->curves->ui->xgamma->setText(QString::number(g, 'f', 2));
     ui->tileviewer->setGamma(g);
   }
+  void createDB() {
+    QString fn = QFileDialog::getSaveFileName(0, "Create Database...", "",
+                                              "*.sbemdb");
+    if (fn.isEmpty())
+      return;
+    if (!fn.endsWith(".sbemdb"))
+      fn += ".sbemdb";
+    SBEMDB::create(fn);
+    db->open(fn);
+    ui->mode->ui->editTrees->setEnabled(true);
+  }
+  void openDB() {
+    QString fn = QFileDialog::getOpenFileName(0, "Open Database...", "",
+                                              "*.sbemdb");
+    if (fn.isEmpty())
+      return;
+    db->open(fn);
+    ui->mode->ui->editTrees->setEnabled(true);
+  }
 };
 
 MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
@@ -74,6 +103,12 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   ui->setupUi(this);
   ui->tileviewer->setCache(cache);
   ui->tileviewer->setInfo(info);
+  ui->tileviewer->setDatabase(d->db);
+  
+  connect(ui->actionCreate_DB, &QAction::triggered,
+          [this]() { d->createDB(); });
+  connect(ui->actionOpen_DB, &QAction::triggered,
+          [this]() { d->openDB(); });
   connect(ui->actionQuit, &QAction::triggered,
           []() { QApplication::quit(); });
   connect(ui->actionAbout, &QAction::triggered,

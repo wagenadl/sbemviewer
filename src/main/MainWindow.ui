@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>1261</width>
+    <height>939</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>1261</width>
      <height>39</height>
     </rect>
    </property>
@@ -27,7 +27,10 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionCreate_DB"/>
+    <addaction name="actionOpen_DB"/>
     <addaction name="actionQuit"/>
+    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -56,6 +59,15 @@
    </attribute>
    <widget class="Curves" name="curves"/>
   </widget>
+  <widget class="QDockWidget" name="modeDock">
+   <property name="windowTitle">
+    <string>Mode</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="ModeDlg" name="mode"/>
+  </widget>
   <action name="actionQuit">
    <property name="text">
     <string>Quit</string>
@@ -64,6 +76,16 @@
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionOpen_DB">
+   <property name="text">
+    <string>Open DB...</string>
+   </property>
+  </action>
+  <action name="actionCreate_DB">
+   <property name="text">
+    <string>Create DB...</string>
    </property>
   </action>
  </widget>
@@ -84,6 +106,12 @@
    <class>Curves</class>
    <extends>QWidget</extends>
    <header>Curves.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ModeDlg</class>
+   <extends>QWidget</extends>
+   <header>ModeDlg.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -12,6 +12,10 @@ class TileViewer: public QWidget {
 public:
   static constexpr int TILESIZE = 512;
   static constexpr int MAXA = 8;
+  enum Mode {
+    View,
+    EditTrees
+  };
 public:
   TileViewer(QWidget *parent=0);
   int x() const;
@@ -22,8 +26,10 @@ public:
   int visibleYRange() const;
   int level(float p) const;
 public slots:
+  void setMode(Mode m);
   void setCache(TileCache *cache);
   void setInfo(class ServerInfo *info);
+  void setDatabase(class SBEMDB *db);  
   void setScale(int); // 0 is full resolution, +n is 2^n reduced
   void setZ(int z); // slice #
   void setPosition(int x, int y); // in pixels; refers to center of window
@@ -61,12 +67,14 @@ private:
   int angleaccum;
   class TileCache *cache;
   class ServerInfo *info;
+  class SBEMDB *db;
   bool isdrag;
   int blk, wht;
   float gamma;
   int sharp;
   QVector<uint8_t> lut;
   bool lutok;
+  Mode mode;
 };
 
 #endif

@@ -36,7 +36,8 @@ struct ViewInfo {
 
 TileViewer::TileViewer(QWidget *parent):
   QWidget(parent),
-  cache(0), info(0) {
+  cache(0), info(0), db(0) {
+  mode = View;
   z_ = 805;
   x_ = 63*TILESIZE;
   y_ = 150*TILESIZE;
@@ -52,6 +53,14 @@ TileViewer::TileViewer(QWidget *parent):
 
 void TileViewer::setInfo(ServerInfo *i) {
   info = i;
+}
+
+void TileViewer::setDatabase(class SBEMDB *db1) {
+  db = db1;
+}
+
+void TileViewer::setMode(Mode m) {
+  mode = m;
 }
 
 void TileViewer::setCache(TileCache *c) {

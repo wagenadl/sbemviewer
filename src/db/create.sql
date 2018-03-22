@@ -36,9 +36,9 @@ create table simplesynapses (
        prenid integer,
        postnid integer,
        foreign key(prenid) references nodes(nid)
-       	       on delete propagate,
+       	       on delete cascade,
        foreign key(postnid) references nodes(nid)
-       	       on delete propagate
+       	       on delete cascade
        );
 
 create table nodecons (
