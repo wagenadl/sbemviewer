@@ -4,10 +4,12 @@
 #include <QMouseEvent>
 #include <QWheelEvent>
 #include <QPainter>
+#include <QPaintEvent>
 #include <QDebug>
 #include <cmath>
 #include "ServerInfo.h"
 #include "ViewInfo.h"
+#include "Overlay.h"
 
 #include "../../1000/Gray.h"
 
@@ -15,8 +17,8 @@ TileViewer::TileViewer(QWidget *parent):
   QWidget(parent),
   cache(0), info(0) {
   z_ = 805;
-  x_ = 63*TILESIZE;
-  y_ = 150*TILESIZE;
+  x_ = 63*ViewInfo::TILESIZE;
+  y_ = 150*ViewInfo::TILESIZE;
   a = 0;
   angleaccum = 0;
   setMouseTracking(true);
@@ -164,7 +166,7 @@ int TileViewer::level(float p) const {
   return dst[K];
 }
 
-void TileViewer::paintEvent(QPaintEvent *) {
+void TileViewer::paintEvent(QPaintEvent *e) {
   if (!cache)
     return;
   ViewInfo vi(width(), height(), x_, y_, z_, a);
@@ -224,8 +226,8 @@ void TileViewer::paintEvent(QPaintEvent *) {
             }
           }
         }
-        ptr.drawImage(QPoint((c-vi.c0)*TILESIZE - vi.dx,
-                             (r-vi.r0)*TILESIZE - vi.dy), img);
+        ptr.drawImage(QPoint((c-vi.c0)*ViewInfo::TILESIZE - vi.dx,
+                             (r-vi.r0)*ViewInfo::TILESIZE - vi.dy), img);
       }
     }
   }
@@ -243,12 +245,25 @@ void TileViewer::paintEvent(QPaintEvent *) {
     k++;
   int px = ums[k] / um_per_px;
   QString lbl = lbls[k];
-  ptr.setPen(QPen(QColor(0, 128, 255), 6));
+  ptr.setPen(QPen(QColor(0, 0, 0, 60), 10));
+  ptr.drawLine(QPoint(width() - px - 20, height() - 100),
+               QPoint(width() - 20, height() - 100));
+  ptr.setPen(QPen(QColor(0, 0, 0, 10), 10));
+  QFont f = ptr.font();
+  f.setPointSizeF(f.pointSizeF()*1.3);
+  ptr.setFont(f);
+  for (int dx=-3; dx<=3; dx++)
+    for (int dy=-3; dy<=3; dy++)
+      ptr.drawText(QRect(QPoint(width() - px - 20+dx, height() - 80 + dy),
+			 QSize(px, 70)), Qt::AlignHCenter | Qt::AlignTop, lbl);
+  ptr.setPen(QPen(QColor(128, 255, 255), 6));
   ptr.drawLine(QPoint(width() - px - 20, height() - 100),
                QPoint(width() - 20, height() - 100));
   ptr.drawText(QRect(QPoint(width() - px - 20, height() - 80),
                      QSize(px, 70)), Qt::AlignHCenter | Qt::AlignTop, lbl);
-      
+
+  for (auto *o: overlays)
+    o->paint(&ptr, e->rect(), vi);
 }
 
 void TileViewer::resizeEvent(QResizeEvent *) {
@@ -257,24 +272,43 @@ void TileViewer::resizeEvent(QResizeEvent *) {
 
 void TileViewer::mousePressEvent(QMouseEvent *e) {
   e->accept();
+  if (!(e->modifiers() & Qt::ControlModifier))
+    for (auto *o: overlays)
+      if (o->mousePress(mapToSBEM(e->pos()), e->button(), e->modifiers()))
+	return;
+
   lastpx = e->x();
   lastpy = e->y();
   isdrag = true;
 }
 
 void TileViewer::mouseMoveEvent(QMouseEvent *e) {
+  e->accept();
+
   if (isdrag) {
     x_ -= (e->x() - lastpx) << a;
     y_ -= (e->y() - lastpy) << a;
     lastpx = e->x();
     lastpy = e->y();
     update();
-    e->accept();
+  } else {
+    if (!(e->modifiers() & Qt::ControlModifier))
+      for (auto *o: overlays)
+	if (o->mouseMove(mapToSBEM(e->pos()), e->button(), e->modifiers()))
+	  break;
   }
+
   emit viewChanged(x_ + (e->x()<<a),
                    y_ + (e->y()<<a),
                    z_,
                    true);
+}
+
+
+Point TileViewer::mapToSBEM(QPoint p) const {
+  return Point(x_ + (p.x()<<a),
+	       y_ + (p.y()<<a),
+	       z_);
 }
 
 void TileViewer::reportView() {
@@ -290,11 +324,15 @@ void TileViewer::enterEvent(QEvent *) {
 
 void TileViewer::leaveEvent(QEvent *) {
   reportView();
-}  
+}
 
 void TileViewer::mouseReleaseEvent(QMouseEvent *e) {
   isdrag = false;
   e->accept();
+  if (!(e->modifiers() & Qt::ControlModifier))
+    for (auto *o: overlays)
+      if (o->mouseRelease(mapToSBEM(e->pos()), e->button(), e->modifiers()))
+	break;
 }
 
 void TileViewer::keyPressEvent(QKeyEvent *e) {
@@ -356,6 +394,11 @@ void TileViewer::keyPressEvent(QKeyEvent *e) {
     enforceZ();
     reportView();
     update();
+    break;
+  default:
+    for (auto *o: overlays)
+      if (o->keyPress(e))
+	break;
     break;
   }
   e->accept();

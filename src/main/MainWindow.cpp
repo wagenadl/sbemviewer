@@ -103,7 +103,6 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   ui->setupUi(this);
   ui->tileviewer->setCache(cache);
   ui->tileviewer->setInfo(info);
-  ui->tileviewer->setDatabase(d->db);
   
   connect(ui->actionCreate_DB, &QAction::triggered,
           [this]() { d->createDB(); });
@@ -114,13 +113,13 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   connect(ui->actionAbout, &QAction::triggered,
           this, &MainWindow::aboutAct);
 
-  //ui->nav->ui->zoom->setText(QString("2<sup>–%1</sup>")
-  //                           .arg(ui->tileviewer->scale()));
-  ui->nav->ui->zoom->setText(QString("1/%1")
-                             .arg(1<<ui->tileviewer->scale()));
+  ui->nav->ui->zoom->setText(QString("2<sup>–%1</sup>")
+                             .arg(ui->tileviewer->scale()));
+  //ui->nav->ui->zoom->setText(QString("1/%1")
+  //.arg(1<<ui->tileviewer->scale()));
   connect(ui->tileviewer, &TileViewer::scaleChanged,
 	  [this](int a) {
-	    ui->nav->ui->zoom->setText(QString("1/%1").arg(1<<a));
+	    ui->nav->ui->zoom->setText(QString("2<sup>–%1</sup").arg(a));
 	  });
   
   connect(ui->tileviewer, &TileViewer::viewChanged,

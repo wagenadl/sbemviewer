@@ -6,16 +6,12 @@
 
 #include <QWidget>
 #include "TileCache.h"
+#include "Point.h"
 
 class TileViewer: public QWidget {
   Q_OBJECT;
 public:
-  static constexpr int TILESIZE = 512;
   static constexpr int MAXA = 8;
-  enum Mode {
-    View,
-    EditTrees
-  };
 public:
   TileViewer(QWidget *parent=0);
   int x() const;
@@ -25,11 +21,13 @@ public:
   int visibleXRange() const;
   int visibleYRange() const;
   int level(float p) const;
+  void addOverlay(class Overlay *);
+  void removeOverlay(class Overlay *);
+  Point mapToSBEM(QPoint widgetcoords) const;
+				      
 public slots:
-  void setMode(Mode m);
   void setCache(TileCache *cache);
   void setInfo(class ServerInfo *info);
-  void setDatabase(class SBEMDB *db);  
   void setScale(int); // 0 is full resolution, +n is 2^n reduced
   void setZ(int z); // slice #
   void setPosition(int x, int y); // in pixels; refers to center of window
@@ -67,14 +65,13 @@ private:
   int angleaccum;
   class TileCache *cache;
   class ServerInfo *info;
-  class SBEMDB *db;
   bool isdrag;
   int blk, wht;
   float gamma;
   int sharp;
   QVector<uint8_t> lut;
   bool lutok;
-  Mode mode;
+  QVector<class Overlay *> overlays;
 };
 
 #endif
