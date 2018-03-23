@@ -7,8 +7,12 @@
 #include  "Point.h"
 #include "ViewInfo.h"
 #include <QMouseEvent>
+#include <QObject>
 
-class Overlay {
+class Overlay: public QObject {
+public:
+  Overlay(QObject *parent=0): QObject(parent) {}
+  virtual ~Overlay() {}
 public:
   virtual void paint(class QPainter *, QRect const &,
 		     ViewInfo const &);
