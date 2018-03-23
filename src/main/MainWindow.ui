@@ -68,6 +68,24 @@
    </attribute>
    <widget class="ModeDlg" name="mode"/>
   </widget>
+  <widget class="QDockWidget" name="treeDock">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="windowTitle">
+    <string>Trees</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="TreeView" name="treeView"/>
+  </widget>
   <action name="actionQuit">
    <property name="text">
     <string>Quit</string>
@@ -112,6 +130,12 @@
    <class>ModeDlg</class>
    <extends>QWidget</extends>
    <header>ModeDlg.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>TreeView</class>
+   <extends>QWidget</extends>
+   <header>TreeView.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

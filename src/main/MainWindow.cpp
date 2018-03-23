@@ -8,6 +8,8 @@
 #include <QMessageBox>
 #include "ServerInfo.h"
 #include "SBEMDB.h"
+#include "TreeModel.h"
+#include "TreeView.h"
 
 #include <QDoubleValidator>
 #include <QDebug>
@@ -18,6 +20,7 @@ class MWData {
 public:
   MWData() {
     db = new SBEMDB;
+    tm = new TreeModel(db);
   }
   ~MWData() {
     db->close();
@@ -27,6 +30,7 @@ public:
   ServerInfo *info; // provided
   Ui_MainWindow *ui; // created by MainWindow
   SBEMDB *db; // we create
+  TreeModel *tm; // we create
 public:
   double xscale() {
     return info->contains("dx") ? info->real("dx") : 0.0055;
@@ -82,7 +86,9 @@ public:
     if (!fn.endsWith(".sbemdb"))
       fn += ".sbemdb";
     SBEMDB::create(fn);
+    tm->beginReset();
     db->open(fn);
+    tm->concludeReset();
     ui->mode->ui->editTrees->setEnabled(true);
   }
   void openDB() {
@@ -90,7 +96,9 @@ public:
                                               "*.sbemdb");
     if (fn.isEmpty())
       return;
+    tm->beginReset();
     db->open(fn);
+    tm->concludeReset();
     ui->mode->ui->editTrees->setEnabled(true);
   }
 };
@@ -103,7 +111,6 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   ui->setupUi(this);
   ui->tileviewer->setCache(cache);
   ui->tileviewer->setInfo(info);
-  ui->tileviewer->setDatabase(d->db);
   
   connect(ui->actionCreate_DB, &QAction::triggered,
           [this]() { d->createDB(); });
@@ -256,7 +263,9 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
 
   ui->tileviewer->setFocusPolicy(Qt::StrongFocus);
   resizeDocks({ui->navdock}, {10}, Qt::Vertical);
+  resizeDocks({ui->modeDock}, {10}, Qt::Vertical);
 
+  ui->treeView->setModel(d->tm);
 }
 
 MainWindow::~MainWindow() {

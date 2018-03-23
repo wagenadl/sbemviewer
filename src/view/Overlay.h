@@ -4,7 +4,12 @@
 
 #define OVERLAY_H
 
-class Overlay {
+#include <QObject>
+
+class Overlay: public QObject {
+public:
+  Overlay(QObject *parent=0): QObject(parent) {}
+  virtual ~Overlay() {}
 public:
   virtual void paint(class QPainter *);
   virtual bool mousePress(class QMouseEvent *);
