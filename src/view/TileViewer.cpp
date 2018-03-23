@@ -274,7 +274,7 @@ void TileViewer::mousePressEvent(QMouseEvent *e) {
   e->accept();
   if (!(e->modifiers() & Qt::ControlModifier))
     for (auto *o: overlays)
-      if (o->mousePress(mapToSBEM(e->pos()), e->button(), e->modifiers()))
+      if (o->mousePress(mapToSBEM(e->pos()), e->button(), e->modifiers(), a))
 	return;
 
   lastpx = e->x();
@@ -294,7 +294,7 @@ void TileViewer::mouseMoveEvent(QMouseEvent *e) {
   } else {
     if (!(e->modifiers() & Qt::ControlModifier))
       for (auto *o: overlays)
-	if (o->mouseMove(mapToSBEM(e->pos()), e->button(), e->modifiers()))
+	if (o->mouseMove(mapToSBEM(e->pos()), e->button(), e->modifiers(), a))
 	  break;
   }
 
@@ -331,7 +331,7 @@ void TileViewer::mouseReleaseEvent(QMouseEvent *e) {
   e->accept();
   if (!(e->modifiers() & Qt::ControlModifier))
     for (auto *o: overlays)
-      if (o->mouseRelease(mapToSBEM(e->pos()), e->button(), e->modifiers()))
+      if (o->mouseRelease(mapToSBEM(e->pos()), e->button(), e->modifiers(), a))
 	break;
 }
 
@@ -494,4 +494,12 @@ void TileViewer::setGamma(float g) {
 void TileViewer::setSharpening(float s) {
   sharp = 255*s;
   update();
+}
+
+void TileViewer::addOverlay(Overlay *o) {
+  overlays << o;
+}
+
+void TileViewer::removeOverlay(Overlay *o) {
+  overlays.removeAll(o);
 }

@@ -8,20 +8,24 @@
 #include "ViewInfo.h"
 #include <QMouseEvent>
 #include <QObject>
+#include <QWidget>
 
 class Overlay: public QObject {
 public:
-  Overlay(QObject *parent=0): QObject(parent) {}
+  Overlay(QWidget *parent=0): QObject(parent) {}
   virtual ~Overlay() {}
 public:
   virtual void paint(class QPainter *, QRect const &,
 		     ViewInfo const &);
-  virtual bool mousePress(Point const &, Qt::MouseButton,
-			  Qt::KeyboardModifiers);
-  virtual bool mouseMove(Point const &, Qt::MouseButton,
-			  Qt::KeyboardModifiers);
-  virtual bool mouseRelease(Point const &, Qt::MouseButton,
-			    Qt::KeyboardModifiers);
+  virtual bool mousePress(Point const &,
+			  Qt::MouseButton, Qt::KeyboardModifiers,
+			  int a);
+  virtual bool mouseRelease(Point const &,
+			    Qt::MouseButton, Qt::KeyboardModifiers,
+			    int a);
+  virtual bool mouseMove(Point const &,
+			 Qt::MouseButton, Qt::KeyboardModifiers,
+			 int a);
   virtual bool keyPress(class QKeyEvent *);
 };
 

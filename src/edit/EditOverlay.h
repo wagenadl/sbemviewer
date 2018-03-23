@@ -10,16 +10,23 @@
 class EditOverlay: public Overlay {
   Q_OBJECT;
 public:
-  EditOverlay(SBEMDB *db);
+  EditOverlay(SBEMDB *db, QWidget *parent=0);
   ~EditOverlay();
   void paint(QPainter *, QRect const &, class ViewInfo const &) override;
-  bool mousePress(Point, Qt::MouseButton, Qt::KeyboardModifiers) override;
-  bool mouseRelease(Point, Qt::MouseButton, Qt::KeyboardModifiers) override;
-  bool mouseMove(Point, Qt::MouseButton, Qt::KeyboardModifiers) override;
+  bool mousePress(Point const &,
+		  Qt::MouseButton, Qt::KeyboardModifiers,
+		  int a) override;
+  bool mouseRelease(Point const &,
+		    Qt::MouseButton, Qt::KeyboardModifiers,
+		    int a) override;
+  bool mouseMove(Point const &,
+		 Qt::MouseButton, Qt::KeyboardModifiers,
+		 int a) override;
 public slots:
   void setActiveTree(quint64);
 private:
   SBEMDB *db;
+  QWidget *parent;
   Point presspt;
   quint64 tid;
 };

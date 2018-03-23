@@ -10,6 +10,7 @@
 #include "SBEMDB.h"
 #include "TreeModel.h"
 #include "TreeView.h"
+#include "EditOverlay.h"
 
 #include <QDoubleValidator>
 #include <QDebug>
@@ -18,12 +19,16 @@
 
 class MWData {
 public:
-  MWData() {
+  MWData(ServerInfo *info, Ui_MainWindow *ui): info(info), ui(ui) {
     db = new SBEMDB;
     tm = new TreeModel(db);
+    eo = new EditOverlay(db, ui->tileviewer);
+    ui->tileviewer->addOverlay(eo);
   }
   ~MWData() {
     db->close();
+    delete eo;
+    delete tm;
     delete db;
   }
 public:
@@ -31,6 +36,7 @@ public:
   Ui_MainWindow *ui; // created by MainWindow
   SBEMDB *db; // we create
   TreeModel *tm; // we create
+  EditOverlay *eo; // we create
 public:
   double xscale() {
     return info->contains("dx") ? info->real("dx") : 0.0055;
@@ -105,10 +111,8 @@ public:
 
 MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   ui = new Ui_MainWindow;
-  d = new MWData;
-  d->info = info;
-  d->ui = ui;
   ui->setupUi(this);
+  d = new MWData(info, ui);
   ui->tileviewer->setCache(cache);
   ui->tileviewer->setInfo(info);
   
