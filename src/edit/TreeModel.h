@@ -24,6 +24,9 @@ public:
   bool deleteTree(quint64); // true if successful
   void beginReset(); // call before changing the db
   void concludeReset(); // call after changing the db
+  SBEMDB *database() const { return db; }
+  int rowForTreeID(quint64 tid) const; // -1 if invalid
+  quint64 treeIDAt(int row) const; // 0 if invalid
 private:
   SBEMDB *db;
 };

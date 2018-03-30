@@ -80,6 +80,8 @@ public:
   Node node(quint64 nid) const;
   Tag tag(quint64 tagid) const;
   NodeCon nodeCon(quint64 ncid) const;
+  void selectTree(quint64 tid);
+  quint64 selectedTree() const;
 public:
   QVector<SimpleSynapse> simpleSynapses(QSqlQuery q) const;
   /* q must be of the form "select * from simplesynapses" followed by

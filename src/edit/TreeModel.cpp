@@ -85,13 +85,30 @@ Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const {
 quint64 TreeModel::newTree() {
   int R = rowCount();
   beginInsertRows(QModelIndex(), R, R);
-  quint64 tid = db->query("insert into versions(tname) values(:a)", "")
+  quint64 tid = db->query("insert into trees(tname) values(:a)",
+                          QVariant("-"))
     .lastInsertId().toULongLong();
   endInsertRows();
   return tid;
 }
 
+int TreeModel::rowForTreeID(quint64 tid) const {
+  int n = db->simpleQuery("select count(*) from trees where tid==:a",
+                          qulonglong(tid)).toInt();
+  if (!n)
+    return -1;
+  int n0 = db->simpleQuery("select count(*) from trees where tid<:a",
+                           tid).toInt();
+  return n0;
+}
+
+quint64 TreeModel::treeIDAt(int row) const {
+  return data(index(row, 0)).toULongLong();
+}
+
 bool TreeModel::deleteTree(quint64 tid) {
+  if (tid==0)
+    return false;
   int n = db->simpleQuery("select count(*) from trees where tid==:a",
                           qulonglong(tid)).toInt();
   if (!n)
@@ -99,7 +116,7 @@ bool TreeModel::deleteTree(quint64 tid) {
   int n0 = db->simpleQuery("select count(*) from trees where tid<:a",
                            tid).toInt();
   beginRemoveRows(QModelIndex(), n0, n0);
-  db->query("delete from versions where tid==:a", tid);
+  db->query("delete from trees where tid==:a", tid);
   endRemoveRows();
   return true;
 }

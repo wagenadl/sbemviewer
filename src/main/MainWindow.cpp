@@ -19,7 +19,8 @@
 
 class MWData {
 public:
-  MWData(ServerInfo *info, Ui_MainWindow *ui): info(info), ui(ui) {
+  MWData(MainWindow *mw, ServerInfo *info, Ui_MainWindow *ui):
+    mw(mw), info(info), ui(ui) {
     db = new SBEMDB;
     tm = new TreeModel(db);
     eo = new EditOverlay(db, ui->tileviewer);
@@ -32,6 +33,7 @@ public:
     delete db;
   }
 public:
+  MainWindow *mw;
   ServerInfo *info; // provided
   Ui_MainWindow *ui; // created by MainWindow
   SBEMDB *db; // we create
@@ -84,6 +86,16 @@ public:
     ui->curves->ui->xgamma->setText(QString::number(g, 'f', 2));
     ui->tileviewer->setGamma(g);
   }
+  void openDB(QString fn) {
+    tm->beginReset();
+    db->open(fn);
+    tm->concludeReset();
+    ui->mode->ui->editTrees->setEnabled(true);
+    ui->treeView->updateAfterChangingDB();
+    ui->modeDock->show();
+    ui->treeDock->show();
+    mw->resizeDocks({ui->modeDock}, {10}, Qt::Vertical);
+  }
   void createDB() {
     QString fn = QFileDialog::getSaveFileName(0, "Create Database...", "",
                                               "*.sbemdb");
@@ -92,27 +104,21 @@ public:
     if (!fn.endsWith(".sbemdb"))
       fn += ".sbemdb";
     SBEMDB::create(fn);
-    tm->beginReset();
-    db->open(fn);
-    tm->concludeReset();
-    ui->mode->ui->editTrees->setEnabled(true);
+    openDB(fn);
   }
   void openDB() {
     QString fn = QFileDialog::getOpenFileName(0, "Open Database...", "",
                                               "*.sbemdb");
     if (fn.isEmpty())
       return;
-    tm->beginReset();
-    db->open(fn);
-    tm->concludeReset();
-    ui->mode->ui->editTrees->setEnabled(true);
+    openDB(fn);
   }
 };
 
 MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   ui = new Ui_MainWindow;
   ui->setupUi(this);
-  d = new MWData(info, ui);
+  d = new MWData(this, info, ui);
   ui->tileviewer->setCache(cache);
   ui->tileviewer->setInfo(info);
   
@@ -127,8 +133,6 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
 
   ui->nav->ui->zoom->setText(QString("2<sup>–%1</sup>")
                              .arg(ui->tileviewer->scale()));
-  //ui->nav->ui->zoom->setText(QString("1/%1")
-  //.arg(1<<ui->tileviewer->scale()));
   connect(ui->tileviewer, &TileViewer::scaleChanged,
 	  [this](int a) {
 	    ui->nav->ui->zoom->setText(QString("2<sup>–%1</sup").arg(a));
@@ -254,20 +258,21 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   connect(ui->curves->ui->gamma, &QSlider::sliderMoved,
           [this](int v) {
             double g = pow(2, v/50.);
-            ui->curves->ui->xgamma->setText(QString::number(g, 'f', 2)); //("%1").arg(g, 1, 'g', 2));   
+            ui->curves->ui->xgamma->setText(QString::number(g, 'f', 2));
             ui->tileviewer->setGamma(g);
           });
 
   connect(ui->curves->ui->sharp, &QSlider::sliderMoved,
           [this](int v) {
             double g = v/25.;
-            ui->curves->ui->xsharp->setText(QString::number(g, 'f', 2)); //("%1").arg(g, 1, 'g', 2));   
+            ui->curves->ui->xsharp->setText(QString::number(g, 'f', 2));
             ui->tileviewer->setSharpening(g);
           });
 
   ui->tileviewer->setFocusPolicy(Qt::StrongFocus);
   resizeDocks({ui->navdock}, {10}, Qt::Vertical);
-  resizeDocks({ui->modeDock}, {10}, Qt::Vertical);
+  ui->modeDock->hide();
+  ui->treeDock->hide();
 
   ui->treeView->setModel(d->tm);
 }
@@ -292,4 +297,8 @@ void MainWindow::aboutAct() {
 
 void MainWindow::resizeEvent(QResizeEvent *e) {
   QMainWindow::resizeEvent(e);
+}
+
+void MainWindow::openDB(QString fn) {
+  d->openDB(fn);
 }

@@ -174,4 +174,11 @@ SBEMDB::Synapse SBEMDB::synapse(quint64 sid) const {
   return res;
 }
 
+void SBEMDB::selectTree(quint64 tid) {
+  query("update selectedtree set tid = :a", tid);
+}
+
+quint64 SBEMDB::selectedTree() const {
+  return simpleQuery("select tid from selectedtree").toULongLong();
+}
 

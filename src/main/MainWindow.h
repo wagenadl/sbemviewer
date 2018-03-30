@@ -16,6 +16,7 @@ protected:
   void resizeEvent(QResizeEvent *);
 public:
   void aboutAct();
+  void openDB(QString fn);
 private:
   class Ui_MainWindow *ui;
   class MWData *d;

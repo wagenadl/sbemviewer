@@ -5,6 +5,7 @@
 #include "MainWindow.h"
 #include <QApplication>
 #include <QDebug>
+#include <QFileInfo>
 
 int main(int argc, char **argv) {
   QString server = "http://leechem.caltech.edu:9090";
@@ -13,6 +14,8 @@ int main(int argc, char **argv) {
   ServerInfo info(server);
   MainWindow mw(&cache, &info);
   mw.show();
+  if (QFileInfo::exists("/tmp/sbemv.sbemdb"))
+    mw.openDB("/tmp/sbemv.sbemdb");
   app.exec();
   return 0;
 }

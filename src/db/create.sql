@@ -82,6 +82,11 @@ create table postsyncon (
        	       on delete cascade
        	       on update cascade );
 
+create table selectedtree (
+       tid integer,
+       foreign key(tid) references trees(tid)
+              on delete set null );
+
 ----------------------------------------------------------------------
 
 create index if not exists zidx on nodes(z);
@@ -90,6 +95,7 @@ create index if not exists treeidx on nodes(tid);
 ----------------------------------------------------------------------
 
 insert into info values("sbemviewer", "0.1");
+insert into selectedtree values(null);
 
 ----------------------------------------------------------------------
 
