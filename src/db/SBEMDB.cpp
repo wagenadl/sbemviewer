@@ -4,6 +4,7 @@
 #include <QFile>
 #include "PDebug.h"
 #include "SqlFile.h"
+#include "Point.h"
 
 SBEMDB::SBEMDB(QString id): Database(id) {
 }
@@ -174,6 +175,14 @@ SBEMDB::Synapse SBEMDB::synapse(quint64 sid) const {
   return res;
 }
 
+void SBEMDB::selectNode(quint64 nid) {
+  query("update selectednode set nid = :a", nid);
+}
+
+quint64 SBEMDB::selectedNode() const {
+  return simpleQuery("select nid from selectednode").toULongLong();
+}
+
 void SBEMDB::selectTree(quint64 tid) {
   query("update selectedtree set tid = :a", tid);
 }
@@ -182,3 +191,25 @@ quint64 SBEMDB::selectedTree() const {
   return simpleQuery("select tid from selectedtree").toULongLong();
 }
 
+SBEMDB::Node SBEMDB::nodeAt(Point const &p,
+                            int xytol, int ztol, quint64 tid) const {
+  QVector<Node> nn = nodes(constQuery("select * from nodes where tid==:a"
+                                      " and z>=:b and z<=:c"
+                                      " and x>=:d and x<=:e"
+                                      " and y>=:f and y<=:g",
+                                 tid,
+                                 p.z-ztol, p.z+ztol,
+                                 p.x-xytol, p.x+xytol,
+                                 p.y-xytol, p.y+xytol));
+  Node nbest;
+  int dbest = 0;
+  auto sq = [](int x) { return x*x; };
+  for (Node const &n: nn) {
+    int d = sq(n.x - p.x) + sq(n.y - p.y) + sq(n.z - p.z);
+    if (nbest.nid==0 || d<dbest) {
+      nbest = n;
+      dbest = d;
+    }
+  }
+  return nbest;
+}

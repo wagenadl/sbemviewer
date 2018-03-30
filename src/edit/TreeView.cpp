@@ -32,6 +32,7 @@ void TreeView::updateAfterChangingDB() {
   if (row>=0) {
     ui->table->selectRow(row);
   }
+  emit activeTreeChanged(tid);
 }
 
 void TreeView::setModel(TreeModel *tm1) {
@@ -49,10 +50,13 @@ void TreeView::setModel(TreeModel *tm1) {
             if (sel.isEmpty()) {
               qDebug() << "empty";
               tm->database()->selectTree(0);
+              activeTreeChanged(0);
             } else {
               QModelIndex idx = sel.indexes().first();
               qDebug() << "sel row" << idx.row();
-              tm->database()->selectTree(tm->treeIDAt(idx.row()));
+              quint64 tid = tm->treeIDAt(idx.row());
+              tm->database()->selectTree(tid);
+              activeTreeChanged(tid);
             }
           });
   

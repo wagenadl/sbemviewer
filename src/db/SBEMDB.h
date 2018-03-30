@@ -82,6 +82,8 @@ public:
   NodeCon nodeCon(quint64 ncid) const;
   void selectTree(quint64 tid);
   quint64 selectedTree() const;
+  void selectNode(quint64 nid);
+  quint64 selectedNode() const;
 public:
   QVector<SimpleSynapse> simpleSynapses(QSqlQuery q) const;
   /* q must be of the form "select * from simplesynapses" followed by
@@ -95,6 +97,7 @@ public:
   QVector<NodeCon> nodeCons(QSqlQuery q) const;
 public:
   Synapse synapse(quint64 sid) const;
+  Node nodeAt(class Point const &p, int xytol, int ztol, quint64 tid) const;
 
 };
 

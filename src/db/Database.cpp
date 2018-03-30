@@ -234,6 +234,11 @@ QSqlQuery Database::query(QString s, QVariant a, QVariant b, QVariant c,
   return constQuery(s, a, b, c, d, e, f);
 }
 
+QSqlQuery Database::query(QString s, QVariant a, QVariant b, QVariant c,
+                          QVariant d, QVariant e, QVariant f, QVariant g) {
+  return constQuery(s, a, b, c, d, e, f, g);
+}
+
 QSqlQuery Database::constQuery(QString s, QVariant a, QVariant b, QVariant c,
                                QVariant d, QVariant e, QVariant f) const {
   if (debugging())
@@ -246,6 +251,27 @@ QSqlQuery Database::constQuery(QString s, QVariant a, QVariant b, QVariant c,
   q.bindValue(":d", d);
   q.bindValue(":e", e);
   q.bindValue(":f", f);
+  if (!q.exec())
+    CRASHQ(q);
+  if (debugging())
+    pDebug() << "query" << (void*)this << "executed";
+  return q;
+}
+
+QSqlQuery Database::constQuery(QString s, QVariant a, QVariant b, QVariant c,
+                               QVariant d, QVariant e, QVariant f,
+                               QVariant g) const {
+  if (debugging())
+    pDebug() << "query" << (void*)this << s;
+  QSqlQuery q(db);
+  q.prepare(s);
+  q.bindValue(":a", a);
+  q.bindValue(":b", b);
+  q.bindValue(":c", c);
+  q.bindValue(":d", d);
+  q.bindValue(":e", e);
+  q.bindValue(":f", f);
+  q.bindValue(":g", g);
   if (!q.exec())
     CRASHQ(q);
   if (debugging())

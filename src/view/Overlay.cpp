@@ -23,3 +23,12 @@ bool Overlay::mouseRelease(Point const &, Qt::MouseButton,
 bool Overlay::keyPress(class QKeyEvent *) {
   return false;
 }
+
+QWidget *Overlay::parentWidget() const {
+  return parentw;
+}
+
+void Overlay::forceUpdate() {
+  if (parentw)
+    parentw->update();
+}

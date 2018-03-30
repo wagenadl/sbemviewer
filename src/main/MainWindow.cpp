@@ -275,6 +275,8 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   ui->treeDock->hide();
 
   ui->treeView->setModel(d->tm);
+  connect(ui->treeView, &TreeView::activeTreeChanged,
+          d->eo, &EditOverlay::setActiveTree);
 }
 
 MainWindow::~MainWindow() {

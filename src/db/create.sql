@@ -87,6 +87,11 @@ create table selectedtree (
        foreign key(tid) references trees(tid)
               on delete set null );
 
+create table selectednode (
+       nid integer,
+       foreign key(nid) references nodes(nid)
+              on delete set null );
+
 ----------------------------------------------------------------------
 
 create index if not exists zidx on nodes(z);
@@ -96,6 +101,7 @@ create index if not exists treeidx on nodes(tid);
 
 insert into info values("sbemviewer", "0.1");
 insert into selectedtree values(null);
+insert into selectednode values(null);
 
 ----------------------------------------------------------------------
 
