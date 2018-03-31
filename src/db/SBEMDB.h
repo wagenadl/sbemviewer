@@ -19,7 +19,9 @@ public:
   struct Tree {
     quint64 tid;
     QString tname;
-    Tree(quint64 tid=0, QString tname=""): tid(tid), tname(tname) {}
+    bool visible;
+    Tree(quint64 tid=0, QString tname="", bool visible=true):
+      tid(tid), tname(tname), visible(visible) {}
   };
   struct Node {
     quint64 nid;

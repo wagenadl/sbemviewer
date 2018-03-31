@@ -9,8 +9,11 @@ INCLUDEPATH += view
 INCLUDEPATH += db
 INCLUDEPATH += edit
 QT += gui widgets network sql
+CONFIG += debug_and_release
 
 DEFINES += QT_DEPRECATED_WARNINGS
+
+CONFIG(debug, debug|release) { TARGET=$${TARGET}_debug }
 
 # Input
 HEADERS += view/TiffLoader.h    view/TileCache.h    view/TileViewer.h    

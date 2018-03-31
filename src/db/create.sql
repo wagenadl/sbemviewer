@@ -10,7 +10,8 @@ create table nodetypes (
 
 create table trees (
        tid integer primary key,
-       tname text );
+       tname text,
+       visible boolean );
 
 create table nodes (
        nid integer primary key,
