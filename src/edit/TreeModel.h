@@ -8,6 +8,14 @@
 #include <QAbstractTableModel>
 
 class TreeModel: public QAbstractTableModel {
+  Q_OBJECT;
+public:
+  enum Columns {
+    Col_Id = 0,
+    Col_Visible,
+    Col_Name,
+    COLUMNS
+  };
 public:
   TreeModel(SBEMDB *db, QObject *parent=0);
   ~TreeModel();
@@ -27,6 +35,8 @@ public:
   SBEMDB *database() const { return db; }
   int rowForTreeID(quint64 tid) const; // -1 if invalid
   quint64 treeIDAt(int row) const; // 0 if invalid
+signals:
+  void visibilityChanged();
 private:
   SBEMDB *db;
 };

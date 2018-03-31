@@ -176,7 +176,10 @@ SBEMDB::Synapse SBEMDB::synapse(quint64 sid) const {
 }
 
 void SBEMDB::selectNode(quint64 nid) {
-  query("update selectednode set nid = :a", nid);
+  if (nid)
+    query("update selectednode set nid = :a", nid);
+  else
+    query("update selectednode set nid = null");
 }
 
 quint64 SBEMDB::selectedNode() const {
@@ -184,7 +187,10 @@ quint64 SBEMDB::selectedNode() const {
 }
 
 void SBEMDB::selectTree(quint64 tid) {
-  query("update selectedtree set tid = :a", tid);
+  if (tid)
+    query("update selectedtree set tid = :a", tid);
+  else
+    query("update selectedtree set tid = null");
 }
 
 quint64 SBEMDB::selectedTree() const {

@@ -22,41 +22,81 @@ int TreeModel::columnCount(const QModelIndex &parent) const {
   if (parent.isValid())
     return 0;
   else
-    return 2;
+    return COLUMNS;
 }
 
 QVariant TreeModel::data(const QModelIndex &index,
                          int role) const {
   int r = index.row();
   int c = index.column();
-  if (r<0 || c<0 || c>=2)
+  if (r<0 || c<0 || c>=COLUMNS)
     return QVariant();
-  if (!(role==Qt::DisplayRole || (r==1 && role==Qt::EditRole)))
+
+  bool iseditdisp = role==Qt::EditRole || role==Qt::DisplayRole;
+  bool ischeck = role==Qt::CheckStateRole;
+  bool istip = role==Qt::ToolTipRole;
+
+  if (istip) {
+    if (c==Col_Visible)
+      return "Visible";
+    else
+      return QVariant();
+  } else if (ischeck) {
+    if (c==Col_Visible) {
+    QSqlQuery q = db->constQuery("select visible from trees"
+                                 " order by tid asc"
+                                 " limit 1 offset :a", r);
+    if (q.next())
+      return q.value(0).toBool() ?  Qt::Checked : Qt::Unchecked;
+    else
+      return QVariant();
+    } else {
+      return QVariant();
+    }
+  } else if (iseditdisp) {
+    QSqlQuery q = db->constQuery("select tid,tname from trees"
+                                 " order by tid asc"
+                                 " limit 1 offset :a", r);
+    if (!q.next())
+      return QVariant();
+    switch (c) {
+    case Col_Id: return q.value(0);
+    case Col_Name: return q.value(1);
+    default: return QVariant();
+    }
+  } else {
     return QVariant();
-  QSqlQuery q = db->constQuery("select * from trees order by tid asc"
-                               " limit 1 offset :a", r);
-  if (!q.next())
-    return QVariant();
-  return q.value(c); // returns ID for c=0, name for c=1
+  }
 }
 
 bool TreeModel::setData(const QModelIndex &index, const QVariant &value,
                         int role) {
   int r = index.row();
   int c = index.column();
-  if (r<0 || c!=1)
+  if (r<0)
     return false;
-  if (role!=Qt::EditRole)
+  if (!(role==Qt::EditRole || role==Qt::CheckStateRole))
     return false;
 
   // let's find our TID
-  QSqlQuery q = db->constQuery("select * from trees order by tid asc"
+  QSqlQuery q = db->constQuery("select tid from trees order by tid asc"
                                " limit 1 offset :a", r);
   if (!q.next())
     return false;
-  db->query("update trees set tname=:a where tid==:b", value, q.value(0));
-  emit dataChanged(index, index);
-  return true;
+  QVariant tid = q.value(0);
+  if (c==Col_Name && role==Qt::EditRole) {
+    db->query("update trees set tname=:a where tid==:b",
+              value, tid);
+    emit dataChanged(index, index);
+    return true;
+  } else if (c==Col_Visible && role==Qt::CheckStateRole) {
+    db->query("update trees set visible=:a where tid==:b",
+              value.toInt() != Qt::Unchecked, tid);
+    emit dataChanged(index, index);
+    emit visibilityChanged();
+  } else {
+    return false;
+  }
 }
 
 QVariant TreeModel::headerData(int section, Qt::Orientation orientation,
@@ -65,8 +105,9 @@ QVariant TreeModel::headerData(int section, Qt::Orientation orientation,
     return QVariant();
   if (orientation==Qt::Horizontal) {
     switch (section) {
-    case 0: return QString("Id");
-    case 1: return QString("Name");
+    case Col_Id: return QString("Id");
+    case Col_Visible: return QString("V");
+    case Col_Name: return QString("Name");
     default: return QVariant();
     }
   } else {
@@ -77,15 +118,17 @@ QVariant TreeModel::headerData(int section, Qt::Orientation orientation,
 Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const {
   int c = index.column();
   Qt::ItemFlags f = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
-  if (c==1)
+  if (c==Col_Name)
     f |= Qt::ItemIsEditable;
+  else if (c==Col_Visible)
+    f |= Qt::ItemIsUserCheckable;
   return f;
 }
 
 quint64 TreeModel::newTree() {
   int R = rowCount();
   beginInsertRows(QModelIndex(), R, R);
-  quint64 tid = db->query("insert into trees(tname) values(:a)",
+  quint64 tid = db->query("insert into trees(visible,tname) values(1,:a)",
                           QVariant("-"))
     .lastInsertId().toULongLong();
   endInsertRows();
@@ -93,11 +136,11 @@ quint64 TreeModel::newTree() {
 }
 
 int TreeModel::rowForTreeID(quint64 tid) const {
-  int n = db->simpleQuery("select count(*) from trees where tid==:a",
+  int n = db->simpleQuery("select count(1) from trees where tid==:a",
                           qulonglong(tid)).toInt();
   if (!n)
     return -1;
-  int n0 = db->simpleQuery("select count(*) from trees where tid<:a",
+  int n0 = db->simpleQuery("select count(1) from trees where tid<:a",
                            tid).toInt();
   return n0;
 }
@@ -109,11 +152,11 @@ quint64 TreeModel::treeIDAt(int row) const {
 bool TreeModel::deleteTree(quint64 tid) {
   if (tid==0)
     return false;
-  int n = db->simpleQuery("select count(*) from trees where tid==:a",
+  int n = db->simpleQuery("select count(1) from trees where tid==:a",
                           qulonglong(tid)).toInt();
   if (!n)
     return false;
-  int n0 = db->simpleQuery("select count(*) from trees where tid<:a",
+  int n0 = db->simpleQuery("select count(1) from trees where tid<:a",
                            tid).toInt();
   beginRemoveRows(QModelIndex(), n0, n0);
   db->query("delete from trees where tid==:a", tid);

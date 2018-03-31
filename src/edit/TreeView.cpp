@@ -39,7 +39,8 @@ void TreeView::setModel(TreeModel *tm1) {
   // the model may very well not have a db attached yet!
   tm = tm1;
   ui->table->setModel(tm);
-  ui->table->resizeColumnToContents(0);
+  ui->table->resizeColumnToContents(TreeModel::Col_Id);
+  ui->table->resizeColumnToContents(TreeModel::Col_Visible);
   ui->table->setSelectionBehavior(QAbstractItemView::SelectRows);
   ui->table->setSelectionMode(QAbstractItemView::SingleSelection);
 

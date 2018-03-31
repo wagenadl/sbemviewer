@@ -277,6 +277,8 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   ui->treeView->setModel(d->tm);
   connect(ui->treeView, &TreeView::activeTreeChanged,
           d->eo, &EditOverlay::setActiveTree);
+  connect(d->tm, &TreeModel::visibilityChanged,
+          [this]() { ui->tileviewer->update(); });
 }
 
 MainWindow::~MainWindow() {

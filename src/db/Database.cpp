@@ -19,6 +19,7 @@ void Database::open(QString filename) {
   db.setDatabaseName(filename);
   if (!db.open())
     CRASH("Could not open database " + filename);
+  query("pragma foreign_keys = on");
 }
 
 void Database::close() {
