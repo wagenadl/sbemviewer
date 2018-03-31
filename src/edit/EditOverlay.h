@@ -22,7 +22,7 @@ public:
 		    Qt::MouseButton, Qt::KeyboardModifiers,
 		    int a) override;
   bool mouseMove(Point const &,
-		 Qt::MouseButton, Qt::KeyboardModifiers,
+		 Qt::MouseButtons, Qt::KeyboardModifiers,
 		 int a) override;
   bool keyPress(QKeyEvent *) override;
   static int nodeScreenRadius(int a); // how large should a node look on screen
@@ -31,6 +31,8 @@ public:
 public slots:
   void setActiveTree(quint64); // resets active node to null
   void setActiveNode(quint64); // if non-null, also sets active tree
+signals:
+  void otherTreePressed(quint64 tid, quint64 nid);
 private:
   void drawActiveTree(QPainter *p, ViewInfo const &vi);
   void drawOtherTrees(QPainter *p, ViewInfo const &vi);
@@ -38,6 +40,7 @@ private:
   SBEMDB *db;
   QWidget *parent;
   Point presspt;
+  Point origpt;
   quint64 tid; // active tree
   quint64 nid; // selected node
 };

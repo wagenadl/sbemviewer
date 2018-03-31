@@ -279,6 +279,10 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
           d->eo, &EditOverlay::setActiveTree);
   connect(d->tm, &TreeModel::visibilityChanged,
           [this]() { ui->tileviewer->update(); });
+  connect(d->eo, &EditOverlay::otherTreePressed,
+          [this](quint64 tid, quint64 nid) {
+            ui->treeView->setActiveTree(tid);
+            d->eo->setActiveNode(nid); });
 }
 
 MainWindow::~MainWindow() {

@@ -10,7 +10,7 @@ bool Overlay::mousePress(Point const &, Qt::MouseButton,
   return false;
 }
 
-bool Overlay::mouseMove(Point const &, Qt::MouseButton,
+bool Overlay::mouseMove(Point const &, Qt::MouseButtons,
 			Qt::KeyboardModifiers, int) {
   return false;
 }

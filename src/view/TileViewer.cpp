@@ -294,7 +294,7 @@ void TileViewer::mouseMoveEvent(QMouseEvent *e) {
   } else {
     if (!(e->modifiers() & Qt::ControlModifier))
       for (auto *o: overlays)
-	if (o->mouseMove(mapToSBEM(e->pos()), e->button(), e->modifiers(), a))
+	if (o->mouseMove(mapToSBEM(e->pos()), e->buttons(), e->modifiers(), a))
 	  break;
   }
 

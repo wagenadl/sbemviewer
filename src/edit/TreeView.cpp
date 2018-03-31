@@ -62,3 +62,10 @@ void TreeView::setModel(TreeModel *tm1) {
           });
   
 }
+
+void TreeView::setActiveTree(quint64 tid) {
+  if (!tm)
+    return;
+  int row = tm->rowForTreeID(tid);
+  ui->table->selectRow(row);
+}

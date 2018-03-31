@@ -15,6 +15,8 @@ public:
   void updateAfterChangingDB();
 signals:
   void activeTreeChanged(quint64);
+public slots:
+  void setActiveTree(quint64);
 private:
   class Ui_TreeView *ui;
   class TreeModel *tm;

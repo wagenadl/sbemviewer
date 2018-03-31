@@ -146,7 +146,7 @@ void EditOverlay::drawActiveTree(QPainter *p, ViewInfo const &vi) {
   db->query("drop table visnodes");
 }
 
-int EditOverlay::nodeScreenRadius(int a) {
+int EditOverlay::nodeScreenRadius(int) {
   return 12;
   //  int r = 20 >> a;
   //if (r<5)
@@ -168,11 +168,15 @@ bool EditOverlay::mousePress(Point const &p,
   }
   presspt = p;
   if (b==Qt::LeftButton && m==Qt::NoModifier) {
-    SBEMDB::Node n = db->nodeAt(p, nodeSBEMRadius(a), ZTOLERANCE, tid);
+    SBEMDB::Node n = db->nodeAt(p, 2*nodeSBEMRadius(a), ZTOLERANCE, tid);
     qDebug() << "node" << n.nid;
     if (n.nid>0) {
-      nid = n.nid;
-      forceUpdate();
+      if (n.tid==tid) {
+        nid = n.nid;
+        forceUpdate();
+      } else {
+        emit otherTreePressed(n.tid, n.nid);
+      }
     } else {
       // create new node
       if (nid==0) { // no current selection
@@ -204,22 +208,36 @@ bool EditOverlay::mousePress(Point const &p,
         forceUpdate();
       }
     }
+    if (nid) {
+      auto n = db->node(nid);
+      origpt = Point(n.x, n.y, n.z);
+    }
+    return true;
   }
   return false;
 }
 
-bool EditOverlay::mouseRelease(Point const &p,
-			       Qt::MouseButton b, Qt::KeyboardModifiers m,
-			       int a) {
+bool EditOverlay::mouseRelease(Point const &,
+			       Qt::MouseButton, Qt::KeyboardModifiers,
+			       int) {
   //  qDebug() << "EditOverlay::release" << p << b << m << a;
   presspt = Point(-1000, -1000, -1000);
   return false;
 }
 
 bool EditOverlay::mouseMove(Point const &p,
-			    Qt::MouseButton b, Qt::KeyboardModifiers m,
+			    Qt::MouseButtons bb, Qt::KeyboardModifiers m,
 			    int a) {
-  //  qDebug() << "EditOverlay::move" << p << b << m << a;
+  if (bb & Qt::LeftButton && presspt.x>=0 && nid>0) {
+    qDebug() << "EditOverlay::move" << p << bb << m << a << presspt << nid;
+    Point dp = p - presspt;
+    Point newpt = origpt + dp;
+    db->query("update nodes set x=:a, y=:b, z=:c where nid==:d",
+              newpt.x, newpt.y, newpt.z, nid);
+    forceUpdate();
+    return true;
+  }
+    
   return false;
 }
 

@@ -24,7 +24,7 @@ public:
 			    Qt::MouseButton, Qt::KeyboardModifiers,
 			    int a);
   virtual bool mouseMove(Point const &,
-			 Qt::MouseButton, Qt::KeyboardModifiers,
+			 Qt::MouseButtons, Qt::KeyboardModifiers,
 			 int a);
   virtual bool keyPress(class QKeyEvent *);
   QWidget *parentWidget() const;
