@@ -11,6 +11,7 @@
 #include "TreeModel.h"
 #include "TreeView.h"
 #include "EditOverlay.h"
+#include "Mode.h"
 
 #include <QDoubleValidator>
 #include <QDebug>
@@ -283,6 +284,8 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
           [this](quint64 tid, quint64 nid) {
             ui->treeView->setActiveTree(tid);
             d->eo->setActiveNode(nid); });
+  connect(ui->mode->ui->editTrees, &QRadioButton::toggled,
+          [this](bool b) { d->eo->setMode(b ? Mode_Edit : Mode_View); });
 }
 
 MainWindow::~MainWindow() {

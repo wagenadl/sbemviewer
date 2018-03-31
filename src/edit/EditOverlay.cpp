@@ -10,6 +10,7 @@ EditOverlay::EditOverlay(SBEMDB *db, QWidget *parent):
   presspt = Point(-1000, -1000, -1000); // i.e., not real
   tid = 0; // i.e., none
   nid = 0;
+  mode = Mode_View;
 }
 
 EditOverlay::~EditOverlay() {
@@ -177,7 +178,7 @@ bool EditOverlay::mousePress(Point const &p,
       } else {
         emit otherTreePressed(n.tid, n.nid);
       }
-    } else {
+    } else if (mode==Mode_Edit) {
       // create new node
       if (nid==0) { // no current selection
         int nnodes = db->simpleQuery("select count(*) from nodes"
@@ -226,15 +227,16 @@ bool EditOverlay::mouseRelease(Point const &,
 }
 
 bool EditOverlay::mouseMove(Point const &p,
-			    Qt::MouseButtons bb, Qt::KeyboardModifiers m,
-			    int a) {
+			    Qt::MouseButtons bb, Qt::KeyboardModifiers,
+			    int) {
   if (bb & Qt::LeftButton && presspt.x>=0 && nid>0) {
-    qDebug() << "EditOverlay::move" << p << bb << m << a << presspt << nid;
-    Point dp = p - presspt;
-    Point newpt = origpt + dp;
-    db->query("update nodes set x=:a, y=:b, z=:c where nid==:d",
-              newpt.x, newpt.y, newpt.z, nid);
-    forceUpdate();
+    if (mode==Mode_Edit) {
+      Point dp = p - presspt;
+      Point newpt = origpt + dp;
+      db->query("update nodes set x=:a, y=:b, z=:c where nid==:d",
+                newpt.x, newpt.y, newpt.z, nid);
+      forceUpdate();
+    }
     return true;
   }
     
@@ -261,6 +263,8 @@ void EditOverlay::setActiveNode(quint64 nid1) {
 bool EditOverlay::keyPress(QKeyEvent *e) {
   switch (e->key()) {
   case Qt::Key_Delete:
+    if (mode != Mode_Edit)
+      return false;
     if (e->modifiers() & Qt::ShiftModifier) {
       qDebug() << "Disconnecting delete NYI";
     } else {
@@ -302,4 +306,8 @@ bool EditOverlay::keyPress(QKeyEvent *e) {
     break;
   }
   return false;
+}
+
+void EditOverlay::setMode(Mode m) {
+  mode = m;
 }
