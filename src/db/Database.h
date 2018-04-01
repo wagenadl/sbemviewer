@@ -37,6 +37,12 @@ public:
   QVariant simpleQuery(QString s, QVariant a, QVariant b, QVariant c) const;
   QVariant simpleQuery(QString s, QVariant a, QVariant b, QVariant c,
                        QVariant d) const;
+  QVariant simpleQuery(QString s, QVariant a, QVariant b, QVariant c,
+                       QVariant d, QVariant e) const;
+  QVariant simpleQuery(QString s, QVariant a, QVariant b, QVariant c,
+                       QVariant d, QVariant e, QVariant f) const;
+  QVariant simpleQuery(QString s, QVariant a, QVariant b, QVariant c,
+                       QVariant d, QVariant e, QVariant f, QVariant g) const;
   // The following execute the query and return the value(0) from the
   // first result row. They return the provided default if there is no result.
   QVariant defaultQuery(QString s, QVariant dflt) const;

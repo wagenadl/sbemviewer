@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QKeyEvent>
 #include <QInputDialog>
+#include "TileViewer.h"
 
 EditOverlay::EditOverlay(SBEMDB *db, QWidget *parent):
   Overlay(parent), db(db) {
@@ -180,7 +181,60 @@ void EditOverlay::drawAuxNid(QPainter *p, ViewInfo const &vi) {
   int r = dz==0 ? sr : 3*sr/4;
   p->setPen(QPen(Qt::NoPen));
   drawNode(p, vi, r, n);
-}                   
+}
+
+bool EditOverlay::isTreeVisible(quint64 tid1, ViewInfo const &vi) const {
+  int nr = nodeSBEMRadius(vi.a);
+  
+  int n = db->simpleQuery("select count(1) from nodes"
+                          " where tid==:a"
+                          " and z>=:b and z<=:c"
+                          " and x>=:d and x<:e"
+                          " and y>=:f and y<:g",
+                          tid1,
+                          vi.z - ZTOLERANCE, vi.z + ZTOLERANCE,
+                          vi.xl - nr, vi.xr + nr,
+                          vi.yt - nr, vi.yb + nr).toInt();
+  return n>0;
+}
+
+Point EditOverlay::goodSpotForTree(quint64 tid1,
+                                   ViewInfo const &vi, bool *ok) const {
+  // First, make sure the tree has points, otherwise this won't work.
+  int n  = db->simpleQuery("select count(1) from nodes"
+                           " where tid==:a", tid1).toInt();
+  if (ok)
+    *ok = n>0;
+  if (n==0) {
+    qDebug() << "goodSpotForTree: empty tree";
+    return Point();
+  }
+  
+  // Then, find median Z
+  int z0 = db->simpleQuery("select z from nodes where tid==:a order by z"
+                           " limit 1 offset :b", tid1, int(n/2)).toInt();
+  // Now, find all points that are visible if we focus on that plane
+  db->query("create temp table visz as select x,y from nodes"
+            " where tid==:a"
+            " and z>=:b and z<=:c",
+            tid1, z0 - ZTOLERANCE, z0 + ZTOLERANCE);
+  n = db->simpleQuery("select count(1) from visz").toInt();
+  // Now, find median X
+  int x0 = db->simpleQuery("select x from visz order by x"
+                           " limit 1 offset :a", int(n/2)).toInt();
+  int dx = vi.xr - vi.xl;
+  // Now, find all points that are within a screen width of X
+  db->query("create temp table visy as select y from visz"
+            " where x>=:a and x<=:b",
+            x0 - dx/2, x0 + dx/2);
+  n = db->simpleQuery("select count(1) from visy").toInt();
+  // and find median Y
+  int y0 = db->simpleQuery("select y from visy order by y"
+                           " limit 1 offset :a", int(n/2)).toInt();
+  db->query("drop table visy");
+  db->query("drop table visz");
+  return Point(x0, y0, z0);
+}  
   
 void EditOverlay::drawActiveTree(QPainter *p, ViewInfo const &vi) {
   int nr = nodeSBEMRadius(vi.a);
@@ -318,6 +372,19 @@ void EditOverlay::setActiveTree(quint64 tid1) {
   tid = tid1;
   nid = 0;
   aux_nid = 0;
+
+  TileViewer *tv = dynamic_cast<TileViewer *>(parentWidget());
+  if (tv) {
+    // can see if our tree is visible
+    ViewInfo vi = tv->currentView();
+    if (!isTreeVisible(tid, vi)) {
+      bool ok;
+      Point p = goodSpotForTree(tid, vi, &ok);
+      if (ok)
+        emit gotoNodeRequest(p);
+    }
+  }
+  
   forceUpdate();
 }
 

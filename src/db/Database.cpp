@@ -112,6 +112,32 @@ QVariant Database::simpleQuery(QString s, QVariant a, QVariant b,
   return q.value(0);
 }
    
+QVariant Database::simpleQuery(QString s, QVariant a, QVariant b,
+                               QVariant c, QVariant d, QVariant e) const {
+  QSqlQuery q = constQuery(s, a, b, c, d, e);
+  if (!q.next())
+    CRASH("No result");
+  return q.value(0);
+}
+
+QVariant Database::simpleQuery(QString s, QVariant a, QVariant b,
+                               QVariant c, QVariant d, QVariant e,
+                               QVariant f) const {
+  QSqlQuery q = constQuery(s, a, b, c, d, e, f);
+  if (!q.next())
+    CRASH("No result");
+  return q.value(0);
+}
+   
+QVariant Database::simpleQuery(QString s, QVariant a, QVariant b,
+                               QVariant c, QVariant d, QVariant e,
+                               QVariant f, QVariant g) const {
+  QSqlQuery q = constQuery(s, a, b, c, d, e, f, g);
+  if (!q.next())
+    CRASH("No result");
+  return q.value(0);
+}
+   
 QSqlQuery Database::query(QString s) {
   // Operationally, query and constQuery are identical.
   // Both are provided for easier understanding of code.

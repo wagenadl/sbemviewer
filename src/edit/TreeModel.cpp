@@ -94,6 +94,7 @@ bool TreeModel::setData(const QModelIndex &index, const QVariant &value,
               value.toInt() != Qt::Unchecked, tid);
     emit dataChanged(index, index);
     emit visibilityChanged();
+    return true;
   } else {
     return false;
   }

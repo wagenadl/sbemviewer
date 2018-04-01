@@ -8,6 +8,7 @@
 #include "TileCache.h"
 #include "Point.h"
 #include "Mode.h"
+#include "ViewInfo.h"
 
 class TileViewer: public QWidget {
   Q_OBJECT;
@@ -25,7 +26,7 @@ public:
   void addOverlay(class Overlay *);
   void removeOverlay(class Overlay *);
   Point mapToSBEM(QPoint widgetcoords) const;
-				      
+  ViewInfo currentView() const;				      
 public slots:
   void setMode(Mode);
   void setCache(TileCache *cache);

@@ -129,8 +129,12 @@ void TileViewer::setY(int y1) {
   update();
 }
 
+ViewInfo TileViewer::currentView() const {
+  return ViewInfo(width(), height(), x_, y_, z_, a);
+}
+
 int TileViewer::level(float p) const {
-  ViewInfo vi(width(), height(), x_, y_, z_, a);
+  ViewInfo vi(currentView());
   QVector<uint8_t> bits;
   for (int r=vi.r0; r<=vi.r1; r++) {
     for (int c=vi.c0; c<=vi.c1; c++) {
@@ -181,7 +185,7 @@ int TileViewer::level(float p) const {
 void TileViewer::paintEvent(QPaintEvent *e) {
   if (!cache)
     return;
-  ViewInfo vi(width(), height(), x_, y_, z_, a);
+  ViewInfo vi(currentView());
 
   QPainter ptr;
   ptr.begin(this);
