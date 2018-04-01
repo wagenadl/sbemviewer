@@ -44,6 +44,67 @@ static QColor otherNodeColor(int dz) {
   return otherEdgeColor(2*dz);
 }
 
+void EditOverlay::drawCons(QPainter *p, ViewInfo const &vi,
+                           QVector<SBEMDB::NodeCon> const &cons,
+                           QColor (*colorfn)(int)) {
+  QSet<QPair<quint64, quint64>> seen;
+  for (auto const &c: cons) {
+    if (seen.contains(QPair<quint64, quint64>(c.nid1, c.nid2)))
+      continue;
+    seen << QPair<quint64, quint64>(c.nid2, c.nid1);
+    auto n1 = db->node(c.nid1);
+    auto n2 = db->node(c.nid2);
+    int dz = n1.z + n2.z - 2*vi.z;
+    p->setPen(QPen(colorfn(dz), 5));
+    p->drawLine(QPoint((n1.x - vi.xl)>>vi.a, (n1.y - vi.yt)>>vi.a),
+                QPoint((n2.x - vi.xl)>>vi.a, (n2.y - vi.yt)>>vi.a));
+  }
+}
+
+static void drawNode(QPainter *p, ViewInfo const &vi, int r,
+                     SBEMDB::Node const &n) {
+  QPoint pc((n.x - vi.xl)>>vi.a, (n.y - vi.yt)>>vi.a);
+  QPoint rx(r, 0);
+  QPoint ry(0, r);
+  switch (n.typ) {
+  case SBEMDB::TreeNode:
+    p->drawEllipse(pc, r, r);
+    break;
+  case SBEMDB::PresynTerm:
+    p->drawPolygon(QPolygon() << pc - rx - ry << pc - rx + ry << pc + rx);
+    break;
+  case SBEMDB::PostsynTerm:
+    p->drawPolygon(QPolygon() << pc + rx - ry << pc + rx + ry << pc - rx);
+    break;
+  case SBEMDB::Soma:
+    p->drawEllipse(pc, 3*r, 3*r);
+    break;
+  case SBEMDB::ExitPoint:
+    p->drawRect(QRect(pc-2*rx-2*ry, pc+2*rx+2*ry));
+    break;
+  default:
+    break;
+  }
+}  
+
+void EditOverlay::drawNodes(QPainter *p, ViewInfo const &vi,
+                           QVector<SBEMDB::Node> const &nodes,
+                           QColor (*colorfn)(int)) {
+  int sr = nodeScreenRadius(vi.a);
+  p->setPen(QPen(Qt::NoPen));
+  for (auto const &n: nodes) {
+    int dz = n.z - vi.z;
+    int r = (dz==0) ? sr : sr*3/4;
+    p->setBrush(QBrush(colorfn(dz)));
+    if (n.nid==nid) 
+      p->setPen(QPen(QColor(255, 0, 0), 5));
+    drawNode(p, vi, r, n);
+    if (n.nid==nid)
+      p->setPen(QPen(Qt::NoPen));
+  }
+}
+
+
 void EditOverlay::paint(QPainter *p,
 			QRect const &, class ViewInfo const &vi) {
   if (!db->isOpen())
@@ -55,7 +116,6 @@ void EditOverlay::paint(QPainter *p,
 
 void EditOverlay::drawOtherTrees(QPainter *p, ViewInfo const &vi) {
   int nr = nodeSBEMRadius(vi.a);
-  int sr = nodeScreenRadius(vi.a);
   
   db->query("create temp table visnodes as select nid from nodes"
             " where tid!=:a"
@@ -75,23 +135,9 @@ void EditOverlay::drawOtherTrees(QPainter *p, ViewInfo const &vi) {
                                              " where nid1 in"
                                              " ( select * from visnodes )"));
 
-  for (auto const &c: viscons) {
-    auto n1 = db->node(c.nid1);
-    auto n2 = db->node(c.nid2);
-    int dz = n1.z + n2.z - 2*vi.z;
-    p->setPen(QPen(otherEdgeColor(dz), 5));
-    p->drawLine(QPoint((n1.x - vi.xl)>>vi.a, (n1.y - vi.yt)>>vi.a),
-                QPoint((n2.x - vi.xl)>>vi.a, (n2.y - vi.yt)>>vi.a));
-  }
+  drawCons(p, vi, viscons, &otherEdgeColor);
+  drawNodes(p, vi, visnodes, &otherNodeColor);
 
-  p->setPen(QPen(Qt::NoPen));
-  for (auto const &n: visnodes) {
-    int dz = n.z - vi.z;
-    p->setBrush(QBrush(otherNodeColor(dz)));
-    int r = (dz==0) ? sr : sr*3/4;
-    p->drawEllipse(QPoint((n.x - vi.xl)>>vi.a, (n.y - vi.yt)>>vi.a), r, r);
-  }
-  
   db->query("drop table visnodes");
 }
 
@@ -103,14 +149,11 @@ void EditOverlay::drawAuxNid(QPainter *p, ViewInfo const &vi) {
     return; // can't find the node?? this shouldn't happen
   
   int dz = n.z - vi.z;
-  p->setBrush(QBrush(n.tid==tid ? nodeColor(dz) : otherNodeColor(dz)));
+  p->setBrush(QColor(255, 0, 0));
   int sr = nodeScreenRadius(vi.a);
-  int r = dz==0 ? 3*sr/2 : sr;
-  p->setPen(QPen(QColor(255, 0, 0), 5));
-  QPoint pc((n.x - vi.xl)>>vi.a, (n.y - vi.yt)>>vi.a);
-  QPoint dpx(r, 0);
-  QPoint dpy(0, r);
-  p->drawPolygon(QPolygon() << pc + dpx << pc + dpy << pc - dpx << pc - dpy);
+  int r = dz==0 ? sr : 3*sr/4;
+  p->setPen(QPen(Qt::NoPen));
+  drawNode(p, vi, r, n);
 }                   
   
 void EditOverlay::drawActiveTree(QPainter *p, ViewInfo const &vi) {
@@ -133,26 +176,8 @@ void EditOverlay::drawActiveTree(QPainter *p, ViewInfo const &vi) {
                                              " where nid1 in"
                                              " ( select * from visnodes )"));
 
-  for (auto const &c: viscons) {
-    auto n1 = db->node(c.nid1);
-    auto n2 = db->node(c.nid2);
-    int dz = n1.z + n2.z - 2*vi.z;
-    p->setPen(QPen(edgeColor(dz), 5));
-    p->drawLine(QPoint((n1.x - vi.xl)>>vi.a, (n1.y - vi.yt)>>vi.a),
-                QPoint((n2.x - vi.xl)>>vi.a, (n2.y - vi.yt)>>vi.a));
-  }
-
-  p->setPen(QPen(Qt::NoPen));
-  for (auto const &n: visnodes) {
-    int dz = n.z - vi.z;
-    p->setBrush(QBrush(nodeColor(dz)));
-    int r = dz==0 ? sr : 3*sr/4;
-    if (n.nid==nid) 
-      p->setPen(QPen(QColor(255, 0, 0), 5));
-    p->drawEllipse(QPoint((n.x - vi.xl)>>vi.a, (n.y - vi.yt)>>vi.a), r, r);
-    if (n.nid==nid)
-      p->setPen(QPen(Qt::NoPen));
-  }
+  drawCons(p, vi, viscons, &edgeColor);
+  drawNodes(p, vi, visnodes, &nodeColor);
   
   db->query("drop table visnodes");
 }
@@ -284,7 +309,6 @@ void EditOverlay::setActiveNode(quint64 nid1) {
 bool EditOverlay::keyPress(QKeyEvent *e) {
   if (mode() != Mode_Edit)
     return false;
-  qDebug() << e->key() << Qt::Key_Insert << Qt::Key_Delete;
   switch (e->key()) {
   case Qt::Key_Delete:
     if (aux_nid && nid)
@@ -295,6 +319,41 @@ bool EditOverlay::keyPress(QKeyEvent *e) {
   case Qt::Key_Insert:
     if (aux_nid && nid)
       insertSelectedConnection();
+    return true;
+  case Qt::Key_T: // convert to a presynaptic terminal
+    if (nid) {
+      db->query("update nodes set typ=:a where nid==:b",
+                SBEMDB::PresynTerm, nid);
+      forceUpdate();
+    }
+    return true;
+  case Qt::Key_D: // convert to postsynaptic density
+    if (nid) {
+      db->query("update nodes set typ=:a where nid==:b",
+                SBEMDB::PostsynTerm, nid);
+      forceUpdate();
+    }
+    return true;
+  case Qt::Key_N: // convert to tree node
+    if (nid) {
+      db->query("update nodes set typ=:a where nid==:b",
+                SBEMDB::TreeNode, nid);
+      forceUpdate();
+    }
+    return true;
+  case Qt::Key_E: // convert to exit point
+    if (nid) {
+      db->query("update nodes set typ=:a where nid==:b",
+                SBEMDB::ExitPoint, nid);
+      forceUpdate();
+    }
+    return true;
+  case Qt::Key_S: // convert to soma
+    if (nid) {
+      db->query("update nodes set typ=:a where nid==:b",
+                SBEMDB::Soma, nid);
+      forceUpdate();
+    }
     return true;
   default:
     break;

@@ -43,6 +43,12 @@ private:
   void deleteSelectedNode();
   void deleteSelectedConnection();
   void insertSelectedConnection();
+  void drawCons(QPainter *p, ViewInfo const &vi,
+                QVector<SBEMDB::NodeCon> const &cons,
+                QColor (*colorfn)(int));
+  void drawNodes(QPainter *p, ViewInfo const &vi,
+                QVector<SBEMDB::Node> const &nodes,
+                QColor (*colorfn)(int));
 private:
   SBEMDB *db;
   QWidget *parent;
