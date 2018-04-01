@@ -35,6 +35,7 @@ public slots:
 signals:
   void otherTreePressed(quint64 tid, quint64 nid);
   void treeTableAltered();
+  void gotoNodeRequest(Point p);
 private:
   void drawActiveTree(QPainter *p, ViewInfo const &vi);
   void drawOtherTrees(QPainter *p, ViewInfo const &vi);

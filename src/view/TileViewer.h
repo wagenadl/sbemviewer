@@ -32,9 +32,10 @@ public slots:
   void setInfo(class ServerInfo *info);
   void setScale(int); // 0 is full resolution, +n is 2^n reduced
   void setZ(int z); // slice #
-  void setPosition(int x, int y); // in pixels; refers to center of window
   void setX(int x); // in pixels; refers to center of window
   void setY(int y); // in pixels; refers to center of window
+  void setPosition(int x, int y); // combination of above
+  void setPosition(int x, int y, int z); // combination of above
   void stepX(int dx);
   void stepY(int dy);
   void stepZ(int dz);

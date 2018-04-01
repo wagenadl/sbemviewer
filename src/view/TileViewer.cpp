@@ -103,6 +103,17 @@ void TileViewer::setPosition(int x1, int y1) {
   update();
 }
 
+void TileViewer::setPosition(int x1, int y1, int z1) {
+  x_ = x1 - (width()<<a)/2;
+  y_ = y1 - (height()<<a)/2;
+  z_ = z1;
+  enforceX();
+  enforceY();
+  enforceZ();
+  reportView();
+  update();
+}
+
 void TileViewer::setX(int x1) {
   x_ = x1 - (width()<<a)/2;
   enforceX();
@@ -314,9 +325,10 @@ Point TileViewer::mapToSBEM(QPoint p) const {
 }
 
 void TileViewer::reportView() {
-  qDebug() << "reportview" << x_ + (width()<<a)/2;
+  qDebug() << "reportview" << x_ + (width()<<a)/2 << y_ + (height()<<a)/2
+           << z_;
   emit viewChanged(x_ + (width()<<a)/2,
-                   y_ + (height()<<a),
+                   y_ + (height()<<a)/2,
                    z_,
                    false);
 }
@@ -454,7 +466,7 @@ void TileViewer::enforceY() {
 }
   
 void TileViewer::enforceZ() {
-  int z0 = info->contains("z0") ? info->integer("z0") : 50000;
+  int z0 = info->contains("z0") ? info->integer("z0") : 0;
   int z1 = info->contains("z1") ? info->integer("z1") : 99000;
   qDebug() << "enforcez" << z0 << z1 << z_;
   if (z_<z0)

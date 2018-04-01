@@ -184,7 +184,6 @@ void EditOverlay::drawAuxNid(QPainter *p, ViewInfo const &vi) {
   
 void EditOverlay::drawActiveTree(QPainter *p, ViewInfo const &vi) {
   int nr = nodeSBEMRadius(vi.a);
-  int sr = nodeScreenRadius(vi.a);
   
   db->query("create temp table visnodes as select nid from nodes"
             " where tid==:a"
@@ -379,6 +378,13 @@ bool EditOverlay::keyPress(QKeyEvent *e) {
       db->query("update nodes set typ=:a where nid==:b",
                 SBEMDB::Soma, nid);
       forceUpdate();
+    }
+    return true;
+  case Qt::Key_G: // Goto node request
+    if (nid) {
+      auto node = db->node(nid);
+      if (node.nid)
+        emit gotoNodeRequest(Point(node.x, node.y, node.z));
     }
     return true;
   case Qt::Key_M: // edit memo

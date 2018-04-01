@@ -96,6 +96,13 @@ public:
     ui->modeDock->show();
     ui->treeDock->show();
     mw->resizeDocks({ui->modeDock}, {10}, Qt::Vertical);
+    quint64 nid = db->simpleQuery("select nid from selectednode").toULongLong();
+    if (nid>0) {
+      auto n = db->node(nid);
+      qDebug() << n.x << n.y << n.z;
+      if (n.nid)
+        ui->tileviewer->setPosition(n.x, n.y, n.z);
+    }
   }
   void createDB() {
     QString fn = QFileDialog::getSaveFileName(0, "Create Database...", "",
@@ -291,6 +298,10 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   connect(ui->mode->ui->editTrees, &QRadioButton::toggled,
           [this](bool b) {
             ui->tileviewer->setMode(b ? Mode_Edit : Mode_View);
+          });
+  connect(d->eo, &EditOverlay::gotoNodeRequest,
+          [this](Point const &p) {
+            ui->tileviewer->setPosition(p.x, p.y, p.z);
           });
 }
 
