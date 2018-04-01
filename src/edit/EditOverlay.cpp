@@ -11,7 +11,6 @@ EditOverlay::EditOverlay(SBEMDB *db, QWidget *parent):
   tid = 0; // i.e., none
   nid = 0;
   aux_nid = 0;
-  mode = Mode_View;
 }
 
 EditOverlay::~EditOverlay() {
@@ -145,7 +144,6 @@ void EditOverlay::drawActiveTree(QPainter *p, ViewInfo const &vi) {
 
   p->setPen(QPen(Qt::NoPen));
   for (auto const &n: visnodes) {
-    qDebug() << "paint node" << n.nid;
     int dz = n.z - vi.z;
     p->setBrush(QBrush(nodeColor(dz)));
     int r = dz==0 ? sr : 3*sr/4;
@@ -196,15 +194,15 @@ bool EditOverlay::plainLeftPress(Point const &p, int a) {
     forceUpdate();
   }
   SBEMDB::Node n = db->nodeAt(p, 2*nodeSBEMRadius(a), ZTOLERANCE, tid);
-  qDebug() << "node" << n.nid;
   if (n.nid>0) {
     if (n.tid==tid) {
       nid = n.nid;
+      db->selectNode(nid);
       forceUpdate();
     } else {
       emit otherTreePressed(n.tid, n.nid);
     }
-  } else if (mode==Mode_Edit) {
+  } else if (mode()==Mode_Edit) {
     // create new node
     if (nid==0) { // no current selection
       int nnodes = db->simpleQuery("select count(*) from nodes"
@@ -245,7 +243,6 @@ bool EditOverlay::plainLeftPress(Point const &p, int a) {
 bool EditOverlay::mouseRelease(Point const &,
 			       Qt::MouseButton, Qt::KeyboardModifiers,
 			       int) {
-  //  qDebug() << "EditOverlay::release" << p << b << m << a;
   presspt = Point(-1000, -1000, -1000);
   return false;
 }
@@ -254,7 +251,7 @@ bool EditOverlay::mouseMove(Point const &p,
 			    Qt::MouseButtons bb, Qt::KeyboardModifiers,
 			    int) {
   if (bb & Qt::LeftButton && presspt.x>=0 && nid>0) {
-    if (mode==Mode_Edit) {
+    if (mode()==Mode_Edit) {
       Point dp = p - presspt;
       Point newpt = origpt + dp;
       db->query("update nodes set x=:a, y=:b, z=:c where nid==:d",
@@ -269,7 +266,6 @@ bool EditOverlay::mouseMove(Point const &p,
 
 void EditOverlay::setActiveTree(quint64 tid1) {
   tid = tid1;
-  qDebug() << "setactivetree" << tid;
   nid = 0;
   aux_nid = 0;
   forceUpdate();
@@ -278,7 +274,6 @@ void EditOverlay::setActiveTree(quint64 tid1) {
 void EditOverlay::setActiveNode(quint64 nid1) {
   nid = nid1;
   aux_nid = 0;
-  qDebug() << "setactivenode" << nid;
   if (nid) {
     auto n = db->node(nid);
     tid = n.tid;
@@ -287,7 +282,7 @@ void EditOverlay::setActiveNode(quint64 nid1) {
 }
 
 bool EditOverlay::keyPress(QKeyEvent *e) {
-  if (mode != Mode_Edit)
+  if (mode() != Mode_Edit)
     return false;
   qDebug() << e->key() << Qt::Key_Insert << Qt::Key_Delete;
   switch (e->key()) {
@@ -348,7 +343,6 @@ void EditOverlay::deleteSelectedConnection() {
       if (!seennodes.contains(c.nid2))
         newnodes << c.nid2;
   }
-  qDebug() << seennodes;
   QString name = db->simpleQuery("select tname from trees where tid==:a",
                                  n1.tid).toString();
   quint64 newtid = db->query("insert into trees (tname, visible)"
@@ -433,8 +427,4 @@ void EditOverlay::deleteSelectedNode() {
     db->selectNode(0);
     forceUpdate();
   }
-}
-
-void EditOverlay::setMode(Mode m) {
-  mode = m;
 }

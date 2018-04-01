@@ -28,11 +28,13 @@ TreeView::~TreeView() {
 
 void TreeView::updateAfterChangingDB() {
   quint64 tid = tm->database()->selectedTree();
+  quint64 nid = tm->database()->selectedNode();
   int row = tm->rowForTreeID(tid);
   if (row>=0) {
     ui->table->selectRow(row);
   }
   emit activeTreeChanged(tid);
+  emit activeNodeChanged(nid);
 }
 
 void TreeView::setModel(TreeModel *tm1) {
@@ -67,5 +69,6 @@ void TreeView::setActiveTree(quint64 tid) {
   if (!tm)
     return;
   int row = tm->rowForTreeID(tid);
+  tm->database()->selectTree(tid);
   ui->table->selectRow(row);
 }

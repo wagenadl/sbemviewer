@@ -15,6 +15,7 @@ public:
   void updateAfterChangingDB();
 signals:
   void activeTreeChanged(quint64);
+  void activeNodeChanged(quint64);
 public slots:
   void setActiveTree(quint64);
 private:

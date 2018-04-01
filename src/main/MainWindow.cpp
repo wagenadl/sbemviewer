@@ -278,6 +278,8 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   ui->treeView->setModel(d->tm);
   connect(ui->treeView, &TreeView::activeTreeChanged,
           d->eo, &EditOverlay::setActiveTree);
+  connect(ui->treeView, &TreeView::activeNodeChanged,
+          d->eo, &EditOverlay::setActiveNode);
   connect(d->tm, &TreeModel::visibilityChanged,
           [this]() { ui->tileviewer->update(); });
   connect(d->eo, &EditOverlay::otherTreePressed,
@@ -287,7 +289,9 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   connect(d->eo, &EditOverlay::treeTableAltered,
           [this]() { d->tm->beginReset(); d->tm->concludeReset(); });
   connect(ui->mode->ui->editTrees, &QRadioButton::toggled,
-          [this](bool b) { d->eo->setMode(b ? Mode_Edit : Mode_View); });
+          [this](bool b) {
+            ui->tileviewer->setMode(b ? Mode_Edit : Mode_View);
+          });
 }
 
 MainWindow::~MainWindow() {

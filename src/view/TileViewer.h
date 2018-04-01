@@ -7,6 +7,7 @@
 #include <QWidget>
 #include "TileCache.h"
 #include "Point.h"
+#include "Mode.h"
 
 class TileViewer: public QWidget {
   Q_OBJECT;
@@ -26,6 +27,7 @@ public:
   Point mapToSBEM(QPoint widgetcoords) const;
 				      
 public slots:
+  void setMode(Mode);
   void setCache(TileCache *cache);
   void setInfo(class ServerInfo *info);
   void setScale(int); // 0 is full resolution, +n is 2^n reduced
@@ -72,6 +74,7 @@ private:
   QVector<uint8_t> lut;
   bool lutok;
   QVector<class Overlay *> overlays;
+  Mode mode;
 };
 
 #endif

@@ -32,3 +32,11 @@ void Overlay::forceUpdate() {
   if (parentw)
     parentw->update();
 }
+
+Mode Overlay::mode() const {
+  return mode_;
+}
+
+void Overlay::setMode(Mode m) {
+  mode_ = m;
+}

@@ -32,7 +32,6 @@ public:
 public slots:
   void setActiveTree(quint64); // resets active node to null
   void setActiveNode(quint64); // if non-null, also sets active tree
-  void setMode(Mode);
 signals:
   void otherTreePressed(quint64 tid, quint64 nid);
   void treeTableAltered();
@@ -52,7 +51,6 @@ private:
   quint64 tid; // active tree
   quint64 nid; // selected node
   quint64 aux_nid; // shift-clicked node
-  Mode mode;
 };
 
 #endif

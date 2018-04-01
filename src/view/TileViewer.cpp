@@ -16,6 +16,7 @@
 TileViewer::TileViewer(QWidget *parent):
   QWidget(parent),
   cache(0), info(0) {
+  mode = Mode_View;
   z_ = 805;
   x_ = 63*ViewInfo::TILESIZE;
   y_ = 150*ViewInfo::TILESIZE;
@@ -272,7 +273,8 @@ void TileViewer::resizeEvent(QResizeEvent *) {
 
 void TileViewer::mousePressEvent(QMouseEvent *e) {
   e->accept();
-  if (!(e->modifiers() & Qt::ControlModifier))
+  qDebug() << "mouse press" << e->pos() << e->button() << e->modifiers();
+  if (mode!=Mode_View && !(e->modifiers() & Qt::ControlModifier))
     for (auto *o: overlays)
       if (o->mousePress(mapToSBEM(e->pos()), e->button(), e->modifiers(), a))
 	return;
@@ -292,7 +294,7 @@ void TileViewer::mouseMoveEvent(QMouseEvent *e) {
     lastpy = e->y();
     update();
   } else {
-    if (!(e->modifiers() & Qt::ControlModifier))
+    if (mode!=Mode_View && !(e->modifiers() & Qt::ControlModifier))
       for (auto *o: overlays)
 	if (o->mouseMove(mapToSBEM(e->pos()), e->buttons(), e->modifiers(), a))
 	  break;
@@ -329,7 +331,7 @@ void TileViewer::leaveEvent(QEvent *) {
 void TileViewer::mouseReleaseEvent(QMouseEvent *e) {
   isdrag = false;
   e->accept();
-  if (!(e->modifiers() & Qt::ControlModifier))
+  if (mode!=Mode_View && !(e->modifiers() & Qt::ControlModifier))
     for (auto *o: overlays)
       if (o->mouseRelease(mapToSBEM(e->pos()), e->button(), e->modifiers(), a))
 	break;
@@ -498,8 +500,16 @@ void TileViewer::setSharpening(float s) {
 
 void TileViewer::addOverlay(Overlay *o) {
   overlays << o;
+  o->setMode(mode);
 }
 
 void TileViewer::removeOverlay(Overlay *o) {
   overlays.removeAll(o);
+}
+
+
+void TileViewer::setMode(Mode m) {
+  mode = m;
+  for (auto *o: overlays)
+    o->setMode(m);
 }

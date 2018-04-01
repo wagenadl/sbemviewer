@@ -6,11 +6,13 @@
 
 #include  "Point.h"
 #include "ViewInfo.h"
+#include "Mode.h"
 #include <QMouseEvent>
 #include <QObject>
 #include <QWidget>
 
 class Overlay: public QObject {
+  Q_OBJECT;
 public:
   Overlay(QWidget *parent=0): QObject(parent), parentw(parent) {}
   virtual ~Overlay() {}
@@ -28,10 +30,14 @@ public:
 			 int a);
   virtual bool keyPress(class QKeyEvent *);
   QWidget *parentWidget() const;
+public slots:
+  void setMode(Mode);
 protected:
+  Mode mode() const;
   void forceUpdate();
 private:
   QWidget *parentw;
+  Mode mode_;
 };
 
 #endif

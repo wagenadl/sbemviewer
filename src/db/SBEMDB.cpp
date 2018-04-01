@@ -176,6 +176,7 @@ SBEMDB::Synapse SBEMDB::synapse(quint64 sid) const {
 }
 
 void SBEMDB::selectNode(quint64 nid) {
+  qDebug() << "selectnode" << nid;
   if (nid)
     query("update selectednode set nid = :a", nid);
   else
