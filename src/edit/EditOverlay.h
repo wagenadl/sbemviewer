@@ -35,9 +35,15 @@ public slots:
   void setMode(Mode);
 signals:
   void otherTreePressed(quint64 tid, quint64 nid);
+  void treeTableAltered();
 private:
   void drawActiveTree(QPainter *p, ViewInfo const &vi);
   void drawOtherTrees(QPainter *p, ViewInfo const &vi);
+  void drawAuxNid(QPainter *p, ViewInfo const &vi);
+  bool plainLeftPress(Point const &p, int a);
+  void deleteSelectedNode();
+  void deleteSelectedConnection();
+  void insertSelectedConnection();
 private:
   SBEMDB *db;
   QWidget *parent;
@@ -45,6 +51,7 @@ private:
   Point origpt;
   quint64 tid; // active tree
   quint64 nid; // selected node
+  quint64 aux_nid; // shift-clicked node
   Mode mode;
 };
 
