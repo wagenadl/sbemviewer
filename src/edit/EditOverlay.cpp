@@ -308,14 +308,67 @@ bool EditOverlay::keyPress(QKeyEvent *e) {
 }
 
 void EditOverlay::deleteSelectedConnection() {
+  auto n1 = db->node(nid);
+  auto n2 = db->node(aux_nid);
+  if (!n1.nid || !n2.nid) {
+    qDebug() << "Nodes not found while trying to delete connection";
+    return;
+  }
+  if (n1.tid != n2.tid) {
+    qDebug() << "Nodes not in same tree while trying to delete connection";
+    return;
+  }
+  
+  auto cons = db->nodeCons(db->constQuery("select * from nodecons"
+                                          " where nid1==:a and nid2==:b",
+                                          n1.nid, n2.nid));
+  if (cons.isEmpty()) {
+    qDebug() << "No connection to delete";
+    return;
+  }
+
+  /* Our strategy will be to first remove the connection, then find all
+     nodes connected to n2 and create a new tree for them.
+  */
+  db->begin();
+  db->query("delete from nodecons where nid1==:a and nid2==:b",
+            n1.nid, n2.nid);
+  db->query("delete from nodecons where nid1==:a and nid2==:b",
+            n2.nid, n1.nid);
+  QSet<quint64> seennodes;
+  QSet<quint64> newnodes;
+  newnodes << n2.nid;
+  while (!newnodes.isEmpty()) {
+    quint64 n = *newnodes.begin();
+    newnodes.erase(newnodes.begin());
+    seennodes << n;
+    auto cons = db->nodeCons(db->constQuery("select * from nodecons"
+                                            " where nid1==:a", n));
+    for (auto c: cons) 
+      if (!seennodes.contains(c.nid2))
+        newnodes << c.nid2;
+  }
+  qDebug() << seennodes;
+  QString name = db->simpleQuery("select tname from trees where tid==:a",
+                                 n1.tid).toString();
+  quint64 newtid = db->query("insert into trees (tname, visible)"
+                             " values (:a, :b)", name + "'", true)
+    .lastInsertId().toULongLong();
+  for (quint64 n: seennodes) 
+    db->query("update nodes set tid=:a where nid==:b", newtid, n);
+  db->commit();
+  emit treeTableAltered();
+  emit otherTreePressed(n1.tid, n1.nid);
+  forceUpdate();
 }
 
 void EditOverlay::insertSelectedConnection() {
   auto n1 = db->node(nid);
   auto n2 = db->node(aux_nid);
-  qDebug() <<"insert" << n1.nid << n1.tid << n2.nid << n2.tid;
-  if (!n1.nid || !n2.nid)
+  if (!n1.nid || !n2.nid) {
+    qDebug() << "Nodes not found while trying to insert connection";
     return;
+  }
   if (n1.tid==n2.tid) {
     // this would create a circular graph
     qDebug() << "Refusing to create a circular graph";
