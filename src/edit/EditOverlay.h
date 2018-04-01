@@ -49,6 +49,7 @@ private:
   void drawNodes(QPainter *p, ViewInfo const &vi,
                 QVector<SBEMDB::Node> const &nodes,
                 QColor (*colorfn)(int));
+  void drawTags(QPainter *p, ViewInfo const &vi);
 private:
   SBEMDB *db;
   QWidget *parent;

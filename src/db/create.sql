@@ -26,10 +26,11 @@ create table nodes (
        
 create table tags (
        tagid integer primary key,
-       x integer,
-       y integer,
-       z integer,
-       tag text );
+       nid integer,
+       tag text,
+       foreign key(nid) references nodes(nid)
+               on delete cascade
+               on update cascade );
 
 create table simplesynapses (
        -- Straightforward one to one synapses

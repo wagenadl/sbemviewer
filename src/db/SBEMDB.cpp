@@ -140,8 +140,8 @@ QVector<SBEMDB::Tag> SBEMDB::tags(QSqlQuery q) const {
   QVector<Tag> lst;
   while (q.next()) {
     lst << Tag{q.value(0).toULongLong(),
-        q.value(1).toInt(), q.value(2).toInt(), q.value(3).toInt(),
-        q.value(4).toString()};
+        q.value(1).toULongLong(),
+        q.value(2).toString()};
   }
   return lst;
 }

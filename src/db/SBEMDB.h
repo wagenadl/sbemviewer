@@ -34,10 +34,10 @@ public:
   };
   struct Tag {
     quint64 tagid;
-    int x, y, z;
+    quint64 nid;
     QString tag;
-    Tag(quint64 tagid=0, int x=0, int y=0, int z=0, QString tag=""):
-      tagid(tagid), x(x), y(y), z(z), tag(tag) {}
+    Tag(quint64 tagid=0, quint64 nid=0, QString tag=""):
+      tagid(tagid), nid(nid), tag(tag) {}
   };
   struct SimpleSynapse {
     quint64 sid;

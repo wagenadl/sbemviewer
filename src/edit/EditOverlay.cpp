@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QPainter>
 #include <QKeyEvent>
+#include <QInputDialog>
 
 EditOverlay::EditOverlay(SBEMDB *db, QWidget *parent):
   Overlay(parent), db(db) {
@@ -112,6 +113,31 @@ void EditOverlay::paint(QPainter *p,
   drawOtherTrees(p, vi);
   drawActiveTree(p, vi);
   drawAuxNid(p, vi);
+  drawTags(p, vi);
+}
+
+void EditOverlay::drawTags(QPainter *p, ViewInfo const &vi) {
+  int nr = nodeSBEMRadius(vi.a);
+  int sr = nodeScreenRadius(vi.a);
+  
+  QSqlQuery q = db->query("select x, y, z, tag, tid from tags natural join nodes"
+                          " where z>=:a and z<=:b"
+                          " and x>=:c and x<:d"
+                          " and y>=:e and y<:f",
+                          vi.z - ZTOLERANCE, vi.z + ZTOLERANCE,
+                          vi.xl - nr, vi.xr + nr,
+                          vi.yt - nr, vi.yb + nr);
+  while (q.next()) {
+    int x = q.value(0).toInt();
+    int y = q.value(1).toInt();
+    int z = q.value(2).toInt();
+    QString tag = q.value(3).toString();
+    quint64 tid1 = q.value(4).toULongLong();
+    QColor c = tid1==tid ? nodeColor(z - vi.z) : otherNodeColor(z - vi.z);
+    p->setPen(QPen(c));
+    QPoint pc((x - vi.xl)>>vi.a, (y - vi.yt)>>vi.a);
+    p->drawText(pc + QPoint(sr, -sr), tag);
+  }
 }
 
 void EditOverlay::drawOtherTrees(QPainter *p, ViewInfo const &vi) {
@@ -353,6 +379,33 @@ bool EditOverlay::keyPress(QKeyEvent *e) {
       db->query("update nodes set typ=:a where nid==:b",
                 SBEMDB::Soma, nid);
       forceUpdate();
+    }
+    return true;
+  case Qt::Key_M: // edit memo
+    if (nid) {
+      auto tags = db->tags(db->constQuery("select * from tags where nid==:a",
+                                          nid));
+      QString tag = tags.isEmpty() ? "" : tags.first().tag;
+      bool ok;
+      tag = QInputDialog::getText(parentWidget(),
+                                  "Memo",
+                                  "Set memo for node:",
+                                  QLineEdit::Normal,
+                                  tag,
+                                  &ok);
+      if (ok) {
+        if (tag.isEmpty()) {
+          if (!tags.isEmpty())
+            db->query("delete from tags where tagid==:a", tags.first().tagid);
+        } else {
+          if (tags.isEmpty())
+            db->query("insert into tags (nid, tag) values(:a, :b)",
+                      nid, tag);
+          else
+            db->query("update tags set tag=:a where tagid==:b",
+                      tag, tags.first().tagid);
+        }
+      }
     }
     return true;
   default:
