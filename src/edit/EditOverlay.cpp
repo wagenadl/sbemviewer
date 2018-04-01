@@ -121,7 +121,9 @@ void EditOverlay::drawTags(QPainter *p, ViewInfo const &vi) {
   int nr = nodeSBEMRadius(vi.a);
   int sr = nodeScreenRadius(vi.a);
   
-  QSqlQuery q = db->query("select x, y, z, tag, tid from tags natural join nodes"
+  QSqlQuery q = db->query("select x, y, z, tag, tid, visible from tags"
+                          " natural join nodes"
+                          " natural join trees"
                           " where z>=:a and z<=:b"
                           " and x>=:c and x<:d"
                           " and y>=:e and y<:f",
@@ -134,10 +136,13 @@ void EditOverlay::drawTags(QPainter *p, ViewInfo const &vi) {
     int z = q.value(2).toInt();
     QString tag = q.value(3).toString();
     quint64 tid1 = q.value(4).toULongLong();
-    QColor c = tid1==tid ? nodeColor(z - vi.z) : otherNodeColor(z - vi.z);
-    p->setPen(QPen(c));
-    QPoint pc((x - vi.xl)>>vi.a, (y - vi.yt)>>vi.a);
-    p->drawText(pc + QPoint(sr, -sr), tag);
+    bool vis = q.value(5).toBool();
+    if (tid1==tid || vis) {
+      QColor c = tid1==tid ? nodeColor(z - vi.z) : otherNodeColor(z - vi.z);
+      p->setPen(QPen(c));
+      QPoint pc((x - vi.xl)>>vi.a, (y - vi.yt)>>vi.a);
+      p->drawText(pc + QPoint(sr, -sr), tag);
+    }
   }
 }
 
@@ -398,96 +403,82 @@ void EditOverlay::setActiveNode(quint64 nid1) {
   forceUpdate();
 }
 
-bool EditOverlay::keyPress(QKeyEvent *e) {
-  if (mode() != Mode_Edit)
-    return false;
-  switch (e->key()) {
-  case Qt::Key_Delete:
-    if (aux_nid && nid)
-      deleteSelectedConnection();
-    else if (nid)
-      deleteSelectedNode();
-    return true;
-  case Qt::Key_Insert:
-    if (aux_nid && nid)
-      insertSelectedConnection();
-    return true;
-  case Qt::Key_T: // convert to a presynaptic terminal
-    if (nid) {
-      db->query("update nodes set typ=:a where nid==:b",
-                SBEMDB::PresynTerm, nid);
-      forceUpdate();
-    }
-    return true;
-  case Qt::Key_D: // convert to postsynaptic density
-    if (nid) {
-      db->query("update nodes set typ=:a where nid==:b",
-                SBEMDB::PostsynTerm, nid);
-      forceUpdate();
-    }
-    return true;
-  case Qt::Key_N: // convert to tree node
-    if (nid) {
-      db->query("update nodes set typ=:a where nid==:b",
-                SBEMDB::TreeNode, nid);
-      forceUpdate();
-    }
-    return true;
-  case Qt::Key_E: // convert to exit point
-    if (nid) {
-      db->query("update nodes set typ=:a where nid==:b",
-                SBEMDB::ExitPoint, nid);
-      forceUpdate();
-    }
-    return true;
-  case Qt::Key_S: // convert to soma
-    if (nid) {
-      db->query("update nodes set typ=:a where nid==:b",
-                SBEMDB::Soma, nid);
-      forceUpdate();
-    }
-    return true;
-  case Qt::Key_G: // Goto node request
-    if (nid) {
-      auto node = db->node(nid);
-      if (node.nid)
-        emit gotoNodeRequest(Point(node.x, node.y, node.z));
-    }
-    return true;
-  case Qt::Key_M: // edit memo
-    if (nid) {
-      auto tags = db->tags(db->constQuery("select * from tags where nid==:a",
-                                          nid));
-      QString tag = tags.isEmpty() ? "" : tags.first().tag;
-      bool ok;
-      tag = QInputDialog::getText(parentWidget(),
-                                  "Memo",
-                                  "Set memo for node:",
-                                  QLineEdit::Normal,
-                                  tag,
-                                  &ok);
-      if (ok) {
-        if (tag.isEmpty()) {
-          if (!tags.isEmpty())
-            db->query("delete from tags where tagid==:a", tags.first().tagid);
-        } else {
-          if (tags.isEmpty())
-            db->query("insert into tags (nid, tag) values(:a, :b)",
-                      nid, tag);
-          else
-            db->query("update tags set tag=:a where tagid==:b",
-                      tag, tags.first().tagid);
-        }
+void EditOverlay::actEditMemo() {
+  if (nid) {
+    auto tags = db->tags(db->constQuery("select * from tags where nid==:a",
+                                        nid));
+    QString tag = tags.isEmpty() ? "" : tags.first().tag;
+    bool ok;
+    tag = QInputDialog::getText(parentWidget(),
+                                "Memo",
+                                "Set memo for node:",
+                                QLineEdit::Normal,
+                                tag,
+                                &ok);
+    if (ok) {
+      if (tag.isEmpty()) {
+        if (!tags.isEmpty())
+          db->query("delete from tags where tagid==:a", tags.first().tagid);
+      } else {
+        if (tags.isEmpty())
+          db->query("insert into tags (nid, tag) values(:a, :b)",
+                    nid, tag);
+        else
+          db->query("update tags set tag=:a where tagid==:b",
+                    tag, tags.first().tagid);
       }
     }
-    return true;
-  default:
-    break;
   }
-  return false;
 }
 
-void EditOverlay::deleteSelectedConnection() {
+void EditOverlay::actSetNodeType(SBEMDB::NodeType typ) {
+  if (nid) {
+    db->query("update nodes set typ=:a where nid==:b",
+              typ, nid);
+    forceUpdate();
+  }
+}
+
+void EditOverlay::actDeleteNode() {
+  if (!nid || aux_nid)
+    return;
+  // delete nid
+  auto cons = db->nodeCons(db->constQuery("select * from nodecons"
+                                          " where nid1==:a", nid));
+  bool candelete = nid>0;
+  switch (cons.size()) {
+  case 0: // can simply delete this thing without consequence
+    break;
+  case 1: // must delete one pair of segments
+    break;
+  case 2: // must delete two pairs of segments; may have to reconnect
+    if (db->simpleQuery("select count(1) from nodecons"
+                        " where nid1==:a"
+                        " and nid2==:b",
+                        cons.first().nid2,
+                        cons.last().nid2) == 0) {
+      // must reconnect
+      db->query("insert into nodecons(nid1,nid2) values(:a,:b)",
+                cons.first().nid2, cons.last().nid2);
+      db->query("insert into nodecons(nid1,nid2) values(:a,:b)",
+                cons.last().nid2, cons.first().nid2);
+    }
+    break;
+  default:
+    candelete = false;
+  }
+  if (candelete) {
+    db->query("delete from nodes where nid==:a", nid);
+    // this propagates deleting the connections
+    nid = 0;
+    db->selectNode(0);
+    forceUpdate();
+  }
+}
+
+void EditOverlay::actDisconnectNodes() {
+  if (!aux_nid || !nid)
+    return;
   auto n1 = db->node(nid);
   auto n2 = db->node(aux_nid);
   if (!n1.nid || !n2.nid) {
@@ -541,7 +532,10 @@ void EditOverlay::deleteSelectedConnection() {
   forceUpdate();
 }
 
-void EditOverlay::insertSelectedConnection() {
+void EditOverlay::actConnectNodes() {
+  if (!aux_nid || !nid)
+    return;
+
   auto n1 = db->node(nid);
   auto n2 = db->node(aux_nid);
   if (!n1.nid || !n2.nid) {
@@ -579,37 +573,23 @@ void EditOverlay::insertSelectedConnection() {
   }
 }
 
-void EditOverlay::deleteSelectedNode() {
-  // delete nid
-  auto cons = db->nodeCons(db->constQuery("select * from nodecons"
-                                          " where nid1==:a", nid));
-  bool candelete = nid>0;
-  switch (cons.size()) {
-  case 0: // can simply delete this thing without consequence
-    break;
-  case 1: // must delete one pair of segments
-    break;
-  case 2: // must delete two pairs of segments; may have to reconnect
-    if (db->simpleQuery("select count(1) from nodecons"
-                        " where nid1==:a"
-                        " and nid2==:b",
-                        cons.first().nid2,
-                        cons.last().nid2) == 0) {
-      // must reconnect
-      db->query("insert into nodecons(nid1,nid2) values(:a,:b)",
-                cons.first().nid2, cons.last().nid2);
-      db->query("insert into nodecons(nid1,nid2) values(:a,:b)",
-                cons.last().nid2, cons.first().nid2);
-    }
-    break;
-  default:
-    candelete = false;
-  }
-  if (candelete) {
-    db->query("delete from nodes where nid==:a", nid);
-    // this propagates deleting the connections
-    nid = 0;
-    db->selectNode(0);
-    forceUpdate();
+void EditOverlay::actConnectTerminals() {
+  qDebug() << "connect terminals";
+}
+
+void EditOverlay::actDissolveSynapse() {
+  qDebug() << "dissolve synapse";
+}
+
+void EditOverlay::actCenterNode() {
+  if (nid) {
+    auto node = db->node(nid);
+    if (node.nid)
+      emit gotoNodeRequest(Point(node.x, node.y, node.z));
   }
 }
+
+bool EditOverlay::keyPress(QKeyEvent *) {
+  return false;
+}
+

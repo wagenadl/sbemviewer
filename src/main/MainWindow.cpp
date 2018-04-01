@@ -139,6 +139,52 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   connect(ui->actionAbout, &QAction::triggered,
           this, &MainWindow::aboutAct);
 
+  connect(ui->actionTypeTreeNode, &QAction::triggered,
+          [this]() { d->eo->actSetNodeType(SBEMDB::TreeNode); });
+  ui->actionTypeTreeNode->setShortcut(tr("T, N"));
+  connect(ui->actionTypePresynapticTerminal, &QAction::triggered,
+          [this]() { d->eo->actSetNodeType(SBEMDB::PresynTerm); });
+  ui->actionTypePresynapticTerminal->setShortcut(tr("T, T"));
+  connect(ui->actionTypePostsynapticDensity, &QAction::triggered,
+          [this]() { d->eo->actSetNodeType(SBEMDB::PostsynTerm); });
+  ui->actionTypePostsynapticDensity->setShortcut(tr("T, D"));
+  connect(ui->actionTypeSoma, &QAction::triggered,
+          [this]() { d->eo->actSetNodeType(SBEMDB::Soma); });
+  ui->actionTypeSoma->setShortcut(tr("T, S"));
+  connect(ui->actionTypeNeuropilExitPoint, &QAction::triggered,
+          [this]() { d->eo->actSetNodeType(SBEMDB::ExitPoint); });
+  ui->actionTypeNeuropilExitPoint->setShortcut(tr("T, E"));
+  connect(ui->actionEditMemo, &QAction::triggered,
+          d->eo, &EditOverlay::actEditMemo);
+  connect(ui->actionConnectNodes, &QAction::triggered,
+          d->eo, &EditOverlay::actConnectNodes);
+  connect(ui->actionDisconnectNodes, &QAction::triggered,
+          d->eo, &EditOverlay::actDisconnectNodes);
+  connect(ui->actionDeleteNode, &QAction::triggered,
+          d->eo, &EditOverlay::actDeleteNode);
+  connect(ui->actionConnectTerminals, &QAction::triggered,
+          d->eo, &EditOverlay::actConnectTerminals);
+  connect(ui->actionDissolveSynapse, &QAction::triggered,
+          d->eo, &EditOverlay::actDissolveSynapse);
+
+  connect(ui->actionNewTree, &QAction::triggered,
+          ui->treeView, &TreeView::actNewTree);
+  connect(ui->actionDeleteTree, &QAction::triggered,
+          ui->treeView, &TreeView::actDeleteTree);
+  connect(ui->actionShowTrees, &QAction::triggered,
+          ui->treeView, &TreeView::actShowAll);
+  connect(ui->actionHideTrees, &QAction::triggered,
+          ui->treeView, &TreeView::actHideAll);
+
+  ui->treeView->ui->add->setDefaultAction(ui->actionNewTree);
+  ui->treeView->ui->add->setText("+");
+  ui->treeView->ui->del->setDefaultAction(ui->actionDeleteTree);
+  ui->treeView->ui->del->setText(tr("–"));
+  ui->treeView->ui->show->setDefaultAction(ui->actionShowTrees);
+  ui->treeView->ui->show->setText("⭕"); // 🌕
+  ui->treeView->ui->hide->setDefaultAction(ui->actionHideTrees);
+  ui->treeView->ui->hide->setText(tr("◍")); // 🌘
+
   ui->nav->ui->zoom->setText(QString("2<sup>–%1</sup>")
                              .arg(ui->tileviewer->scale()));
   connect(ui->tileviewer, &TileViewer::scaleChanged,

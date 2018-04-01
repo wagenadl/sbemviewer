@@ -5,6 +5,7 @@
 #define TREEVIEW_H
 
 #include <QWidget>
+#include "ui_TreeView.h"
 
 class TreeView: public QWidget {
   Q_OBJECT;
@@ -18,8 +19,13 @@ signals:
   void activeNodeChanged(quint64);
 public slots:
   void setActiveTree(quint64);
-private:
+  void actNewTree();
+  void actDeleteTree();
+  void actShowAll();
+  void actHideAll();
+public:
   class Ui_TreeView *ui;
+private:
   class TreeModel *tm;
 };
 

@@ -4,26 +4,51 @@
 #include "ui_TreeView.h"
 #include "TreeModel.h"
 #include <QDebug>
+#include <QMessageBox>
 
 TreeView::TreeView(QWidget *parent): QWidget(parent) {
   tm = 0;
   ui = new Ui_TreeView();
   ui->setupUi(this);
-  ui->add->setDefaultAction(new QAction("+"));
-  ui->del->setDefaultAction(new QAction("–"));
-  connect(ui->add, &QToolButton::triggered,
-          [this]() { if (!tm) return;
-            tm->newTree();
-            ui->table->selectRow(tm->rowCount()-1);
-          });
-  connect(ui->del, &QToolButton::triggered,
-          [this]() { if (!tm) return;
-            tm->deleteTree(tm->database()->selectedTree());
-          });
 }
 
 TreeView::~TreeView() {
   delete ui;
+}
+
+void TreeView::actNewTree() {
+  if (!tm) return;
+  tm->newTree();
+  ui->table->selectRow(tm->rowCount()-1);
+}
+
+void TreeView::actDeleteTree() {
+  if (!tm)
+    return;
+  quint64 tid = tm->database()->selectedTree();
+  if (!tid)
+    return;
+  QString name = tm->database()->simpleQuery("select tname from trees"
+                                             " where tid==:a", tid)
+    .toString();
+  auto ans = QMessageBox::question(0, "Delete tree?",
+                                   "Deleting a tree cannot be undone."
+                                   " All tracing work on the tree named\n\n"
+                                   "     “" + name + "”\n\n"
+                                   "will be"
+                                   " irretrievably lost."
+                                   " Are you sure you want to proceed?");
+  if (ans == QMessageBox::Yes)
+    tm->deleteTree(tid);
+}
+
+void TreeView::actShowAll() {
+  tm->setAllVisible(true);
+
+}
+
+void TreeView::actHideAll() {
+  tm->setAllVisible(false);
 }
 
 void TreeView::updateAfterChangingDB() {

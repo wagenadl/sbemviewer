@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1261</width>
+    <width>1523</width>
     <height>939</height>
    </rect>
   </property>
@@ -19,13 +19,13 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1261</width>
+     <width>1523</width>
      <height>39</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>&amp;File</string>
     </property>
     <addaction name="actionCreate_DB"/>
     <addaction name="actionOpen_DB"/>
@@ -34,11 +34,50 @@
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>Help</string>
+     <string>&amp;Help</string>
     </property>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>&amp;Edit</string>
+    </property>
+    <widget class="QMenu" name="menuChange_node_type">
+     <property name="title">
+      <string>Change node &amp;type</string>
+     </property>
+     <addaction name="actionTypeTreeNode"/>
+     <addaction name="actionTypePresynapticTerminal"/>
+     <addaction name="actionTypePostsynapticDensity"/>
+     <addaction name="actionTypeSoma"/>
+     <addaction name="actionTypeNeuropilExitPoint"/>
+    </widget>
+    <addaction name="actionNewTree"/>
+    <addaction name="actionDeleteTree"/>
+    <addaction name="separator"/>
+    <addaction name="menuChange_node_type"/>
+    <addaction name="actionDeleteNode"/>
+    <addaction name="actionConnectNodes"/>
+    <addaction name="actionDisconnectNodes"/>
+    <addaction name="actionEditMemo"/>
+    <addaction name="separator"/>
+    <addaction name="actionConnectTerminals"/>
+    <addaction name="actionDissolveSynapse"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>&amp;View</string>
+    </property>
+    <addaction name="actionShowTrees"/>
+    <addaction name="actionHideTrees"/>
+    <addaction name="separator"/>
+    <addaction name="actionRestoreDialogs"/>
+    <addaction name="separator"/>
+    <addaction name="actionCenterSelectedNode"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QDockWidget" name="navdock">
@@ -88,22 +127,146 @@
   </widget>
   <action name="actionQuit">
    <property name="text">
-    <string>Quit</string>
+    <string>&amp;Quit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::ApplicationShortcut</enum>
    </property>
   </action>
   <action name="actionAbout">
    <property name="text">
-    <string>About</string>
+    <string>&amp;About</string>
    </property>
   </action>
   <action name="actionOpen_DB">
    <property name="text">
-    <string>Open DB...</string>
+    <string>&amp;Open DB...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="actionCreate_DB">
    <property name="text">
-    <string>Create DB...</string>
+    <string>&amp;Create DB...</string>
+   </property>
+  </action>
+  <action name="actionTypeTreeNode">
+   <property name="text">
+    <string>Tree &amp;node</string>
+   </property>
+  </action>
+  <action name="actionTypePresynapticTerminal">
+   <property name="text">
+    <string>Presynaptic &amp;terminal</string>
+   </property>
+  </action>
+  <action name="actionTypePostsynapticDensity">
+   <property name="text">
+    <string>Postsynaptic &amp;density</string>
+   </property>
+  </action>
+  <action name="actionTypeSoma">
+   <property name="text">
+    <string>&amp;Soma</string>
+   </property>
+  </action>
+  <action name="actionTypeNeuropilExitPoint">
+   <property name="text">
+    <string>Neuropil &amp;exit point</string>
+   </property>
+  </action>
+  <action name="actionConnectNodes">
+   <property name="text">
+    <string>&amp;Join trees (connect nodes)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+J</string>
+   </property>
+  </action>
+  <action name="actionDeleteNode">
+   <property name="text">
+    <string>&amp;Delete node</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
+   </property>
+  </action>
+  <action name="actionDisconnectNodes">
+   <property name="text">
+    <string>&amp;Split trees (disconnect nodes)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+J</string>
+   </property>
+  </action>
+  <action name="actionConnectTerminals">
+   <property name="text">
+    <string>&amp;Connect terminals (create synapse)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionDissolveSynapse">
+   <property name="text">
+    <string>D&amp;issolve synapse</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="actionNewTree">
+   <property name="text">
+    <string>&amp;New tree</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionDeleteTree">
+   <property name="text">
+    <string>Delete tree</string>
+   </property>
+  </action>
+  <action name="actionShowTrees">
+   <property name="text">
+    <string>&amp;Show all trees</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+V</string>
+   </property>
+  </action>
+  <action name="actionRestoreDialogs">
+   <property name="text">
+    <string>&amp;Restore dialogs</string>
+   </property>
+  </action>
+  <action name="actionHideTrees">
+   <property name="text">
+    <string>&amp;Hide all trees</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+V</string>
+   </property>
+  </action>
+  <action name="actionEditMemo">
+   <property name="text">
+    <string>Edit &amp;memo</string>
+   </property>
+   <property name="shortcut">
+    <string>M</string>
+   </property>
+  </action>
+  <action name="actionCenterSelectedNode">
+   <property name="text">
+    <string>&amp;Center on selected node</string>
+   </property>
+   <property name="shortcut">
+    <string/>
    </property>
   </action>
  </widget>

@@ -35,6 +35,14 @@ public:
 public slots:
   void setActiveTree(quint64); // resets active node to null
   void setActiveNode(quint64); // if non-null, also sets active tree
+  void actEditMemo();
+  void actSetNodeType(SBEMDB::NodeType);
+  void actDeleteNode();
+  void actDisconnectNodes();
+  void actConnectNodes();
+  void actConnectTerminals();
+  void actDissolveSynapse();
+  void actCenterNode();
 signals:
   void otherTreePressed(quint64 tid, quint64 nid);
   void treeTableAltered();
@@ -44,9 +52,6 @@ private:
   void drawOtherTrees(QPainter *p, ViewInfo const &vi);
   void drawAuxNid(QPainter *p, ViewInfo const &vi);
   bool plainLeftPress(Point const &p, int a);
-  void deleteSelectedNode();
-  void deleteSelectedConnection();
-  void insertSelectedConnection();
   void drawCons(QPainter *p, ViewInfo const &vi,
                 QVector<SBEMDB::NodeCon> const &cons,
                 QColor (*colorfn)(int));

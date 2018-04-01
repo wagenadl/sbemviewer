@@ -172,3 +172,10 @@ void TreeModel::beginReset() {
 void TreeModel::concludeReset() {
   endResetModel();
 }
+
+void TreeModel::setAllVisible(bool v) {
+  db->query("update trees set visible=:a", v);
+  emit visibilityChanged();
+  emit dataChanged(index(0, Col_Visible),
+                  index(rowCount()-1, Col_Visible));
+}
