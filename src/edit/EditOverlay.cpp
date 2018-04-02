@@ -163,7 +163,6 @@ void EditOverlay::drawSynapses(QPainter *p, ViewInfo const &vi) {
   QVector<quint64> sids;
   while (q.next())
     sids << q.value(0).toULongLong();
-  qDebug() << "drawsynapses" << sids;
 
   for (quint64 sid: sids) {
     QVector<Point> nodepos;
@@ -179,8 +178,6 @@ void EditOverlay::drawSynapses(QPainter *p, ViewInfo const &vi) {
     }
     Miniball ball(nodepos);
     int dz = ball.center().z - vi.z;
-    qDebug() << "nodes" << nodepos;
-    qDebug() << "center" << ball.center() << " radius" << ball.radius();
 
     QColor c = isActive ? nodeColor(dz) : otherNodeColor(dz);
     p->setPen(QPen(c, 5, Qt::DotLine));

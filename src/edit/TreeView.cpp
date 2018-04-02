@@ -31,15 +31,21 @@ void TreeView::actDeleteTree() {
   QString name = tm->database()->simpleQuery("select tname from trees"
                                              " where tid==:a", tid)
     .toString();
-  auto ans = QMessageBox::question(0, "Delete tree?",
-                                   "Deleting a tree cannot be undone."
-                                   " All tracing work on the tree named\n\n"
-                                   "     “" + name + "”\n\n"
-                                   "will be"
-                                   " irretrievably lost."
-                                   " Are you sure you want to proceed?");
-  if (ans == QMessageBox::Yes)
-    tm->deleteTree(tid);
+  int n = tm->database()->simpleQuery("select count(1) from nodes"
+                                      " where tid==:a", tid).toInt();
+  if (n>=10) {
+    auto ans = QMessageBox::question(0, "Delete tree?",
+                                     "Deleting a tree cannot be undone."
+                                     " The tree named\n\n"
+                                     "     “" + name + "”\n\n"
+                                     "contains " + QString::number(n) +
+                                     " nodes which will be"
+                                     " irretrievably lost."
+                                     " Are you sure you want to proceed?");
+    if (ans != QMessageBox::Yes)
+      return;
+  }
+  tm->deleteTree(tid);
 }
 
 void TreeView::actShowAll() {

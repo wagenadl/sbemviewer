@@ -159,8 +159,11 @@ bool TreeModel::deleteTree(quint64 tid) {
     return false;
   int n0 = db->simpleQuery("select count(1) from trees where tid<:a",
                            tid).toInt();
-  beginRemoveRows(QModelIndex(), n0, n0);
+  db->begin();
+  db->query("delete from nodes where tid==:a", tid);
   db->query("delete from trees where tid==:a", tid);
+  beginRemoveRows(QModelIndex(), n0, n0);
+  db->commit();
   endRemoveRows();
   return true;
 }
