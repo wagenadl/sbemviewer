@@ -6,11 +6,11 @@ Settings::Settings(QObject *parent):
   QSettings("Caltech-WagenaarLab", "SBEMViewer", parent) {
 }
 
-QVariant Settings::get(QString const &key, QVariant const &dflt) {
+QVariant Settings::get(QString const &key, QVariant const &dflt) const {
   return QSettings::value(key, dflt);
 }
 
-bool Settings::contains(QString const &key) {
+bool Settings::contains(QString const &key) const {
   return QSettings::contains(key);
 }
 

@@ -12,6 +12,7 @@
 #include "TreeView.h"
 #include "EditOverlay.h"
 #include "Mode.h"
+#include  "Settings.h"
 
 #include <QDoubleValidator>
 #include <QDebug>
@@ -103,6 +104,8 @@ public:
       if (n.nid)
         ui->tileviewer->setPosition(n.x, n.y, n.z);
     }
+    Settings settings;
+    settings.set("database", fn);
   }
   void createDB() {
     QString fn = QFileDialog::getSaveFileName(0, "Create Database...", "",
@@ -375,4 +378,12 @@ void MainWindow::resizeEvent(QResizeEvent *e) {
 
 void MainWindow::openDB(QString fn) {
   d->openDB(fn);
+}
+
+SBEMDB *MainWindow::database() const {
+  return d->db;
+}
+
+TileViewer *MainWindow::tileViewer() const {
+  return ui->tileviewer;
 }
