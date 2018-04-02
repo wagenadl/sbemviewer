@@ -8,6 +8,7 @@ INCLUDEPATH += main
 INCLUDEPATH += view
 INCLUDEPATH += db
 INCLUDEPATH += edit
+INCLUDEPATH += miniball
 QT += gui widgets network sql
 CONFIG += debug_and_release
 
@@ -33,6 +34,8 @@ SOURCES += db/SBEMDB.cpp
 HEADERS +=  edit/TreeModel.h   edit/TreeView.h   edit/EditOverlay.h
 SOURCES +=  edit/TreeModel.cpp edit/TreeView.cpp edit/EditOverlay.cpp
 FORMS   += edit/TreeView.ui
+HEADERS += miniball/Miniball.h   miniball/SmallestEnclosingCircle.hpp
+SOURCES += miniball/Miniball.cpp miniball/SmallestEnclosingCircle.cpp
 
 RESOURCES += db/sbemdb.qrc
 LIBS += -lopencv_core -lopencv_imgcodecs

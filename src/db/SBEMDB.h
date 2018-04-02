@@ -39,13 +39,7 @@ public:
     Tag(quint64 tagid=0, quint64 nid=0, QString tag=""):
       tagid(tagid), nid(nid), tag(tag) {}
   };
-  struct SimpleSynapse {
-    quint64 sid;
-    quint64 prenid;
-    quint64 postnid;
-    SimpleSynapse(quint64 sid=0, quint64 prenid=0, quint64 postnid=0):
-      sid(sid), prenid(prenid), postnid(postnid) {}
-  };
+
   struct NodeCon {
     quint64 ncid;
     quint64 nid1;
@@ -53,9 +47,9 @@ public:
     NodeCon(quint64 ncid=0, quint64 nid1=0, quint64 nid2=0):
       ncid(ncid), nid1(nid1), nid2(nid2) {}
   };
-  struct PolySynapse {
+  struct Synapse {
     quint64 sid;
-    PolySynapse(quint64 sid=0): sid(sid) {}
+    Synapse(quint64 sid=0): sid(sid) {}
   };
   struct SynCon {
     quint64 scid;
@@ -64,20 +58,18 @@ public:
     SynCon(quint64 scid=0, quint64 sid=0, quint64 nid=0):
       scid(scid), sid(sid), nid(nid) {}
   };
-  struct Synapse {
+  struct FullSynapse {
     quint64 sid;
     QMap<quint64, quint64> pre; // keys are scid or 0, values are nids
     QMap<quint64, quint64> post; // ditto
-    Synapse(quint64 sid=0): sid(sid) {}    
+    FullSynapse(quint64 sid=0): sid(sid) {}    
   };
 public:
   SBEMDB(QString id="");
   static void create(QString fn);
 public:
-  SimpleSynapse simpleSynapse(quint64 sid) const;
-  PolySynapse polySynapse(quint64 sid) const;
-  SynCon preSynCon(quint64 scid) const;
-  SynCon postSynCon(quint64 scid) const;
+  Synapse synapse(quint64 sid) const;
+  SynCon synCon(quint64 scid) const;
   Tree tree(quint64 tid) const;
   Node node(quint64 nid) const;
   Tag tag(quint64 tagid) const;
@@ -87,18 +79,16 @@ public:
   void selectNode(quint64 nid);
   quint64 selectedNode() const;
 public:
-  QVector<SimpleSynapse> simpleSynapses(QSqlQuery q) const;
-  /* q must be of the form "select * from simplesynapses" followed by
+  QVector<Synapse> synapses(QSqlQuery q) const;
+  /* q must be of the form "select * from synapses" followed by
      WHERE and/or JOIN clauses. */
-  QVector<PolySynapse> polySynapses(QSqlQuery q) const;
-  QVector<SynCon> preSynCons(QSqlQuery q) const;
-  QVector<SynCon> postSynCons(QSqlQuery q) const;
+  QVector<SynCon> synCons(QSqlQuery q) const;
   QVector<Tree> trees(QSqlQuery q) const;
   QVector<Node> nodes(QSqlQuery q) const;
   QVector<Tag> tags(QSqlQuery q) const;
   QVector<NodeCon> nodeCons(QSqlQuery q) const;
 public:
-  Synapse synapse(quint64 sid) const;
+  FullSynapse synapseDetails(quint64 sid) const;
   Node nodeAt(class Point const &p, int xytol, int ztol, quint64 tid) const;
 
 };

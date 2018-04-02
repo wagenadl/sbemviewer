@@ -6,6 +6,7 @@
 #include <QKeyEvent>
 #include <QInputDialog>
 #include "TileViewer.h"
+#include "Miniball.h"
 
 EditOverlay::EditOverlay(SBEMDB *db, QWidget *parent):
   Overlay(parent), db(db) {
@@ -111,6 +112,7 @@ void EditOverlay::paint(QPainter *p,
 			QRect const &, class ViewInfo const &vi) {
   if (!db->isOpen())
     return;
+  drawSynapses(p, vi);
   drawOtherTrees(p, vi);
   drawActiveTree(p, vi);
   drawAuxNid(p, vi);
@@ -143,6 +145,50 @@ void EditOverlay::drawTags(QPainter *p, ViewInfo const &vi) {
       QPoint pc((x - vi.xl)>>vi.a, (y - vi.yt)>>vi.a);
       p->drawText(pc + QPoint(sr, -sr), tag);
     }
+  }
+}
+
+void EditOverlay::drawSynapses(QPainter *p, ViewInfo const &vi) {
+  int sr = nodeScreenRadius(vi.a);
+  int nr = nodeSBEMRadius(vi.a);
+
+  QSqlQuery q = db->query("select distinct sid from syncons"
+                          " natural join nodes"
+                          " where z>=:a and z<=:b"
+                          " and x>=:c and x<:d"
+                          " and y>=:e and y<:f",
+                          vi.z - ZTOLERANCE, vi.z + ZTOLERANCE,
+                          vi.xl - nr, vi.xr + nr,
+                          vi.yt - nr, vi.yb + nr);
+  QVector<quint64> sids;
+  while (q.next())
+    sids << q.value(0).toULongLong();
+  qDebug() << "drawsynapses" << sids;
+
+  for (quint64 sid: sids) {
+    QVector<Point> nodepos;
+    bool isActive = false;
+    q = db->query("select x,y,z,tid from nodes natural join syncons"
+                  " where sid==:a", sid);
+    while (q.next()) {
+      nodepos << Point(q.value(0).toInt(),
+                       q.value(1).toInt(),
+                       q.value(2).toInt());
+      if (q.value(3).toULongLong() == tid)
+        isActive = true;
+    }
+    Miniball ball(nodepos);
+    int dz = ball.center().z - vi.z;
+    qDebug() << "nodes" << nodepos;
+    qDebug() << "center" << ball.center() << " radius" << ball.radius();
+
+    QColor c = isActive ? nodeColor(dz) : otherNodeColor(dz);
+    p->setPen(QPen(c, 5, Qt::DotLine));
+    p->setBrush(Qt::NoBrush);
+    int r = (ball.radius()>>vi.a) + sr/2;
+    p->drawEllipse(QPoint((ball.center().x - vi.xl)>>vi.a,
+                          (ball.center().y - vi.yt)>>vi.a),
+                   r, r);
   }
 }
 
@@ -281,9 +327,7 @@ int EditOverlay::nodeSBEMRadius(int a) {
 bool EditOverlay::mousePress(Point const &p,
 			     Qt::MouseButton b, Qt::KeyboardModifiers m,
 			     int a) {
-  qDebug() << "EditOverlay::press" << p << b << m << a;
   if (tid==0) {
-    qDebug() << "no tree";
     return false;
   }
   presspt = p;
@@ -433,6 +477,9 @@ void EditOverlay::actEditMemo() {
 
 void EditOverlay::actSetNodeType(SBEMDB::NodeType typ) {
   if (nid) {
+    // Probably we should check that a synaptic terminal isn't being
+    // changed into something else while it is still part of a synapse.
+    // For now, this issue is not critical.
     db->query("update nodes set typ=:a where nid==:b",
               typ, nid);
     forceUpdate();
@@ -574,11 +621,60 @@ void EditOverlay::actConnectNodes() {
 }
 
 void EditOverlay::actConnectTerminals() {
-  qDebug() << "connect terminals";
+  // Connect nid and aux_nid to the same synapse.
+  // In future, this could potentially connect nid to nearby synapse
+  // even if there is no aux_nid.
+  if (!nid || !aux_nid)
+    return;
+
+  SBEMDB::Node n1 = db->node(nid);
+  SBEMDB::Node n2 = db->node(nid);
+  if (!(n1.typ==SBEMDB::PresynTerm || n1.typ==SBEMDB::PostsynTerm)
+      || !(n2.typ==SBEMDB::PresynTerm || n2.typ==SBEMDB::PostsynTerm)) {
+        // not genuinely plausible partners
+    qDebug() << "Selected node are not synaptic terminals";
+    return;
+  }
+
+  // Let's see if a synapse already exists
+  QSqlQuery q = db->query("select sid from syncons where nid==:a", nid);
+  quint64 sid = q.next() ? q.value(0).toULongLong() : 0;
+  q = db->query("select sid from syncons where nid==:a", aux_nid);
+  quint64 aux_sid = q.next() ? q.value(0).toULongLong() : 0;
+
+  if (sid==0 && aux_sid==0) {
+    // must make a brand new synapse
+    db->begin();
+    sid = db->query("insert into synapses values ( null )")
+      .lastInsertId().toULongLong();
+    db->query("insert into syncons ( sid, nid ) values (:a, :b)", sid, nid);
+    db->query("insert into syncons ( sid, nid ) values (:a, :b)", sid, aux_nid);
+    db->commit();
+  } else if (sid==0) {
+    // must insert nid into existing synapse
+    db->query("insert into syncons ( sid, nid ) values (:a, :b)", aux_sid, nid);
+  } else if (aux_sid==0) {
+    // must insert aux_nid into existing synapse
+    db->query("insert into syncons ( sid, nid ) values (:a, :b)", sid, aux_nid);
+  } else {
+    // must merge synapses
+    db->begin();
+    db->query("update syncons set sid=:a where sid==:b", sid, aux_sid);
+    db->query("delete from synapses where sid==:a", aux_sid);
+    db->commit();
+  }
+  forceUpdate();
 }
 
 void EditOverlay::actDissolveSynapse() {
-  qDebug() << "dissolve synapse";
+  if (!nid)
+    return;
+  QSqlQuery q = db->query("select sid from syncons where nid==:a", nid);
+  if (!q.next())
+    return;
+  quint64 sid = q.value(0).toULongLong();
+  db->query("delete from synapses where sid==:a", sid);
+  forceUpdate();
 }
 
 void EditOverlay::actCenterNode() {

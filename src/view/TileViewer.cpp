@@ -73,7 +73,6 @@ int TileViewer::visibleYRange() const {
 }
 
 void TileViewer::stepX(int dx) {
-  qDebug() << "stepx" << dx;
   x_ += dx;
   enforceX();
   reportView();
@@ -288,7 +287,6 @@ void TileViewer::resizeEvent(QResizeEvent *) {
 
 void TileViewer::mousePressEvent(QMouseEvent *e) {
   e->accept();
-  qDebug() << "mouse press" << e->pos() << e->button() << e->modifiers();
   if (mode!=Mode_View && !(e->modifiers() & Qt::ControlModifier))
     for (auto *o: overlays)
       if (o->mousePress(mapToSBEM(e->pos()), e->button(), e->modifiers(), a))
@@ -329,8 +327,6 @@ Point TileViewer::mapToSBEM(QPoint p) const {
 }
 
 void TileViewer::reportView() {
-  qDebug() << "reportview" << x_ + (width()<<a)/2 << y_ + (height()<<a)/2
-           << z_;
   emit viewChanged(x_ + (width()<<a)/2,
                    y_ + (height()<<a)/2,
                    z_,
@@ -472,7 +468,6 @@ void TileViewer::enforceY() {
 void TileViewer::enforceZ() {
   int z0 = info->contains("z0") ? info->integer("z0") : 0;
   int z1 = info->contains("z1") ? info->integer("z1") : 99000;
-  qDebug() << "enforcez" << z0 << z1 << z_;
   if (z_<z0)
     z_ = z0;
   

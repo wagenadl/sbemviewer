@@ -26,31 +26,17 @@ void SBEMDB::create(QString fn) {
   db.close();
 }
 
-SBEMDB::SimpleSynapse SBEMDB::simpleSynapse(quint64 sid) const {
+SBEMDB::Synapse SBEMDB::synapse(quint64 sid) const {
   auto lst
-    = simpleSynapses(constQuery("select * from simplesynapses where sid==:a",
+    = synapses(constQuery("select * from synapses where sid==:a",
                                 sid));
-  return lst.isEmpty() ? SimpleSynapse() : lst.first();
+  return lst.isEmpty() ? Synapse() : lst.first();
 }
 
-SBEMDB::PolySynapse SBEMDB::polySynapse(quint64 sid) const {
+SBEMDB::SynCon SBEMDB::synCon(quint64 scid) const {
   auto lst
-    = polySynapses(constQuery("select * from polysynapses where sid==:a",
-                              sid));
-  return lst.isEmpty() ? PolySynapse() : lst.first();
-}  
-
-SBEMDB::SynCon SBEMDB::preSynCon(quint64 scid) const {
-  auto lst
-    = preSynCons(constQuery("select * from presyncon where scid==:a",
+    = synCons(constQuery("select * from syncon where scid==:a",
                             scid));
-  return lst.isEmpty() ? SynCon() : lst.first();
-}
-
-SBEMDB::SynCon SBEMDB::postSynCon(quint64 scid) const {
-  auto lst
-    = postSynCons(constQuery("select * from postsyncon where scid==:a",
-                             scid));
   return lst.isEmpty() ? SynCon() : lst.first();
 }
 
@@ -82,33 +68,14 @@ SBEMDB::NodeCon SBEMDB::nodeCon(quint64 ncid) const {
   return lst.isEmpty() ? NodeCon() : lst.first();
 }
 
-QVector<SBEMDB::SimpleSynapse> SBEMDB::simpleSynapses(QSqlQuery q) const {
-  QVector<SimpleSynapse> lst;
-  while (q.next()) {
-    lst << SimpleSynapse{q.value(0).toULongLong(),
-        q.value(1).toULongLong(), q.value(2).toULongLong()};
-  }
+QVector<SBEMDB::Synapse> SBEMDB::synapses(QSqlQuery q) const {
+  QVector<Synapse> lst;
+  while (q.next()) 
+    lst << Synapse{q.value(0).toULongLong()};
   return lst;
 }
 
-QVector<SBEMDB::PolySynapse> SBEMDB::polySynapses(QSqlQuery q) const {
-  QVector<PolySynapse> lst;
-  while (q.next()) {
-    lst << PolySynapse{q.value(0).toULongLong()};
-  }
-  return lst;
-}
-
-QVector<SBEMDB::SynCon> SBEMDB::preSynCons(QSqlQuery q) const {
-  QVector<SynCon> lst;
-  while (q.next()) {
-    lst << SynCon{q.value(0).toULongLong(),
-        q.value(1).toULongLong(), q.value(2).toULongLong()};
-  }
-  return lst;
-}
-
-QVector<SBEMDB::SynCon> SBEMDB::postSynCons(QSqlQuery q) const {
+QVector<SBEMDB::SynCon> SBEMDB::synCons(QSqlQuery q) const {
   QVector<SynCon> lst;
   while (q.next()) {
     lst << SynCon{q.value(0).toULongLong(),
@@ -155,23 +122,25 @@ QVector<SBEMDB::NodeCon> SBEMDB::nodeCons(QSqlQuery q) const {
   return lst;
 }
 
-SBEMDB::Synapse SBEMDB::synapse(quint64 sid) const {
-  SBEMDB::Synapse res;
-  QSqlQuery q = constQuery("select * from simplesynapses where sid=:a", sid);
-  if (q.next()) {
-    res.sid = q.value(0).toULongLong();
-    res.pre[0] = q.value(1).toULongLong();
-    res.post[0] = q.value(2).toULongLong();
+SBEMDB::FullSynapse SBEMDB::synapseDetails(quint64 sid) const {
+  SBEMDB::FullSynapse res;
+  QSqlQuery q = constQuery("select * from synapses where sid=:a", sid);
+  if (!q.next())
     return res;
+
+  res.sid = q.value(0).toULongLong();
+
+  q = constQuery("select scid, nid, typ from syncons"
+                 " natural join nodes where sid==:a", sid);
+  while (q.next()) {
+    quint64 scid = q.value(0).toULongLong();
+    quint64 nid = q.value(1).toULongLong();
+    NodeType typ = (NodeType)(q.value(2).toInt());
+    if (typ==PresynTerm)
+      res.pre[scid] = nid;
+    else if (typ==PostsynTerm)
+      res.post[scid] = nid;
   }
-  if (!constQuery("select * from polysynapses where sid=:a", sid).next())
-    return res;
-  q = constQuery("select * from presyncon where sid==:a", sid);
-  while (q.next())
-    res.pre[q.value(0).toULongLong()] = q.value(2).toULongLong();
-  q = constQuery("select * from postsyncon where sid==:a", sid);
-  while (q.next())
-    res.post[q.value(0).toULongLong()] = q.value(2).toULongLong();
   return res;
 }
 

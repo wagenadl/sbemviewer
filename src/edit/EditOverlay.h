@@ -51,6 +51,7 @@ private:
   void drawActiveTree(QPainter *p, ViewInfo const &vi);
   void drawOtherTrees(QPainter *p, ViewInfo const &vi);
   void drawAuxNid(QPainter *p, ViewInfo const &vi);
+  void drawSynapses(QPainter *p, ViewInfo const &vi);
   bool plainLeftPress(Point const &p, int a);
   void drawCons(QPainter *p, ViewInfo const &vi,
                 QVector<SBEMDB::NodeCon> const &cons,

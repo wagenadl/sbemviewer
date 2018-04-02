@@ -32,17 +32,6 @@ create table tags (
                on delete cascade
                on update cascade );
 
-create table simplesynapses (
-       -- Straightforward one to one synapses
-       sid integer primary key,
-       prenid integer,
-       postnid integer,
-       foreign key(prenid) references nodes(nid)
-       	       on delete cascade,
-       foreign key(postnid) references nodes(nid)
-       	       on delete cascade
-       );
-
 create table nodecons (
        -- Part of a neuronal process
        ncid integer primary key,
@@ -55,32 +44,19 @@ create table nodecons (
        	       on delete cascade
        	       on update cascade );
 
-create table polysynapses (
-       -- Polyadic synapses
+create table synapses (
        sid integer primary key
        );
 
-create table presyncon (
-       -- Presynaptic terminals for polyadic synapses
+create table syncons (
+       -- Association of pre- and postsynaptic terminals with synapses
        scid integer primary key,
        sid integer,
-       prenid integer,
-       foreign key(sid) references polysynapses(sid)
+       nid integer,
+       foreign key(sid) references synapses(sid)
        	       on delete cascade
        	       on update cascade,
-       foreign key(prenid) references nodes(nid)
-       	       on delete cascade
-       	       on update cascade );
-
-create table postsyncon (
-       -- Postsynaptic terminals for polyadic synapses
-       scid integer primary key,
-       sid integer,
-       postnid integer,
-       foreign key(sid) references polysynapses(sid)
-       	       on delete cascade
-       	       on update cascade,
-       foreign key(postnid) references nodes(nid)
+       foreign key(nid) references nodes(nid)
        	       on delete cascade
        	       on update cascade );
 
