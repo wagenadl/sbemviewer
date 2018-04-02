@@ -7,6 +7,7 @@
 #include <QDebug>
 #include <QFileInfo>
 #include "Settings.h"
+#include "TileViewer.h"
 
 int main(int argc, char **argv) {
   Settings settings;
@@ -20,12 +21,20 @@ int main(int argc, char **argv) {
   mw.show();
   if (cleanexit) {
     TileViewer *tv = mw.tileViewer();
-    
+    tv->setPosition(settings.get("x", tv->x()).toInt(),
+                    settings.get("y", tv->y()).toInt(),
+                    settings.get("z", tv->z()).toInt());
+    tv->setScale(settings.get("a", tv->scale()).toInt());
     QString dbfn = settings.get("database", "").toString();
     if (!dbfn.isEmpty() && QFileInfo::exists(dbfn))
       mw.openDB(dbfn);
   }
   app.exec();
+  TileViewer *tv = mw.tileViewer();
+  settings.set("x", tv->x());
+  settings.set("y", tv->y());
+  settings.set("z", tv->z());
+  settings.set("a", tv->scale());
   settings.set("cleanexit", true);
   return 0;
 }
