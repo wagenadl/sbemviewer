@@ -6,8 +6,10 @@
 #include <QApplication>
 #include <QDebug>
 #include <QFileInfo>
+#include "Settings.h"
 
 int main(int argc, char **argv) {
+  Settings settings;
   QString server = "http://leechem.caltech.edu:9090";
   QApplication app(argc, argv);
   TileCache cache(server + "/tile");
