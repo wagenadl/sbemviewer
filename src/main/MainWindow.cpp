@@ -18,15 +18,20 @@
 #include <QDebug>
 #include <QFileDialog>
 #include <cmath>
+#include <QTimer>
 
 class MWData {
 public:
+  void timeout();
+public:
   MWData(MainWindow *mw, ServerInfo *info, Ui_MainWindow *ui):
     mw(mw), info(info), ui(ui) {
+    timer = new QTimer(mw);
     db = new SBEMDB;
     tm = new TreeModel(db);
     eo = new EditOverlay(db, ui->tileviewer);
     ui->tileviewer->addOverlay(eo);
+    QObject::connect(timer, &QTimer::timeout, [this]() { timeout(); });
   }
   ~MWData() {
     db->close();
@@ -41,6 +46,7 @@ public:
   SBEMDB *db; // we create
   TreeModel *tm; // we create
   EditOverlay *eo; // we create
+  QTimer *timer;
 public:
   double xscale() {
     return info->contains("dx") ? info->real("dx") : 0.0055;
@@ -124,7 +130,22 @@ public:
       return;
     openDB(fn);
   }
+  void toggleTimer() {
+    if (ui->nav->ui->autoupdate->isChecked()) {
+      timer->setInterval(5000);
+      timer->start();
+      timeout();
+    } else {
+      timer->stop();
+    }
+  }
 };
+
+void MWData::timeout() {
+  qDebug() << "timeout";
+  
+
+}
 
 MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   ui = new Ui_MainWindow;
@@ -301,6 +322,8 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
             qDebug() << "set z" << z;
             if (ok) ui->tileviewer->setZ(z/d->zscale());
           });
+  connect(ui->nav->ui->autoupdate, &QPushButton::toggled,
+          [this]() { d->toggleTimer(); });
 
   connect(ui->curves->ui->black, &QSlider::sliderMoved,
           [this](int v) {
