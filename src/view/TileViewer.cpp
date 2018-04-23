@@ -432,6 +432,7 @@ void TileViewer::wheelEvent(QWheelEvent *e) {
     enforceA();
     x_ = xc - (e->x()<<a);
     y_ = yc - (e->y()<<a);
+    emit scaleChanged(a);
   } else {
     if (step>0) 
       z_ += (e->modifiers() & Qt::ShiftModifier) ? 10 : 1;

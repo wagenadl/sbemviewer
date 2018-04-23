@@ -12,8 +12,9 @@
 #include "TreeView.h"
 #include "EditOverlay.h"
 #include "Mode.h"
-#include  "Settings.h"
+#include "Settings.h"
 
+#include <QTime>
 #include <QDoubleValidator>
 #include <QDebug>
 #include <QFileDialog>
@@ -143,8 +144,13 @@ public:
 
 void MWData::timeout() {
   qDebug() << "timeout";
-  
-
+  int z = ui->tileviewer->z();
+  ui->tileviewer->setZ(1000000);
+  if (ui->tileviewer->z() != z) {
+    // updated
+    QTime now = QTime::currentTime();
+    ui->nav->ui->updateinfo->setText("Updated: " + now.toString());
+  }
 }
 
 MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
@@ -244,7 +250,7 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   connect(ui->nav->ui->nextslice3, &QToolButton::triggered,
           [this]() { ui->tileviewer->stepZ(100); });
   connect(ui->nav->ui->lastslice, &QToolButton::triggered,
-          [this]() { ui->tileviewer->setZ(100000); });
+          [this]() { ui->tileviewer->setZ(1000000); });
   connect(ui->nav->ui->prevslice, &QToolButton::triggered,
           [this]() { ui->tileviewer->stepZ(-1); });
   connect(ui->nav->ui->prevslice2, &QToolButton::triggered,
