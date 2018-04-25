@@ -58,7 +58,7 @@ void EditOverlay::drawCons(QPainter *p, ViewInfo const &vi,
     auto n1 = db->node(c.nid1);
     auto n2 = db->node(c.nid2);
     int dz = n1.z + n2.z - 2*vi.z;
-    p->setPen(QPen(colorfn(dz), 5));
+    p->setPen(QPen(colorfn(dz), 3));
     p->drawLine(QPoint((n1.x - vi.xl)>>vi.a, (n1.y - vi.yt)>>vi.a),
                 QPoint((n2.x - vi.xl)>>vi.a, (n2.y - vi.yt)>>vi.a));
   }
@@ -67,8 +67,8 @@ void EditOverlay::drawCons(QPainter *p, ViewInfo const &vi,
 static void drawNode(QPainter *p, ViewInfo const &vi, int r,
                      SBEMDB::Node const &n) {
   QPoint pc((n.x - vi.xl)>>vi.a, (n.y - vi.yt)>>vi.a);
-  QPoint rx(r, 0);
-  QPoint ry(0, r);
+  QPoint rx(2*r, 0);
+  QPoint ry(0, 2*r);
   switch (n.typ) {
   case SBEMDB::TreeNode:
     p->drawEllipse(pc, r, r);
@@ -83,7 +83,7 @@ static void drawNode(QPainter *p, ViewInfo const &vi, int r,
     p->drawEllipse(pc, 3*r, 3*r);
     break;
   case SBEMDB::ExitPoint:
-    p->drawRect(QRect(pc-2*rx-2*ry, pc+2*rx+2*ry));
+    p->drawRect(QRect(pc-rx-ry, pc+rx+ry));
     break;
   default:
     break;
@@ -310,7 +310,7 @@ void EditOverlay::drawActiveTree(QPainter *p, ViewInfo const &vi) {
 }
 
 int EditOverlay::nodeScreenRadius(int) {
-  return 12;
+  return 4;
   //  int r = 20 >> a;
   //if (r<5)
   //  r = 5;
