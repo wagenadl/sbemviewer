@@ -36,6 +36,17 @@ void TileCacheData::clean() {
   }
 }
 
+void TileCache::notifyNewSliceAvailable() {
+  // bluntly forget all empty images so they will be requested anew
+  for (TileID id: d->tiles.keys()) {
+    if (d->tiles[id].isNull()) {
+      d->tiles.remove(id);
+      d->age.remove(id);
+    }
+  }
+}
+  
+
 void TileCacheData::receiveQNR(QNetworkReply *reply) {
   if (urlmap.contains(reply->url())) {
     TileID id = urlmap[reply->url()];
@@ -48,6 +59,7 @@ void TileCacheData::receiveQNR(QNetworkReply *reply) {
       // could be good
       QByteArray data = reply->read(1000*1000);
       if (data.isEmpty()) {
+	qDebug() << "No image from" << reply->url().toString();
         tiles[id] = QImage();
         age[id] = ++t;
       } else {
@@ -59,6 +71,7 @@ void TileCacheData::receiveQNR(QNetworkReply *reply) {
           age[id] = ++t;
         } else {
           // got an image!
+	  qDebug() << "Got image from" << reply->url().toString() << "for" << id  << "size" << img.size();
           tiles[id] = img;
           age[id] = ++t;
           tc->loaded(id);
@@ -149,7 +162,7 @@ void TileCache::requestTile(TileID id) {
     .arg(id.z)
     .arg(id.y)
     .arg(id.x);
-  
+  qDebug() << "request" << url.toString() << "for" << id;
   d->urlmap[url] = id;
   d->gotsome[id] = false;
   d->pending[id] = d->nam->get(QNetworkRequest(url));

@@ -18,6 +18,7 @@ public:
   void setAutoNeighbors(bool);
 public slots:
   void requestTile(TileID);
+  void notifyNewSliceAvailable();
 signals:
   void loaded(TileID);
   //  void requestTiles(QVector<TileID> const &, TileConsumer *requestor);

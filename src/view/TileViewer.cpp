@@ -474,6 +474,7 @@ void TileViewer::enforceZ() {
   
   if (z_>z1) {
     z_ = z1;
+    cache->notifyNewSliceAvailable();
     info->update();
   }
 }

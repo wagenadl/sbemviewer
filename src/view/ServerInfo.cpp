@@ -30,8 +30,8 @@ public:
           infos[k] = v.toDouble();
         else
           infos[k] = v.toInt();
-      } else {
-        qDebug() << "Cannot parse" << kv;
+      } else if (!kv.isEmpty()) {
+        qDebug() << "ServerInfo: Cannot parse" << kv;
       }
     }
     qDebug() << "Got info: " << infos;
