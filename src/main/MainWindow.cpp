@@ -113,6 +113,7 @@ public:
     }
     Settings settings;
     settings.set("database", fn);
+    enableEditActions(true);
   }
   void createDB() {
     QString fn = QFileDialog::getSaveFileName(0, "Create Database...", "",
@@ -139,6 +140,28 @@ public:
     } else {
       timer->stop();
     }
+  }
+  void enableEditActions(bool en) {
+    ui->actionTypeTreeNode->setEnabled(en);
+    ui->actionTypePresynapticTerminal->setEnabled(en);
+    ui->actionTypePostsynapticDensity->setEnabled(en);
+    ui->actionTypeSoma->setEnabled(en);
+    ui->actionTypeNeuropilExitPoint->setEnabled(en);
+    ui->actionEditMemo->setEnabled(en);
+    ui->actionConnectNodes->setEnabled(en);
+    ui->actionDisconnectNodes->setEnabled(en);
+    ui->actionDeleteNode->setEnabled(en);
+    ui->actionConnectTerminals->setEnabled(en);
+    ui->actionDissolveSynapse->setEnabled(en);
+    ui->actionNewTree->setEnabled(en);
+    ui->actionDeleteTree->setEnabled(en);
+    ui->actionShowTrees->setEnabled(en);
+    ui->actionHideTrees->setEnabled(en);
+    ui->actionCenterSelectedNode->setEnabled(false);
+    ui->treeView->ui->add->setText("+");
+    ui->treeView->ui->del->setText(QWidget::tr("–"));
+    ui->treeView->ui->show->setText(QWidget::tr("⭕")); // 🌕
+    ui->treeView->ui->hide->setText(QWidget::tr("◍")); // 🌘
   }
 };
 
@@ -207,14 +230,12 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
           ui->treeView, &TreeView::actHideAll);
 
   ui->treeView->ui->add->setDefaultAction(ui->actionNewTree);
-  ui->treeView->ui->add->setText("+");
   ui->treeView->ui->del->setDefaultAction(ui->actionDeleteTree);
-  ui->treeView->ui->del->setText(tr("–"));
   ui->treeView->ui->show->setDefaultAction(ui->actionShowTrees);
-  ui->treeView->ui->show->setText("⭕"); // 🌕
   ui->treeView->ui->hide->setDefaultAction(ui->actionHideTrees);
-  ui->treeView->ui->hide->setText(tr("◍")); // 🌘
 
+  d->enableEditActions(false);
+  
   ui->nav->ui->zoom->setText(QString("2<sup>–%1</sup>")
                              .arg(ui->tileviewer->scale()));
   connect(ui->tileviewer, &TileViewer::scaleChanged,
