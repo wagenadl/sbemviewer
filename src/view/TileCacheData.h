@@ -10,6 +10,8 @@
 #include <QImage>
 #include "TileID.h"
 #include <QUrl>
+#include <QDateTime>
+#include <QMultiMap>
 
 class TileCacheData: public QObject {
   Q_OBJECT;
@@ -20,6 +22,7 @@ public slots:
 public:
   QString urlroot;
   int maxret;
+  int maxdx, maxdy;
   bool autoneighbors;
   int t;
   QMap<TileID, QImage> tiles;
@@ -29,8 +32,11 @@ public:
   QMap<QUrl, TileID> urlmap;
   QMap<TileID, QNetworkReply *> pending;
   QMap<TileID, bool> gotsome;
+  QMap<TileID, QDateTime> soonrequests_byid;
+  QMultiMap<QDateTime, TileID> soonrequests_bytime;
 public:
   void clean();
+  void dropOtherRequests(TileID);
 };
 
 #endif
