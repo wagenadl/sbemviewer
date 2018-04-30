@@ -125,6 +125,15 @@
    </attribute>
    <widget class="TreeView" name="treeView"/>
   </widget>
+  <widget class="QDockWidget" name="overviewDock">
+   <property name="windowTitle">
+    <string>Overview</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="Overview" name="overview"/>
+  </widget>
   <action name="actionQuit">
    <property name="text">
     <string>&amp;Quit</string>
@@ -299,6 +308,12 @@
    <class>TreeView</class>
    <extends>QWidget</extends>
    <header>TreeView.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>Overview</class>
+   <extends>QWidget</extends>
+   <header>Overview.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

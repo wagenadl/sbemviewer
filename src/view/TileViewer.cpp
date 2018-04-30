@@ -451,6 +451,8 @@ void TileViewer::wheelEvent(QWheelEvent *e) {
 void TileViewer::enforceX() {
   int x0 = info->contains("x0") ? info->integer("x0") : 15000;
   int x1 = info->contains("x1") ? info->integer("x1") : 50000;
+  x1 -= (9*width()/10) << a;
+  x0 -= (width()/10) << a;
   if (x_<x0)
     x_ = x0;
   if (x_>x1)
@@ -460,10 +462,14 @@ void TileViewer::enforceX() {
 void TileViewer::enforceY() {
   int y0 = info->contains("y0") ? info->integer("y0") : 50000;
   int y1 = info->contains("y1") ? info->integer("y1") : 99000;
+  y1 -= (9*height()/10) << a;
+  y0 -= (height()/10) << a;
+  qDebug() << "enforceY" << y_ << y0 << y1;
   if (y_<y0)
     y_ = y0;
   if (y_>y1)
     y_ = y1;
+  qDebug() << " => " << y_;
 }
   
 void TileViewer::enforceZ() {

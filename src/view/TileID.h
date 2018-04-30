@@ -19,6 +19,9 @@ public:
     else
       return x<o.x;
   }
+  bool operator==(TileID const &o) const {
+    return a==o.a && z==o.z && y==o.y && x==o.x;
+  }
 public:
   int a, z, y, x;
 };

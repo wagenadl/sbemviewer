@@ -13,6 +13,7 @@
 #include "EditOverlay.h"
 #include "Mode.h"
 #include "Settings.h"
+#include "Overview.h"
 
 #include <QTime>
 #include <QDoubleValidator>
@@ -182,6 +183,18 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   d = new MWData(this, info, ui);
   ui->tileviewer->setCache(cache);
   ui->tileviewer->setInfo(info);
+  ui->overview->setInfo(info);
+  ui->overview->setViewer(ui->tileviewer);
+  auto *tc = new TileCache(cache->urlRoot());
+  tc->setMaxRetained(50);
+  ui->overview->setCache(tc);
+
+  connect(ui->tileviewer, SIGNAL(scaleChanged(int)),
+          ui->overview, SLOT(update()));
+  connect(ui->tileviewer, SIGNAL(viewChanged(int,int,int,bool)),
+          ui->overview, SLOT(update()));
+  connect(ui->overview, &Overview::clicked,
+          [this](int x, int y) { ui->tileviewer->setPosition(x, y); });
   
   connect(ui->actionCreate_DB, &QAction::triggered,
           [this]() { d->createDB(); });
@@ -377,7 +390,8 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
           });
 
   ui->tileviewer->setFocusPolicy(Qt::StrongFocus);
-  resizeDocks({ui->navdock}, {10}, Qt::Vertical);
+  resizeDocks({ui->navdock, ui->curvedock, ui->overviewDock},
+              {10, 10, 10000}, Qt::Vertical);
   ui->modeDock->hide();
   ui->treeDock->hide();
 
@@ -423,6 +437,8 @@ void MainWindow::aboutAct() {
 }
 
 void MainWindow::resizeEvent(QResizeEvent *e) {
+  resizeDocks({ui->navdock, ui->curvedock, ui->overviewDock},
+              {10, 10, 10000}, Qt::Vertical);
   QMainWindow::resizeEvent(e);
 }
 

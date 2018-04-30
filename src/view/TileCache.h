@@ -16,6 +16,7 @@ public:
   bool hasTile(TileID const &) const;
   void setMaxRetained(int);
   void setAutoNeighbors(bool);
+  QString urlRoot() const;
 public slots:
   void requestTile(TileID);
   void notifyNewSliceAvailable();

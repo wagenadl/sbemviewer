@@ -169,3 +169,8 @@ void TileCache::requestTile(TileID id) {
   connect(d->pending[id], &QNetworkReply::readyRead,
 	  [this, id]() { d->gotsome[id] = true; });
 }
+
+QString TileCache::urlRoot() const {
+	  return d->urlroot;
+}
+
