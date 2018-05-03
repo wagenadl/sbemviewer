@@ -22,6 +22,9 @@ public:
   bool operator==(TileID const &o) const {
     return a==o.a && z==o.z && y==o.y && x==o.x;
   }
+  bool isValid() const {
+    return x>=0 && y>=0 && z>=0;
+  }
 public:
   int a, z, y, x;
 };

@@ -14,6 +14,7 @@
 static int appropriateScale(QSize s, ServerInfo const *info) {
   int dx = info->integer("x1") - info->integer("x0");
   int dy = info->integer("y1") - info->integer("y0");
+  int amax = info->integer("amax");
   int w = s.width();
   int h = s.height();
   if (dx<1 || dy<1)
@@ -22,7 +23,7 @@ static int appropriateScale(QSize s, ServerInfo const *info) {
     return 99;
   // we want dx to fit inside w<<a
   int a = 0;
-  while ((w<<a) < dx  ||  (h<<a) < dy)
+  while (((w<<a) < dx  ||  (h<<a) < dy) && a<amax)
     a++;
   return a;
 }

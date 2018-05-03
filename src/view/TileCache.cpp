@@ -175,6 +175,8 @@ void TileCache::setAutoNeighbors(bool an) {
 }
 
 void TileCache::requestTileSoon(TileID id) {
+  if (!id.isValid())
+    return;
   if (d->tiles.contains(id))
     return;
   if (d->pending.contains(id))
@@ -205,6 +207,8 @@ void TileCache::timerEvent(QTimerEvent *) {
 }
 
 void TileCache::requestTile(TileID id) {
+  if (!id.isValid())
+    return;
   if (d->tiles.contains(id))
     return;
   if (d->pending.contains(id))

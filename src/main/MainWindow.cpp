@@ -164,6 +164,23 @@ public:
     ui->treeView->ui->show->setText(QWidget::tr("⭕")); // 🌕
     ui->treeView->ui->hide->setText(QWidget::tr("◍")); // 🌘
   }
+  void restoreDialogs() {
+    mw->addDockWidget(Qt::LeftDockWidgetArea, ui->navdock);
+    ui->navdock->show();
+    mw->addDockWidget(Qt::LeftDockWidgetArea, ui->curvedock);
+    ui->curvedock->show();
+    mw->addDockWidget(Qt::LeftDockWidgetArea, ui->overviewDock);
+    ui->overviewDock->show();
+    mw->resizeDocks({ui->navdock, ui->curvedock, ui->overviewDock},
+                {10, 10, 10000}, Qt::Vertical);
+    if (db && db->isOpen()) {
+      mw->addDockWidget(Qt::RightDockWidgetArea, ui->modeDock);
+      ui->modeDock->show();
+      mw->addDockWidget(Qt::RightDockWidgetArea, ui->treeDock);
+      ui->treeDock->show();
+      mw->resizeDocks({ui->modeDock}, {10}, Qt::Vertical);
+    }
+  }
 };
 
 void MWData::timeout() {
@@ -186,6 +203,7 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   ui->overview->setInfo(info);
   ui->overview->setViewer(ui->tileviewer);
   auto *tc = new TileCache(cache->urlRoot());
+  tc->setAutoNeighbors(true);
   tc->setMaxRetained(50);
   ui->overview->setCache(tc);
 
@@ -204,6 +222,8 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
           []() { QApplication::quit(); });
   connect(ui->actionAbout, &QAction::triggered,
           this, &MainWindow::aboutAct);
+  connect(ui->actionRestoreDialogs, &QAction::triggered,
+          [this]() { d->restoreDialogs(); });
 
   connect(ui->actionTypeTreeNode, &QAction::triggered,
           [this]() { d->eo->actSetNodeType(SBEMDB::TreeNode); });

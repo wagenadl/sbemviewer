@@ -11,7 +11,7 @@
 #include "ViewInfo.h"
 #include "Overlay.h"
 
-#include "../../sbemtools/1000/Gray.h"
+#include "../../sbemtools/1020/Gray.h"
 
 TileViewer::TileViewer(QWidget *parent):
   QWidget(parent),
