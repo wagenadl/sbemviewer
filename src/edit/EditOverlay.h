@@ -55,7 +55,7 @@ private:
   bool plainLeftPress(Point const &p, int a);
   void drawCons(QPainter *p, ViewInfo const &vi,
                 QVector<SBEMDB::NodeCon> const &cons,
-                QColor (*colorfn)(int));
+                QColor (*colorfn)(int), bool thin=false);
   void drawNodes(QPainter *p, ViewInfo const &vi,
                 QVector<SBEMDB::Node> const &nodes,
                 QColor (*colorfn)(int));

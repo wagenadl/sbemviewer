@@ -49,7 +49,7 @@ static QColor otherNodeColor(int dz) {
 
 void EditOverlay::drawCons(QPainter *p, ViewInfo const &vi,
                            QVector<SBEMDB::NodeCon> const &cons,
-                           QColor (*colorfn)(int)) {
+                           QColor (*colorfn)(int), bool thin) {
   QSet<QPair<quint64, quint64>> seen;
   for (auto const &c: cons) {
     if (seen.contains(QPair<quint64, quint64>(c.nid1, c.nid2)))
@@ -58,7 +58,7 @@ void EditOverlay::drawCons(QPainter *p, ViewInfo const &vi,
     auto n1 = db->node(c.nid1);
     auto n2 = db->node(c.nid2);
     int dz = n1.z + n2.z - 2*vi.z;
-    p->setPen(QPen(colorfn(dz), 3));
+    p->setPen(QPen(colorfn(dz), thin ? 1 : 3));
     p->drawLine(QPoint((n1.x - vi.xl)>>vi.a, (n1.y - vi.yt)>>vi.a),
                 QPoint((n2.x - vi.xl)>>vi.a, (n2.y - vi.yt)>>vi.a));
   }
@@ -286,7 +286,30 @@ Point EditOverlay::goodSpotForTree(quint64 tid1,
   
 void EditOverlay::drawActiveTree(QPainter *p, ViewInfo const &vi) {
   int nr = nodeSBEMRadius(vi.a);
-  
+
+  if (true) {
+    /* Far away nodes to be drawn thinly */
+    db->query("create temp table visnodes as select nid from nodes"
+              " where tid==:a"
+              " and (z<:b or z>:c)"
+              " and x>=:d and x<:e"
+              " and y>=:f and y<:g",
+              tid,
+              vi.z - ZTOLERANCE, vi.z + ZTOLERANCE,
+              vi.xl - nr, vi.xr + nr,
+              vi.yt - nr, vi.yb + nr);
+    auto visnodes = db->nodes(db->constQuery("select * from nodes where nid in"
+                                             " ( select * from visnodes )"));
+    
+    auto viscons = db->nodeCons(db->constQuery("select * from nodecons"
+                                               " where nid1 in"
+                                               " ( select * from visnodes )"));
+    
+    drawCons(p, vi, viscons, &edgeColor, true);
+    db->query("drop table visnodes");
+  }
+
+  /* Nearby nodes */
   db->query("create temp table visnodes as select nid from nodes"
             " where tid==:a"
             " and z>=:b and z<=:c"
@@ -298,10 +321,10 @@ void EditOverlay::drawActiveTree(QPainter *p, ViewInfo const &vi) {
             vi.yt - nr, vi.yb + nr);
   auto visnodes = db->nodes(db->constQuery("select * from nodes where nid in"
                                            " ( select * from visnodes )"));
-
+  
   auto viscons = db->nodeCons(db->constQuery("select * from nodecons"
-                                             " where nid1 in"
-                                             " ( select * from visnodes )"));
+                                            " where nid1 in"
+                                            " ( select * from visnodes )"));
 
   drawCons(p, vi, viscons, &edgeColor);
   drawNodes(p, vi, visnodes, &nodeColor);
