@@ -207,3 +207,16 @@ SBEMDB::Node SBEMDB::nodeAt(Point const &p,
   }
   return nbest;
 }
+
+QString SBEMDB::nodeTypeName(NodeType nt) {
+  switch (nt) {
+  case Invalid: return "Invalid";
+  case Soma: return "Soma";
+  case ExitPoint: return "Exit point";
+  case TreeNode: return "Tree node";
+  case PresynTerm: return "Presyn.";
+  case PostsynTerm: return "Postsyn.";
+  default: return "Unknown";
+  }
+}
+

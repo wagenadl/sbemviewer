@@ -90,7 +90,7 @@ public:
 public:
   FullSynapse synapseDetails(quint64 sid) const;
   Node nodeAt(class Point const &p, int xytol, int ztol, quint64 tid) const;
-
+  static QString nodeTypeName(NodeType);
 };
 
 #endif

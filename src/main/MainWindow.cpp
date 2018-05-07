@@ -15,6 +15,7 @@
 #include "Settings.h"
 #include "Overview.h"
 #include "NodeSearchDialog.h"
+#include "NodeListWidget.h"
 
 #include <QTime>
 #include <QDoubleValidator>
@@ -185,7 +186,18 @@ public:
   }
   void doFindNodeDialog() {
     QVector<SBEMDB::Node> nodes = NodeSearchDialog::exec1(db);
-    // now create search results popup
+    qDebug() << "NSD: " << nodes.size();
+    if (nodes.isEmpty())
+      return;
+    NodeListWidget *w = new NodeListWidget(info, nodes);
+    QObject::connect(w, &NodeListWidget::selected,
+            [this, nodes](int k) {
+              SBEMDB::Node n(nodes[k]);
+              ui->treeView->setActiveTree(n.tid);
+              eo->setActiveNode(n.nid);
+              ui->tileviewer->setPosition(n.x, n.y, n.z);
+            });
+    w->show();
   }
 };
 

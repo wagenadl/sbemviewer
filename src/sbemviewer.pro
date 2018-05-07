@@ -38,8 +38,8 @@ HEADERS += miniball/Miniball.h   miniball/SmallestEnclosingCircle.hpp
 SOURCES += miniball/Miniball.cpp miniball/SmallestEnclosingCircle.cpp
 HEADERS += main/Settings.h   view/Overview.h
 SOURCES += main/Settings.cpp view/Overview.cpp
-HEADERS += edit/NodeSearchDialog.h
-SOURCES += edit/NodeSearchDialog.cpp
+HEADERS += edit/NodeSearchDialog.h   edit/NSQuery.h   edit/NodeListWidget.h
+SOURCES += edit/NodeSearchDialog.cpp edit/NSQuery.cpp edit/NodeListWidget.cpp
 
 RESOURCES += db/sbemdb.qrc
 LIBS += -lopencv_core -lopencv_imgcodecs
