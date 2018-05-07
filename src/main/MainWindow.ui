@@ -55,6 +55,7 @@
     <addaction name="actionNewTree"/>
     <addaction name="actionDeleteTree"/>
     <addaction name="separator"/>
+    <addaction name="actionFindNode"/>
     <addaction name="menuChange_node_type"/>
     <addaction name="actionDeleteNode"/>
     <addaction name="actionConnectNodes"/>
@@ -264,7 +265,7 @@
   </action>
   <action name="actionEditMemo">
    <property name="text">
-    <string>Edit &amp;memo</string>
+    <string>Edit &amp;memo…</string>
    </property>
    <property name="shortcut">
     <string>M</string>
@@ -276,6 +277,14 @@
    </property>
    <property name="shortcut">
     <string/>
+   </property>
+  </action>
+  <action name="actionFindNode">
+   <property name="text">
+    <string>&amp;Find node…</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
    </property>
   </action>
  </widget>

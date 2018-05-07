@@ -31,7 +31,6 @@ public:
   static int nodeSBEMRadius(int a);
   bool isTreeVisible(quint64 tid1, ViewInfo const &vi) const;
   Point goodSpotForTree(quint64 tid1, ViewInfo const &vi, bool *ok=0) const;
-                                  
 public slots:
   void setActiveTree(quint64); // resets active node to null
   void setActiveNode(quint64); // if non-null, also sets active tree

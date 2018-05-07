@@ -58,7 +58,7 @@ void EditOverlay::drawCons(QPainter *p, ViewInfo const &vi,
     auto n1 = db->node(c.nid1);
     auto n2 = db->node(c.nid2);
     int dz = n1.z + n2.z - 2*vi.z;
-    p->setPen(QPen(colorfn(dz), thin ? 1 : 3));
+    p->setPen(QPen(colorfn(dz), thin ? 1.5 : 3));
     p->drawLine(QPoint((n1.x - vi.xl)>>vi.a, (n1.y - vi.yt)>>vi.a),
                 QPoint((n2.x - vi.xl)>>vi.a, (n2.y - vi.yt)>>vi.a));
   }

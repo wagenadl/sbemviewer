@@ -14,6 +14,7 @@
 #include "Mode.h"
 #include "Settings.h"
 #include "Overview.h"
+#include "NodeSearchDialog.h"
 
 #include <QTime>
 #include <QDoubleValidator>
@@ -163,6 +164,7 @@ public:
     ui->treeView->ui->del->setText(QWidget::tr("–"));
     ui->treeView->ui->show->setText(QWidget::tr("⭕")); // 🌕
     ui->treeView->ui->hide->setText(QWidget::tr("◍")); // 🌘
+    ui->actionFindNode->setEnabled(en);
   }
   void restoreDialogs() {
     mw->addDockWidget(Qt::LeftDockWidgetArea, ui->navdock);
@@ -180,6 +182,10 @@ public:
       ui->treeDock->show();
       mw->resizeDocks({ui->modeDock}, {10}, Qt::Vertical);
     }
+  }
+  void doFindNodeDialog() {
+    QVector<SBEMDB::Node> nodes = NodeSearchDialog::exec1(db);
+    // now create search results popup
   }
 };
 
@@ -262,6 +268,9 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   connect(ui->actionHideTrees, &QAction::triggered,
           ui->treeView, &TreeView::actHideAll);
 
+  connect(ui->actionFindNode, &QAction::triggered,
+          [this]() { d->doFindNodeDialog(); });
+  
   ui->treeView->ui->add->setDefaultAction(ui->actionNewTree);
   ui->treeView->ui->del->setDefaultAction(ui->actionDeleteTree);
   ui->treeView->ui->show->setDefaultAction(ui->actionShowTrees);

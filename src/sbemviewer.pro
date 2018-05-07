@@ -33,11 +33,13 @@ HEADERS += db/SBEMDB.h
 SOURCES += db/SBEMDB.cpp
 HEADERS +=  edit/TreeModel.h   edit/TreeView.h   edit/EditOverlay.h
 SOURCES +=  edit/TreeModel.cpp edit/TreeView.cpp edit/EditOverlay.cpp
-FORMS   += edit/TreeView.ui
+FORMS   += edit/TreeView.ui edit/NodeSearchDialog.ui
 HEADERS += miniball/Miniball.h   miniball/SmallestEnclosingCircle.hpp
 SOURCES += miniball/Miniball.cpp miniball/SmallestEnclosingCircle.cpp
 HEADERS += main/Settings.h   view/Overview.h
 SOURCES += main/Settings.cpp view/Overview.cpp
+HEADERS += edit/NodeSearchDialog.h
+SOURCES += edit/NodeSearchDialog.cpp
 
 RESOURCES += db/sbemdb.qrc
 LIBS += -lopencv_core -lopencv_imgcodecs
