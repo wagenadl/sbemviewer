@@ -16,6 +16,7 @@
 #include "Overview.h"
 #include "NodeSearchDialog.h"
 #include "NodeListWidget.h"
+#include "ProjectionWidget.h"
 
 #include <QTime>
 #include <QDoubleValidator>
@@ -198,6 +199,15 @@ public:
               ui->tileviewer->setPosition(n.x, n.y, n.z);
             });
     w->show();
+    w->setAttribute(Qt::WA_DeleteOnClose);
+    w->resize(w->sizeHint());
+  }
+  void do3DProjection() {
+    ProjectionWidget *w = new ProjectionWidget();
+    w->addVisibleTrees();
+    w->show();
+    w->setAttribute(Qt::WA_DeleteOnClose);
+    w->resize(w->sizeHint());
   }
   void centerSelectedNode() {
     int nid = db->selectedNode();
@@ -288,6 +298,8 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
           ui->treeView, &TreeView::actHideAll);
   connect(ui->actionFindNode, &QAction::triggered,
           [this]() { d->doFindNodeDialog(); });
+  connect(ui->action3DProjection, &QAction::triggered,
+          [this]() { d->doProject3D(); });
   connect(ui->actionCenterSelectedNode, &QAction::triggered,
           [this]() { d->centerSelectedNode(); });
   

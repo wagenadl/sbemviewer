@@ -28,7 +28,6 @@ NodeListWidget::NodeListWidget(ServerInfo *info, SBEMDB *db,
                                QVector<SBEMDB::Node> nodes,
                                QWidget *parent):
   QWidget(parent), d(new NLW_Data(info, db, nodes)) {
-  // setDeleteOnClose();
   QHBoxLayout *lay = new QHBoxLayout(this);
   lay->setContentsMargins(6, 6, 6, 6);
   d->tw = new QTableWidget(this);
@@ -103,9 +102,6 @@ NodeListWidget::NodeListWidget(ServerInfo *info, SBEMDB *db,
                 emit selected(k);
               }
             }});
-  
-  setAttribute(Qt::WA_DeleteOnClose);
-  resize(sizeHint());
 }
 
 NodeListWidget::~NodeListWidget() {

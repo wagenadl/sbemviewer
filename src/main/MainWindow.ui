@@ -75,7 +75,7 @@
     <addaction name="actionRestoreDialogs"/>
     <addaction name="separator"/>
     <addaction name="actionCenterSelectedNode"/>
-    <addaction name="action3D_projection"/>
+    <addaction name="action3DProjection"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -288,7 +288,7 @@
     <string>Ctrl+F</string>
    </property>
   </action>
-  <action name="action3D_projection">
+  <action name="action3DProjection">
    <property name="text">
     <string>3D &amp;projection</string>
    </property>

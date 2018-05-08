@@ -7,6 +7,7 @@ class ProjectionData {
 public:
   ProjectionData(SBEMDB *db): db(db) {
     ui = new Ui_ProjectionWidget;
+    haveSelectedTree = false;
   }
   ~ProjectionData() {
     delete ui;
@@ -14,10 +15,11 @@ public:
 public:
   SBEMDB *db;
   Ui_ProjectionWidget *ui;
+  bool haveSelectedTree;
 };
   
-ProjectionWidget::ProjectionWidget(SBEMDB *db, QWidget *parent): QWidget(parent),
-                                                     d(new ProjectionData(db)) {
+ProjectionWidget::ProjectionWidget(SBEMDB *db, QWidget *parent):
+  QWidget(parent), d(new ProjectionData(db)) {
   d->ui->setupUi(this);
 }
 
@@ -26,6 +28,9 @@ ProjectionWidget::~ProjectionWidget() {
 }
 
 void ProjectionWidget::addTree(int tid) {
+  bool isSelected = tid==db->selectedTree();
+  if (isSelected)
+    d->haveSelectedTree = true;
 }
 
 void ProjectionWidget::addVisibleTrees() {
