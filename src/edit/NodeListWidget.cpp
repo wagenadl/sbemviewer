@@ -34,6 +34,7 @@ NodeListWidget::NodeListWidget(ServerInfo *info, SBEMDB *db,
   d->tw = new QTableWidget(this);
   lay->addWidget(d->tw);
   setLayout(lay);
+  setWindowTitle("Search Results");
 
   d->tw->setColumnCount(7);
   d->tw->setColumnHidden(6, true);

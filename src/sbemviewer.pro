@@ -40,6 +40,9 @@ HEADERS += main/Settings.h   view/Overview.h
 SOURCES += main/Settings.cpp view/Overview.cpp
 HEADERS += edit/NodeSearchDialog.h   edit/NSQuery.h   edit/NodeListWidget.h
 SOURCES += edit/NodeSearchDialog.cpp edit/NSQuery.cpp edit/NodeListWidget.cpp
+HEADERS += edit/ProjectionWidget.h   edit/ProjectionView.h
+SOURCES += edit/ProjectionWidget.cpp edit/ProjectionView.cpp
+FORMS   += edit/ProjectionWidget.ui
 
 RESOURCES += db/sbemdb.qrc
 LIBS += -lopencv_core -lopencv_imgcodecs
