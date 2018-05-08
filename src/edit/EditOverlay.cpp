@@ -299,13 +299,16 @@ void EditOverlay::drawActiveTree(QPainter *p, ViewInfo const &vi) {
               vi.xl - nr, vi.xr + nr,
               vi.yt - nr, vi.yb + nr);
     auto visnodes = db->nodes(db->constQuery("select * from nodes where nid in"
-                                             " ( select * from visnodes )"));
+                                             " ( select nid from visnodes "
+                                             "   where nid==:a)",
+                                             db->selectedNode()));
     
     auto viscons = db->nodeCons(db->constQuery("select * from nodecons"
                                                " where nid1 in"
-                                               " ( select * from visnodes )"));
+                                               " ( select nid from visnodes )"));
     
     drawCons(p, vi, viscons, &edgeColor, true);
+    drawNodes(p, vi, visnodes, &nodeColor);
     db->query("drop table visnodes");
   }
 
@@ -320,11 +323,11 @@ void EditOverlay::drawActiveTree(QPainter *p, ViewInfo const &vi) {
             vi.xl - nr, vi.xr + nr,
             vi.yt - nr, vi.yb + nr);
   auto visnodes = db->nodes(db->constQuery("select * from nodes where nid in"
-                                           " ( select * from visnodes )"));
+                                           " ( select nid from visnodes )"));
   
   auto viscons = db->nodeCons(db->constQuery("select * from nodecons"
                                             " where nid1 in"
-                                            " ( select * from visnodes )"));
+                                            " ( select nid from visnodes )"));
 
   drawCons(p, vi, viscons, &edgeColor);
   drawNodes(p, vi, visnodes, &nodeColor);
@@ -362,6 +365,8 @@ bool EditOverlay::mousePress(Point const &p,
 }
 
 bool EditOverlay::plainLeftPress(Point const &p, int a) {
+  bool take = false;
+  
   if (aux_nid) {
     aux_nid = 0;
     forceUpdate();
@@ -375,6 +380,7 @@ bool EditOverlay::plainLeftPress(Point const &p, int a) {
     } else {
       emit otherTreePressed(n.tid, n.nid);
     }
+    take = true;
   } else if (mode()==Mode_Edit) {
     // create new node
     if (nid==0) { // no current selection
@@ -405,12 +411,14 @@ bool EditOverlay::plainLeftPress(Point const &p, int a) {
       db->selectNode(nid);
       forceUpdate();
     }
+    take = true;
   }
+  
   if (nid) {
     auto n = db->node(nid);
     origpt = Point(n.x, n.y, n.z);
   }
-  return true;
+  return take;
 }
 
 bool EditOverlay::mouseRelease(Point const &,

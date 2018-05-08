@@ -169,7 +169,8 @@ quint64 SBEMDB::selectedTree() const {
 
 SBEMDB::Node SBEMDB::nodeAt(Point const &p,
                             int xytol, int ztol, quint64 tid) const {
-  // prefer to return from tid, but will accept other tree
+  // Prefer to return from tid, but will accept other tree.
+  // If all else fails, will select from tid with ztol ignored.
   QVector<Node> nn = nodes(constQuery("select * from nodes where tid==:a"
                                       " and z>=:b and z<=:c"
                                       " and x>=:d and x<=:e"
@@ -179,10 +180,10 @@ SBEMDB::Node SBEMDB::nodeAt(Point const &p,
                                  p.x-xytol, p.x+xytol,
                                  p.y-xytol, p.y+xytol));
   Node nbest;
-  int dbest = 0;
+  double dbest = 0;
   auto sq = [](int x) { return x*x; };
   for (Node const &n: nn) {
-    int d = sq(n.x - p.x) + sq(n.y - p.y) + sq(n.z - p.z);
+    double d = sq(n.x - p.x) + sq(n.y - p.y) + sq(n.z - p.z);
     if (nbest.nid==0 || d<dbest) {
       nbest = n;
       dbest = d;
@@ -199,12 +200,29 @@ SBEMDB::Node SBEMDB::nodeAt(Point const &p,
                         p.x-xytol, p.x+xytol,
                         p.y-xytol, p.y+xytol));
   for (Node const &n: nn) {
-    int d = sq(n.x - p.x) + sq(n.y - p.y) + sq(n.z - p.z);
+    double d = sq(n.x - p.x) + sq(n.y - p.y) + sq(n.z - p.z);
     if (nbest.nid==0 || d<dbest) {
       nbest = n;
       dbest = d;
     }
   }
+  if (nbest.nid)
+    return nbest;
+
+  nn = nodes(constQuery("select * from nodes where tid==:a"
+                        " and x>=:b and x<=:c"
+                        " and y>=:d and y<=:e",
+                        tid,
+                        p.x-xytol, p.x+xytol,
+                        p.y-xytol, p.y+xytol));
+  for (Node const &n: nn) {
+    double d = sq(n.x - p.x) + sq(n.y - p.y) + sq(n.z - p.z)/1000000.0;
+    if (nbest.nid==0 || d<dbest) {
+      nbest = n;
+      dbest = d;
+    }
+  }
+
   return nbest;
 }
 

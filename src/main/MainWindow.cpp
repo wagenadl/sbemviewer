@@ -160,7 +160,7 @@ public:
     ui->actionDeleteTree->setEnabled(en);
     ui->actionShowTrees->setEnabled(en);
     ui->actionHideTrees->setEnabled(en);
-    ui->actionCenterSelectedNode->setEnabled(false);
+    ui->actionCenterSelectedNode->setEnabled(en);
     ui->treeView->ui->add->setText("+");
     ui->treeView->ui->del->setText(QWidget::tr("–"));
     ui->treeView->ui->show->setText(QWidget::tr("⭕")); // 🌕
@@ -189,7 +189,7 @@ public:
     qDebug() << "NSD: " << nodes.size();
     if (nodes.isEmpty())
       return;
-    NodeListWidget *w = new NodeListWidget(info, nodes);
+    NodeListWidget *w = new NodeListWidget(info, db, nodes);
     QObject::connect(w, &NodeListWidget::selected,
             [this, nodes](int k) {
               SBEMDB::Node n(nodes[k]);
@@ -198,6 +198,13 @@ public:
               ui->tileviewer->setPosition(n.x, n.y, n.z);
             });
     w->show();
+  }
+  void centerSelectedNode() {
+    int nid = db->selectedNode();
+    if (nid>0) {
+      SBEMDB::Node n = db->node(nid);
+      ui->tileviewer->setPosition(n.x, n.y, n.z);
+    }
   }
 };
 
@@ -279,9 +286,11 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
           ui->treeView, &TreeView::actShowAll);
   connect(ui->actionHideTrees, &QAction::triggered,
           ui->treeView, &TreeView::actHideAll);
-
   connect(ui->actionFindNode, &QAction::triggered,
           [this]() { d->doFindNodeDialog(); });
+  connect(ui->actionCenterSelectedNode, &QAction::triggered,
+          [this]() { d->centerSelectedNode(); });
+  
   
   ui->treeView->ui->add->setDefaultAction(ui->actionNewTree);
   ui->treeView->ui->del->setDefaultAction(ui->actionDeleteTree);
@@ -493,4 +502,8 @@ SBEMDB *MainWindow::database() const {
 
 TileViewer *MainWindow::tileViewer() const {
   return ui->tileviewer;
+}
+
+void MainWindow::closeEvent(QCloseEvent *) {
+  QApplication::quit();
 }

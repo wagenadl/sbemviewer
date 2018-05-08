@@ -10,7 +10,7 @@
 class NodeListWidget: public QWidget {
   Q_OBJECT;
 public:
-  NodeListWidget(class ServerInfo *info,
+  NodeListWidget(class ServerInfo *info, SBEMDB *db,
                  QVector<SBEMDB::Node> nodes, QWidget *parent=0);
   virtual ~NodeListWidget();
 signals:

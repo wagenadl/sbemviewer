@@ -42,8 +42,11 @@ void TileViewer::setCache(TileCache *c) {
 }
 
 void TileViewer::setScale(int a1) {
+  int x0 = x();
+  int y0 = y();
   a = a1;
   enforceA();
+  setPosition(x0, y0);
   emit scaleChanged(a);
   update();
 }
@@ -287,7 +290,7 @@ void TileViewer::resizeEvent(QResizeEvent *) {
 
 void TileViewer::mousePressEvent(QMouseEvent *e) {
   e->accept();
-  if (mode!=Mode_View && !(e->modifiers() & Qt::ControlModifier))
+  if (!(e->modifiers() & Qt::ControlModifier))
     for (auto *o: overlays)
       if (o->mousePress(mapToSBEM(e->pos()), e->button(), e->modifiers(), a))
 	return;

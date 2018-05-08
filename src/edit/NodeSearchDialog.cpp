@@ -70,7 +70,8 @@ NodeSearchDialog::NodeSearchDialog(SBEMDB *db, QWidget *parent):
           [this]() { d->recount(); });
   connect(d->ui->memoNotText, &QLineEdit::textEdited,
           [this]() { d->recount(); });
-  
+
+  d->recount();
 }
 
 NodeSearchDialog::~NodeSearchDialog() {

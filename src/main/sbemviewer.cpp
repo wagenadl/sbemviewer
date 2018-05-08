@@ -29,7 +29,9 @@ int main(int argc, char **argv) {
     if (!dbfn.isEmpty() && QFileInfo::exists(dbfn))
       mw.openDB(dbfn);
   }
+
   app.exec();
+
   TileViewer *tv = mw.tileViewer();
   settings.set("x", tv->x());
   settings.set("y", tv->y());

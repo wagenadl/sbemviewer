@@ -90,6 +90,8 @@ public:
 public:
   FullSynapse synapseDetails(quint64 sid) const;
   Node nodeAt(class Point const &p, int xytol, int ztol, quint64 tid) const;
+  // Prefer to return from tid, but will accept other tree.
+  // If all else fails, will select from tid with ztol ignored.
   static QString nodeTypeName(NodeType);
 };
 

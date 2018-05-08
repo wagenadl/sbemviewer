@@ -15,6 +15,7 @@ public:
   class TileViewer *tileViewer() const;
 protected:
   void resizeEvent(QResizeEvent *);
+  void closeEvent(QCloseEvent *);
 public:
   void aboutAct();
   void openDB(QString fn);
