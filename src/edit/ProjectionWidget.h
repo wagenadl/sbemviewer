@@ -9,9 +9,9 @@
 
 class ProjectionWidget: public QWidget {
 public:
-  ProjectionWidget(SBEMDB *db, QWidget *parent=0);
+  ProjectionWidget(class ServerInfo *info, SBEMDB *db, QWidget *parent=0);
   virtual ~ProjectionWidget();
-  void addTree(int tid);
+  void addTree(quint64 tid);
   void addVisibleTrees();
   void addSelectedTree();
 private:

@@ -203,11 +203,11 @@ public:
     w->resize(w->sizeHint());
   }
   void do3DProjection() {
-    ProjectionWidget *w = new ProjectionWidget();
+    ProjectionWidget *w = new ProjectionWidget(info, db);
+    w->addSelectedTree();
     w->addVisibleTrees();
     w->show();
     w->setAttribute(Qt::WA_DeleteOnClose);
-    w->resize(w->sizeHint());
   }
   void centerSelectedNode() {
     int nid = db->selectedNode();
@@ -299,7 +299,7 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   connect(ui->actionFindNode, &QAction::triggered,
           [this]() { d->doFindNodeDialog(); });
   connect(ui->action3DProjection, &QAction::triggered,
-          [this]() { d->doProject3D(); });
+          [this]() { d->do3DProjection(); });
   connect(ui->actionCenterSelectedNode, &QAction::triggered,
           [this]() { d->centerSelectedNode(); });
   
