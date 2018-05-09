@@ -15,7 +15,7 @@ public:
   ProjectionView(QWidget *parent=0);
   virtual ~ProjectionView();
   void setTree(int tid, QVector<LineF>);
-  void setColors(int tid, QColor near, QColor far);
+  void setColor(int tid, PointF near); // rgb [0,1]
 public slots:
   void setXAxisLabels(QString neg, QString pos);
   void setYAxisLabels(QString neg, QString pos);
@@ -30,8 +30,7 @@ private:
   double tform[3][3];
   QPoint presspt;
   QMap< int, QVector<LineF> > trees; // in um
-  QMap< int, QColor > nearColor;
-  QMap< int, QColor > farColor;
+  QMap< int, PointF > nearColor;
   QString xneg, xpos, yneg, ypos, zneg, zpos;
 };
 

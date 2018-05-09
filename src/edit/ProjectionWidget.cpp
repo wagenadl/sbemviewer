@@ -47,9 +47,9 @@ void ProjectionData::buildTree(quint64 tid) {
   ui->widget->setTree(tid, ll);
 
   if (isSelected)
-    ui->widget->setColors(tid, QColor(255, 0, 255), QColor(40, 0, 40));
+    ui->widget->setColor(tid, PointF(.5, -.5, .5));
   else
-    ui->widget->setColors(tid, QColor(0, 255, 0), QColor(0, 40, 0));
+    ui->widget->setColor(tid, PointF(-.25, .5, -.25));
 }
   
 ProjectionWidget::ProjectionWidget(ServerInfo *info, SBEMDB *db,

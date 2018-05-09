@@ -26,11 +26,14 @@ void matmul(double const a[3][3], double const b[3][3], double c[3][3]) {
 
 ProjectionView::ProjectionView(QWidget *parent): QWidget(parent) {
   setFocusPolicy(Qt::StrongFocus);
-  
+  QPalette pal = palette();
+  pal.setColor(QPalette::Background, Qt::white);
+  setPalette(pal);
+  setAutoFillBackground(true);
   xneg = "V";
   xpos = "D";
-  yneg = "L?";
-  ypos = "R?";
+  yneg = "R";
+  ypos = "L";
   zneg = "A";
   zpos = "P";
 
@@ -66,9 +69,8 @@ void ProjectionView::setTree(int tid, QVector<LineF> l) {
   update();
 }
 
-void ProjectionView::setColors(int tid, QColor cnear, QColor cfar) {
+void ProjectionView::setColor(int tid, PointF cnear) {
   nearColor[tid] = cnear;
-  farColor[tid] = cfar;
   update();
 }     
 
@@ -79,15 +81,15 @@ void ProjectionView::mousePressEvent(QMouseEvent *e) {
 }
 
 void ProjectionView::keyPressEvent(QKeyEvent *e) {
-  double yform[3][3] = {1, 0, 0,
-                        0, 0, 1,
-                        0, 1, 0};
-  double zform[3][3] = {0, 1, 0,
-                        1, 0, 0,
-                        0, 0, 1};
-  double xform[3][3] = {0, 1, 0,
-                        0, 0, 1,
-                        1, 0, 0};
+  double yform[3][3] = {-1, 0, 0,
+                         0, 0, 1,
+                         0, 1, 0};
+  double zform[3][3] = {0, -1, 0,
+                        -1, 0, 0,
+                        0, 0, -1};
+  double xform[3][3] = {0, -1, 0,
+                        0,  0, 1,
+                        -1, 0, 0};
   switch (e->key()) {
   case Qt::Key_X: cpmat(xform, tform); update(); break;
   case Qt::Key_Y: cpmat(yform, tform); update(); break;
@@ -96,7 +98,7 @@ void ProjectionView::keyPressEvent(QKeyEvent *e) {
 }
  
 void ProjectionView::mouseMoveEvent(QMouseEvent *e) {
-  double dx = (e->pos().x() - presspt.x()) * 4.0 / width();
+  double dx = -(e->pos().x() - presspt.x()) * 4.0 / width();
   double dy = (e->pos().y() - presspt.y()) * 4.0 / height();
 
   double sx = sin(dy);
@@ -185,28 +187,38 @@ void ProjectionView::paintEvent(QPaintEvent *) {
   PointF px = .08*r*map(PointF(1, 0, 0));
   PointF py = .08*r*map(PointF(0, 1, 0));
   PointF pz = .08*r*map(PointF(0, 0, 1));
-
+  auto penForZ = [r](double z) {
+    z = (z/(.08*r))/2 + .5;
+    qreal g = .9*z;
+    return QPen(QColor::fromRgbF(g,g,g));
+  };
   QPainter p;
   p.begin(this);
-  
+  p.setPen(penForZ(-px.z));
   p.drawText(.12*w - px.x, .12*h - px.y, xneg);
+  p.setPen(penForZ(px.z));
   p.drawText(.12*w + px.x, .12*h + px.y, xpos);
+  p.setPen(penForZ(-py.z));
   p.drawText(.12*w - py.x, .12*h - py.y, yneg);
+  p.setPen(penForZ(py.z));
   p.drawText(.12*w + py.x, .12*h + py.y, ypos);
+  p.setPen(penForZ(-pz.z));
   p.drawText(.12*w - pz.x, .12*h - pz.y, zneg);
+  p.setPen(penForZ(pz.z));
   p.drawText(.12*w + pz.x, .12*h + pz.y, zpos);
 
+  auto clip = [](qreal x) { return x<0 ? 0 : x>1 ? 1 : x; };
+  
   for (int k: xformedtrees.keys()) {
     QVector<LineF> const &v = xformedtrees[k];
-    qreal rf, gf, bf;
-    qreal rn, gn, bn;
-    farColor[k].getRgbF(&rf, &gf, &bf);
-    nearColor[k].getRgbF(&rn, &gn, &bn);
+    PointF cn = nearColor[k];
     for (auto const &l: v) {
-      double z = ((l.p1.z + l.p2.z)/2 - zmin) / (1e-9 + zmax - zmin);
-      p.setPen(QPen(QColor::fromRgbF(z*rn + (1-z)*rf,
-                                     z*gn + (1-z)*gf,
-                                     z*bn + (1-z)*bf), 1.5));
+      double zf = ((l.p1.z + l.p2.z)/2 - zmin) / (1e-9 + zmax - zmin) * .8;
+      double zn = 1 - zf;
+      qreal r = clip(cn.x*zn + zf);
+      qreal g = clip(cn.y*zn + zf);
+      qreal b = clip(cn.z*zn + zf);
+      p.setPen(QPen(QColor::fromRgbF(r,g,b), 1.5));
       p.drawLine(QPointF(x0+scale*(l.p1.x - xmin),
                          y0+scale*(l.p1.y - ymin)),
                  QPointF(x0+scale*(l.p2.x - xmin),
