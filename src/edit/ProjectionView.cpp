@@ -5,16 +5,39 @@
 #include <QDebug>
 #include <QPainter>
 #include <QPen>
+#include <QMouseEvent>
+
+void cpmat(double const a[3][3], double b[3][3]) {
+  for (int k=0; k<3; k++)
+    for (int n=0; n<3; n++)
+      b[k][n] = a[k][n];
+};
+
+void matmul(double const a[3][3], double const b[3][3], double c[3][3]) {
+  for (int k=0; k<3; k++) {
+    for (int m=0; m<3; m++) {
+      double v = 0;
+      for (int n=0; n<3; n++)
+        v += a[k][n] * b[n][m];
+      c[k][m] = v;
+    }
+  }
+}
 
 ProjectionView::ProjectionView(QWidget *parent): QWidget(parent) {
-  phix = 0;
-  phiy = 0;
-  xneg = "x";
-  xpos = "X";
-  yneg = "y";
-  ypos = "Y";
-  zneg = "z";
-  zpos = "Z";
+  setFocusPolicy(Qt::StrongFocus);
+  
+  xneg = "V";
+  xpos = "D";
+  yneg = "L?";
+  ypos = "R?";
+  zneg = "A";
+  zpos = "P";
+
+  double xform[3][3] = {0, 1, 0,
+                        0, 0, 1,
+                        1, 0, 0};
+  cpmat(xform, tform);
 }
 
 ProjectionView::~ProjectionView() {
@@ -49,53 +72,65 @@ void ProjectionView::setColors(int tid, QColor cnear, QColor cfar) {
   update();
 }     
 
-void ProjectionView::setYRotation(int p) {
-  phiy = p*3.141592/180;
-  update();
+
+void ProjectionView::mousePressEvent(QMouseEvent *e) {
+  presspt = e->pos();
+  e->accept();
 }
 
-void ProjectionView::setXRotation(int p) {
-  phix = p*3.141592/180;
-  update();
-}
-
-void matmul(double const a[3][3], double const b[3][3], double c[3][3]) {
-  for (int k=0; k<3; k++) {
-    for (int m=0; m<3; m++) {
-      double v = 0;
-      for (int n=0; n<3; n++)
-        v += a[k][n] * b[n][m];
-      c[k][m] = v;
-    }
+void ProjectionView::keyPressEvent(QKeyEvent *e) {
+  double yform[3][3] = {1, 0, 0,
+                        0, 0, 1,
+                        0, 1, 0};
+  double zform[3][3] = {0, 1, 0,
+                        1, 0, 0,
+                        0, 0, 1};
+  double xform[3][3] = {0, 1, 0,
+                        0, 0, 1,
+                        1, 0, 0};
+  switch (e->key()) {
+  case Qt::Key_X: cpmat(xform, tform); update(); break;
+  case Qt::Key_Y: cpmat(yform, tform); update(); break;
+  case Qt::Key_Z: cpmat(zform, tform); update(); break;
   }
+}
+ 
+void ProjectionView::mouseMoveEvent(QMouseEvent *e) {
+  double dx = (e->pos().x() - presspt.x()) * 4.0 / width();
+  double dy = (e->pos().y() - presspt.y()) * 4.0 / height();
+
+  double sx = sin(dy);
+  double cx = cos(dy);
+  double xform[3][3] = {1, 0,   0,
+                        0, cx,-sx,
+                        0, sx, cx};
+  // positive phix maps positive y to positive z
+  double sy = sin(dx);
+  double cy = cos(dx);
+  double yform[3][3] = {cy,  0, sy,
+                        0,   1, 0,
+                        -sy, 0, cy};
+  
+  double qq[3][3];
+  matmul(xform, tform, qq);
+  matmul(yform, qq, tform);
+  
+  presspt = e->pos();
+  e->accept();
+  update();
 }
 
 void ProjectionView::paintEvent(QPaintEvent *) {
   QMap< int, QVector<LineF> > xformedtrees;
 
-  double sx = sin(phix);
-  double cx = cos(phix);
-  double xform[3][3] = {1, 0,   0,
-                        0, cx,-sx,
-                        0, sx, cx};
-  // positive phix maps positive y to positive z
-  double sy = sin(phiy);
-  double cy = cos(phiy);
-  double yform[3][3] = {cy,  0, sy,
-                        0,   1, 0,
-                        -sy, 0, cy};
-  // positive phiy maps positive z to positive x
-
-  double tform[3][3];
-  matmul(yform, xform, tform);
-
-  auto map = [tform](PointF p) {
+  auto map = [this](PointF p) {
     PointF q;
     q.x = tform[0][0]*p.x + tform[0][1]*p.y + tform[0][2]*p.z;
     q.y = tform[1][0]*p.x + tform[1][1]*p.y + tform[1][2]*p.z;
     q.z = tform[2][0]*p.x + tform[2][1]*p.y + tform[2][2]*p.z;
     return q;
   };
+  
   for (int k: trees.keys()) {
     QVector<LineF> v = trees[k];
     for (LineF &l: v) {
@@ -142,44 +177,36 @@ void ProjectionView::paintEvent(QPaintEvent *) {
   int h = height();
   double xrat = w / (xmax - xmin);
   double yrat = h / (ymax - ymin);
-  double scale = .9*(xrat < yrat ? xrat : yrat);
-  double x0 = .05*w;
-  double y0 = .05*h;
+  double scale = .98*(xrat < yrat ? xrat : yrat);
+  int r = w<h ? w : h;
+  double x0 = .5*w - .49*r;
+  double y0 = .5*h - .49*r;
 
-  PointF px = .05*w*map(PointF(1, 0, 0));
-  PointF py = .05*w*map(PointF(0, 1, 0));
-  PointF pz = .05*w*map(PointF(0, 0, 1));
+  PointF px = .08*r*map(PointF(1, 0, 0));
+  PointF py = .08*r*map(PointF(0, 1, 0));
+  PointF pz = .08*r*map(PointF(0, 0, 1));
 
   QPainter p;
   p.begin(this);
   
-  if (pz.L2xy() < py.L2xy() && pz.L2xy() < px.L2xy()) {
-    // show x and y labels
-    p.drawText(.1*w - px.x, .1*w - px.y, xneg);
-    p.drawText(.1*w + px.x, .1*w + px.y, xpos);
-    p.drawText(.1*w - py.x, .1*w - py.y, yneg);
-    p.drawText(.1*w + py.x, .1*w + py.y, ypos);
-  } else if (px.L2xy() < py.L2xy() && px.L2xy() < pz.L2xy()) {
-    // show y and z labels
-    p.drawText(.1*w - pz.x, .1*w - pz.y, zneg);
-    p.drawText(.1*w + pz.x, .1*w + pz.y, zpos);
-    p.drawText(.1*w - py.x, .1*w - py.y, yneg);
-    p.drawText(.1*w + py.x, .1*w + py.y, ypos);
-  } else {
-    // show x and z labels
-    p.drawText(.1*w - px.x, .1*w - px.y, xneg);
-    p.drawText(.1*w + px.x, .1*w + px.y, xpos);
-    p.drawText(.1*w - pz.x, .1*w - pz.y, zneg);
-    p.drawText(.1*w + pz.x, .1*w + pz.y, zpos);
-  }
+  p.drawText(.12*w - px.x, .12*h - px.y, xneg);
+  p.drawText(.12*w + px.x, .12*h + px.y, xpos);
+  p.drawText(.12*w - py.x, .12*h - py.y, yneg);
+  p.drawText(.12*w + py.x, .12*h + py.y, ypos);
+  p.drawText(.12*w - pz.x, .12*h - pz.y, zneg);
+  p.drawText(.12*w + pz.x, .12*h + pz.y, zpos);
 
   for (int k: xformedtrees.keys()) {
     QVector<LineF> const &v = xformedtrees[k];
-    QColor cnear = nearColor[k];
-    QColor cfar = farColor[k];
+    qreal rf, gf, bf;
+    qreal rn, gn, bn;
+    farColor[k].getRgbF(&rf, &gf, &bf);
+    nearColor[k].getRgbF(&rn, &gn, &bn);
     for (auto const &l: v) {
       double z = ((l.p1.z + l.p2.z)/2 - zmin) / (1e-9 + zmax - zmin);
-      p.setPen(QPen(cnear, 1.5)); // hmm
+      p.setPen(QPen(QColor::fromRgbF(z*rn + (1-z)*rf,
+                                     z*gn + (1-z)*gf,
+                                     z*bn + (1-z)*bf), 1.5));
       p.drawLine(QPointF(x0+scale*(l.p1.x - xmin),
                          y0+scale*(l.p1.y - ymin)),
                  QPointF(x0+scale*(l.p2.x - xmin),

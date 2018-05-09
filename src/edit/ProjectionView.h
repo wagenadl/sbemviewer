@@ -17,16 +17,18 @@ public:
   void setTree(int tid, QVector<LineF>);
   void setColors(int tid, QColor near, QColor far);
 public slots:
-  void setYRotation(int); // in degrees
-  void setXRotation(int);
   void setXAxisLabels(QString neg, QString pos);
   void setYAxisLabels(QString neg, QString pos);
   void setZAxisLabels(QString neg, QString pos);
 protected:
+  void mousePressEvent(QMouseEvent *) override;
+  void mouseMoveEvent(QMouseEvent *) override;
+  void keyPressEvent(QKeyEvent *) override;
   void paintEvent(QPaintEvent *) override;
   void resizeEvent(QResizeEvent *) override;
 private:
-  double phix, phiy; // in radians
+  double tform[3][3];
+  QPoint presspt;
   QMap< int, QVector<LineF> > trees; // in um
   QMap< int, QColor > nearColor;
   QMap< int, QColor > farColor;

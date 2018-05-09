@@ -56,8 +56,6 @@ ProjectionWidget::ProjectionWidget(ServerInfo *info, SBEMDB *db,
                                    QWidget *parent):
   QWidget(parent), d(new ProjectionData(info, db)) {
   d->ui->setupUi(this);
-  d->ui->widget->setXRotation(d->ui->verticalSlider->value());
-  d->ui->widget->setYRotation(d->ui->horizontalSlider->value());
 }
 
 ProjectionWidget::~ProjectionWidget() {
