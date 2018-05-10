@@ -63,7 +63,7 @@ void ProjectionData::buildTree(quint64 tid) {
                    q.value(1).toInt()*dy,
                    q.value(2).toInt()*dz);
     ui->widget->setPoints(100000000+tid, ll);
-    ui->widget->setColor(100000000+tid, PointF(-.25, -.25, .5));
+    ui->widget->setColor(100000000+tid, PointF(.5, -.25, -.25));
     ui->widget->setPointSize(100000000+tid, 4);
   }
   if (isSelected) {
@@ -77,7 +77,7 @@ void ProjectionData::buildTree(quint64 tid) {
                    q.value(1).toInt()*dy,
                    q.value(2).toInt()*dz);
     ui->widget->setPoints(200000000+tid, ll);
-    ui->widget->setColor(200000000+tid, PointF(.5, -.25, -.25));
+    ui->widget->setColor(200000000+tid, PointF(-.25, -.25, .5));
     ui->widget->setPointSize(200000000+tid, 4);
   }
   { // decorate somata
