@@ -25,6 +25,7 @@ void matmul(double const a[3][3], double const b[3][3], double c[3][3]) {
 }
 
 ProjectionView::ProjectionView(QWidget *parent): QWidget(parent) {
+  freezedepth = 0;
   setFocusPolicy(Qt::StrongFocus);
   QPalette pal = palette();
   pal.setColor(QPalette::Background, Qt::white);
@@ -46,34 +47,67 @@ ProjectionView::ProjectionView(QWidget *parent): QWidget(parent) {
 ProjectionView::~ProjectionView() {
 }
 
+void ProjectionView::freeze() {
+  freezedepth++;
+}
+
+void ProjectionView::thaw() {
+  freezedepth--;
+}
+
+bool ProjectionView::frozen() const {
+  return freezedepth>0;
+}
+
 void ProjectionView::setXAxisLabels(QString xn, QString xp) {
   xneg = xn;
   xpos = xp;
-  update();
+  if (!frozen())
+    update();
 }
 
 void ProjectionView::setYAxisLabels(QString yn, QString yp) {
   yneg = yn;
   ypos = yp;
-  update();
+  if (!frozen())
+    update();
 }
 
 void ProjectionView::setZAxisLabels(QString zn, QString zp) {
   zneg = zn;
   zpos = zp;
-  update();
+  if (!frozen())
+    update();
 }
 
-void ProjectionView::setTree(int tid, QVector<LineF> l) {
-  trees[tid] = l;
-  update();
+void ProjectionView::setLines(int tid, QVector<LineF> l) {
+  lines[tid] = l;
+  if (!frozen())
+    update();
+}
+
+void ProjectionView::setPoints(int tid, QVector<PointF> p) {
+  points[tid] = p;
+  if (!frozen())
+    update();
+}
+
+PointF ProjectionView::color(int tid) const {
+  if (nearColor.contains(tid))
+    return nearColor[tid];
+  else
+    return PointF();
 }
 
 void ProjectionView::setColor(int tid, PointF cnear) {
   nearColor[tid] = cnear;
-  update();
+  if (!frozen())
+    update();
 }     
 
+void ProjectionView::setPointSize(int tid, float ps) {
+  pointSize[tid] = ps;
+}
 
 void ProjectionView::mousePressEvent(QMouseEvent *e) {
   presspt = e->pos();
@@ -123,8 +157,10 @@ void ProjectionView::mouseMoveEvent(QMouseEvent *e) {
 }
 
 void ProjectionView::paintEvent(QPaintEvent *) {
-  QMap< int, QVector<LineF> > xformedtrees;
+  QMap< int, QVector<LineF> > xformedlines;
+  QMap< int, QVector<PointF> > xformedpoints;
 
+  // MAP maps from source space to rotated space
   auto map = [this](PointF p) {
     PointF q;
     q.x = tform[0][0]*p.x + tform[0][1]*p.y + tform[0][2]*p.z;
@@ -132,20 +168,30 @@ void ProjectionView::paintEvent(QPaintEvent *) {
     q.z = tform[2][0]*p.x + tform[2][1]*p.y + tform[2][2]*p.z;
     return q;
   };
-  
-  for (int k: trees.keys()) {
-    QVector<LineF> v = trees[k];
+
+  // Transform all line series
+  for (int k: lines.keys()) {
+    QVector<LineF> v = lines[k];
     for (LineF &l: v) {
       l.p1 = map(l.p1);
       l.p2 = map(l.p2);
     }
-    xformedtrees[k] = v;
+    xformedlines[k] = v;
   }
 
+  // Transform all point series
+  for (int k: points.keys()) {
+    QVector<PointF> v = points[k];
+    for (PointF &p: v) 
+      p = map(p);
+    xformedpoints[k] = v;
+  }
+
+  // Calculate center based on line series only
   PointF pavg;
   int N = 0;
-  for (int k: trees.keys()) {
-    QVector<LineF> const &v = xformedtrees[k];
+  for (int k: lines.keys()) {
+    QVector<LineF> const &v = xformedlines[k];
     for (LineF const &l: v) {
       pavg += l.p1;
       pavg += l.p2;
@@ -154,9 +200,11 @@ void ProjectionView::paintEvent(QPaintEvent *) {
     }
   }
   pavg /= N;
+
+  // Calculate extent based on line series only
   double d2max = 0;
-  for (int k: trees.keys()) {
-    QVector<LineF> const &v = xformedtrees[k];
+  for (int k: lines.keys()) {
+    QVector<LineF> const &v = xformedlines[k];
     for (LineF const &l: v) {
       double d2 = (l.p1 - pavg).L2();
       if (d2>d2max)
@@ -175,6 +223,7 @@ void ProjectionView::paintEvent(QPaintEvent *) {
   double zmin = pavg.z - dmax;
   double zmax = pavg.z + dmax;
 
+  // Calculate appropriate scaling for widget size
   int w = width();
   int h = height();
   double xrat = w / (xmax - xmin);
@@ -184,6 +233,7 @@ void ProjectionView::paintEvent(QPaintEvent *) {
   double x0 = .5*w - .49*r;
   double y0 = .5*h - .49*r;
 
+  // Draw direction names
   PointF px = .08*r*map(PointF(1, 0, 0));
   PointF py = .08*r*map(PointF(0, 1, 0));
   PointF pz = .08*r*map(PointF(0, 0, 1));
@@ -207,10 +257,12 @@ void ProjectionView::paintEvent(QPaintEvent *) {
   p.setPen(penForZ(pz.z));
   p.drawText(.12*w + pz.x, .12*h + pz.y, zpos);
 
+  // CLIP clips a (color) value to [0, 1]
   auto clip = [](qreal x) { return x<0 ? 0 : x>1 ? 1 : x; };
-  
-  for (int k: xformedtrees.keys()) {
-    QVector<LineF> const &v = xformedtrees[k];
+
+  // Draw all line series
+  for (int k: xformedlines.keys()) {
+    QVector<LineF> const &v = xformedlines[k];
     PointF cn = nearColor[k];
     for (auto const &l: v) {
       double zf = ((l.p1.z + l.p2.z)/2 - zmin) / (1e-9 + zmax - zmin) * .8;
@@ -223,6 +275,25 @@ void ProjectionView::paintEvent(QPaintEvent *) {
                          y0+scale*(l.p1.y - ymin)),
                  QPointF(x0+scale*(l.p2.x - xmin),
                          y0+scale*(l.p2.y - ymin)));
+    }
+  }
+
+  // Draw all point series
+  p.setPen(QPen(Qt::NoPen));
+  for (int k: xformedpoints.keys()) {
+    QVector<PointF> const &v = xformedpoints[k];
+    PointF cn = nearColor[k];
+    float radius = pointSize.contains(k) ? pointSize[k] : 3;
+    for (auto const &q: v) {
+      double zf = (q.z - zmin) / (1e-9 + zmax - zmin) * .8;
+      double zn = 1 - zf;
+      qreal r = clip(cn.x*zn + zf);
+      qreal g = clip(cn.y*zn + zf);
+      qreal b = clip(cn.z*zn + zf);
+      p.setBrush(QBrush(QColor::fromRgbF(r,g,b)));
+      p.drawEllipse(QPointF(x0+scale*(q.x - xmin),
+                            y0+scale*(q.y - ymin)),
+                    radius, radius);
     }
   }
 }

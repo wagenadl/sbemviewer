@@ -27,6 +27,7 @@ public:
 };
 
 void ProjectionData::buildTree(quint64 tid) {
+  ui->widget->freeze();
   bool isSelected = tid==db->selectedTree();
   if (isSelected)
     haveSelectedTree = true;
@@ -44,12 +45,69 @@ void ProjectionData::buildTree(quint64 tid) {
                 PointF(q.value(3).toInt()*dx,
                        q.value(4).toInt()*dy,
                        q.value(5).toInt()*dz));
-  ui->widget->setTree(tid, ll);
+  ui->widget->setLines(tid, ll);
 
   if (isSelected)
     ui->widget->setColor(tid, PointF(.5, -.5, .5));
   else
     ui->widget->setColor(tid, PointF(-.25, .5, -.25));
+
+  if (isSelected) {
+    // decorate presynaptic nodes
+    QVector<PointF> ll;
+    QSqlQuery q = db->constQuery("select x, y, z from nodes"
+                                 " where tid==:a and typ==:b",
+                                 tid, SBEMDB::PresynTerm);
+    while (q.next())
+      ll << PointF(q.value(0).toInt()*dx,
+                   q.value(1).toInt()*dy,
+                   q.value(2).toInt()*dz);
+    ui->widget->setPoints(100000000+tid, ll);
+    ui->widget->setColor(100000000+tid, PointF(-.25, -.25, .5));
+    ui->widget->setPointSize(100000000+tid, 4);
+  }
+  if (isSelected) {
+    // decorate postsynaptic nodes
+    QVector<PointF> ll;
+    QSqlQuery q = db->constQuery("select x, y, z from nodes"
+                                 " where tid==:a and typ==:b",
+                                 tid, SBEMDB::PostsynTerm);
+    while (q.next())
+      ll << PointF(q.value(0).toInt()*dx,
+                   q.value(1).toInt()*dy,
+                   q.value(2).toInt()*dz);
+    ui->widget->setPoints(200000000+tid, ll);
+    ui->widget->setColor(200000000+tid, PointF(.5, -.25, -.25));
+    ui->widget->setPointSize(200000000+tid, 4);
+  }
+  { // decorate somata
+    QVector<PointF> ll;
+    QSqlQuery q = db->constQuery("select x, y, z from nodes"
+                                 " where tid==:a and typ==:b",
+                                 tid, SBEMDB::Soma);
+    while (q.next())
+      ll << PointF(q.value(0).toInt()*dx,
+                   q.value(1).toInt()*dy,
+                   q.value(2).toInt()*dz);
+    ui->widget->setPoints(300000000+tid, ll);
+    ui->widget->setColor(300000000+tid, ui->widget->color(tid));
+    ui->widget->setPointSize(300000000+tid, 20);
+  }
+  { // decorate exit points
+    QVector<PointF> ll;
+    QSqlQuery q = db->constQuery("select x, y, z from nodes"
+                                 " where tid==:a and typ==:b",
+                                 tid, SBEMDB::ExitPoint);
+    while (q.next())
+      ll << PointF(q.value(0).toInt()*dx,
+                   q.value(1).toInt()*dy,
+                   q.value(2).toInt()*dz);
+    ui->widget->setPoints(400000000+tid, ll);
+    ui->widget->setColor(400000000+tid, ui->widget->color(tid));
+    ui->widget->setPointSize(400000000+tid, 12);
+  }
+    
+  ui->widget->thaw();
 }
   
 ProjectionWidget::ProjectionWidget(ServerInfo *info, SBEMDB *db,
@@ -67,9 +125,11 @@ void ProjectionWidget::addTree(quint64 tid) {
 }
 
 void ProjectionWidget::addVisibleTrees() {
+  d->ui->widget->freeze();
   QSqlQuery q = d->db->constQuery("select tid from trees where visible");
   while (q.next())
     addTree(q.value(0).toULongLong());
+  d->ui->widget->thaw();
 }
 
 void ProjectionWidget::addSelectedTree() {
