@@ -118,6 +118,16 @@ void TileCacheData::receiveQNR(QNetworkReply *reply) {
                << "from" << reply->url().toString();
       break;
     }
+  } else if (reply->url().toString().contains("findRS/")) {
+    QByteArray data = reply->read(1000);
+    QString str(data);
+    bool ok;
+    int z = str.toInt(&ok);
+    if (ok)
+      tc->foundRS(z);
+    else
+      qDebug() << "Bad result from findRS:" << str
+               << " [" << reply->url().toString() << "]";
   } else {
     qDebug() << "Received unexpected QNR:" << reply->url().toString();
   }
@@ -219,7 +229,7 @@ void TileCache::requestTile(TileID id) {
   // let's cancel far-away layers, and other a
   d->dropOtherRequests(id);
 
-  QUrl url = QString("%1/A%2/Z%3/Y%4/X%5")
+  QUrl url = QString("%1/tile/A%2/Z%3/Y%4/X%5")
     .arg(d->urlroot)
     .arg(id.a)
     .arg(id.z)
@@ -231,6 +241,12 @@ void TileCache::requestTile(TileID id) {
   d->pending[id] = d->nam->get(QNetworkRequest(url));
   connect(d->pending[id], &QNetworkReply::readyRead,
 	  [this, id]() { d->gotsome[id] = true; });
+}
+
+void TileCache::findRS(int r, int s) {
+  QUrl url = QString("%1/findRS/R%2/S%3").arg(d->urlroot)
+    .arg(r).arg(s);
+  d->nam->get(QNetworkRequest(url));
 }
 
 QString TileCache::urlRoot() const {

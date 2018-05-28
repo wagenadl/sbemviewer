@@ -24,6 +24,7 @@
 #include <QFileDialog>
 #include <cmath>
 #include <QTimer>
+#include <QInputDialog>
 
 class MWData {
 public:
@@ -216,6 +217,34 @@ public:
       ui->tileviewer->setPosition(n.x, n.y, n.z);
     }
   }
+  void goRSDialog() {
+    QString txt = QInputDialog::getText(0, "SBEM Viewer",
+                                        "Input R,S coordinates to go to");
+    if (txt.isEmpty())
+      return;
+    QStringList bits = txt.split(",");
+    if (bits.size()==2) {
+      bool ok1, ok2;
+      int run = bits[0].toInt(&ok1);
+      int slice = bits[1].toInt(&ok2);
+      if (ok1 && ok2) {
+        ui->tileviewer->setRS(run, slice);
+      } else {
+        QMessageBox::warning(0, "SBEM Viewer", "Invalid R,S coordinates");
+      }
+    } else if (bits.size()==1) {
+      // consider as a single Z
+      bool ok1;
+      int z = bits[0].toInt(&ok1);
+      if (ok1) {
+        ui->tileviewer->setZ(z);
+      } else {
+        QMessageBox::warning(0, "SBEM Viewer", "Invalid Z coordinate");
+      }
+    } else {
+      QMessageBox::warning(0, "SBEM Viewer", "Invalid coordinates");
+    }
+  }
 };
 
 void MWData::timeout() {
@@ -302,7 +331,8 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
           [this]() { d->do3DProjection(); });
   connect(ui->actionCenterSelectedNode, &QAction::triggered,
           [this]() { d->centerSelectedNode(); });
-  
+  connect(ui->actionGoRS, &QAction::triggered,
+          [this]() { d->goRSDialog(); });
   
   ui->treeView->ui->add->setDefaultAction(ui->actionNewTree);
   ui->treeView->ui->del->setDefaultAction(ui->actionDeleteTree);

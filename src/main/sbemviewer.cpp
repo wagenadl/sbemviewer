@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
   bool cleanexit = settings.get("cleanexit", false).toBool();
   settings.set("cleanexit", false);
   QApplication app(argc, argv);
-  TileCache cache(server + "/tile");
+  TileCache cache(server);
   ServerInfo info(server);
   MainWindow mw(&cache, &info);
   mw.show();

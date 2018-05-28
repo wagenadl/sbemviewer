@@ -22,11 +22,13 @@ public slots:
   void requestTile(TileID);
   void requestTileSoon(TileID);
   void notifyNewSliceAvailable();
+  void findRS(int r, int s);
 protected:
   void timerEvent(QTimerEvent *) override;
 signals:
   void loaded(TileID);
   //  void requestTiles(QVector<TileID> const &, TileConsumer *requestor);
+  void foundRS(int z);
 private:
   class TileCacheData *d;
 };

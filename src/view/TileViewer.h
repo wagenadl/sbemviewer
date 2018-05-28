@@ -35,6 +35,7 @@ public slots:
   void setZ(int z); // slice #
   void setX(int x); // in pixels; refers to center of window
   void setY(int y); // in pixels; refers to center of window
+  void setRS(int r, int s); // run, slice positioning
   void setPosition(int x, int y); // combination of above
   void setPosition(int x, int y, int z); // combination of above
   void stepX(int dx);

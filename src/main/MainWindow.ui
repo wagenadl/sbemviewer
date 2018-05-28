@@ -76,6 +76,8 @@
     <addaction name="separator"/>
     <addaction name="actionCenterSelectedNode"/>
     <addaction name="action3DProjection"/>
+    <addaction name="separator"/>
+    <addaction name="actionGoRS"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -294,6 +296,14 @@
    </property>
    <property name="shortcut">
     <string>P</string>
+   </property>
+  </action>
+  <action name="actionGoRS">
+   <property name="text">
+    <string>&amp;Go to (R,S) position…</string>
+   </property>
+   <property name="shortcut">
+    <string>G</string>
    </property>
   </action>
  </widget>

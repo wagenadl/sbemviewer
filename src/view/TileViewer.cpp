@@ -39,6 +39,8 @@ void TileViewer::setCache(TileCache *c) {
   cache->setAutoNeighbors(true);
   connect(cache, SIGNAL(loaded(TileID)),
           this, SLOT(update()));
+  connect(cache, SIGNAL(foundRS(int)),
+          this, SLOT(setZ(int)));
 }
 
 void TileViewer::setScale(int a1) {
@@ -49,6 +51,10 @@ void TileViewer::setScale(int a1) {
   setPosition(x0, y0);
   emit scaleChanged(a);
   update();
+}
+
+void TileViewer::setRS(int r1, int s1) {
+  cache->findRS(r1, s1);
 }
 
 void TileViewer::setZ(int z1) {
