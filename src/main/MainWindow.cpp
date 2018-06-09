@@ -253,8 +253,17 @@ void MWData::timeout() {
   ui->tileviewer->setZ(1000000);
   if (ui->tileviewer->z() != z) {
     // updated
-    QTime now = QTime::currentTime();
-    ui->nav->ui->updateinfo->setText("Updated: " + now.toString());
+    //    QTime now = QTime::currentTime();
+    QString dt = info->string("dt");
+    if (!dt.isEmpty()) {
+      QString yy = dt.mid(0,2);
+      QString mm = dt.mid(2,2);
+      QString dd = dt.mid(4,2);
+      QString HH = dt.mid(7,2);
+      QString MM = dt.mid(9,2);
+      QString SS = dt.mid(11,2);
+      ui->nav->ui->updateinfo->setText(mm + "/" + dd + "/20" + yy + " " + HH + ":" + MM + ":" + SS);
+    }
   }
 }
 

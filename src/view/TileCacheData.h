@@ -34,6 +34,7 @@ public:
   QMap<TileID, bool> gotsome;
   QMap<TileID, QDateTime> soonrequests_byid;
   QMultiMap<QDateTime, TileID> soonrequests_bytime;
+  int maxz;
 public:
   void clean();
   void dropOtherRequests(TileID);

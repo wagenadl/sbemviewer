@@ -18,6 +18,7 @@ TileCacheData::TileCacheData(QString urlroot, TileCache *parent):
   maxdx = maxdy = 10;
   autoneighbors = false;
   t = 0;
+  maxz = 100000;
   
   nam = new QNetworkAccessManager(this);
   connect(nam, SIGNAL(finished(QNetworkReply*)),
@@ -67,7 +68,8 @@ void TileCacheData::clean() {
   }
 }
 
-void TileCache::notifyNewSliceAvailable() {
+void TileCache::notifyNewSliceAvailable(int z) {
+  d->maxz = z;
   // bluntly forget all empty images so they will be requested anew
   for (TileID id: d->tiles.keys()) {
     if (d->tiles[id].isNull()) {
@@ -147,9 +149,11 @@ QImage TileCache::getTile(TileID const &id) {
     if (d->autoneighbors) {
       TileID a;
       a = id; a.z+=1;
-      requestTileSoon(a);
+      if (a.z<=d->maxz)
+	requestTileSoon(a);
       a = id; a.z-=1;
-      requestTileSoon(a);
+      if (a.z>=0)
+	requestTileSoon(a);
       a = id; a.x+=1;
       requestTileSoon(a);
       a = id; a.x-=1;
@@ -252,3 +256,4 @@ void TileCache::findRS(int r, int s) {
 QString TileCache::urlRoot() const {
   return d->urlroot;
 }
+
