@@ -489,7 +489,7 @@ void TileViewer::enforceZ() {
   
   if (z_>z1) {
     z_ = z1;
-    cache->notifyNewSliceAvailable();
+    cache->notifyNewSliceAvailable(z1);
     info->update();
   }
 }

@@ -21,7 +21,7 @@ public:
 public slots:
   void requestTile(TileID);
   void requestTileSoon(TileID);
-  void notifyNewSliceAvailable();
+  void notifyNewSliceAvailable(int z);
   void findRS(int r, int s);
 protected:
   void timerEvent(QTimerEvent *) override;
