@@ -16,6 +16,10 @@ const QString defaultServer = "http://leechem.caltech.edu:9090";
 QString getServer(QString dflt) {
   QString server = QInputDialog::getText(0, "SBEM Viewer", "Server name",
                                          QLineEdit::Normal, dflt);
+  if (!server.startsWith("http://") && !server.startsWith("https://"))
+    server = "http://" + server;
+  if (server.lastIndexOf(":") <= server.indexOf(":"))
+    server += ":9090";
   return server;
 }
 
@@ -31,9 +35,7 @@ int main(int argc, char **argv) {
 
   QApplication app(argc, argv);
 
-  QString server = getServer(server);
-  if (!server.startsWith("http://") && !server.startsWith("https://"))
-    server = "http://" + server;
+  QString server = getServer(srv0);
   if (server != srv0) {
     // database likely refers to specific server, so...
     cleanexit = false;
@@ -46,6 +48,7 @@ int main(int argc, char **argv) {
 
   MainWindow mw(&cache, &info);
   mw.show();
+  mw.setWindowTitle(mw.windowTitle() + " at " + server);
   if (cleanexit) {
     TileViewer *tv = mw.tileViewer();
     tv->setPosition(settings.get("x", tv->x()).toInt(),
