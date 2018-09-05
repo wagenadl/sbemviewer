@@ -233,6 +233,68 @@ SBEMDB::Node SBEMDB::nodeAt(Point const &p,
   return nbest;
 }
 
+SBEMDB::Node SBEMDB::somaAt(Point const &p,
+                            int xytol, int ztol, quint64 tid) const {
+  // Prefer to return from tid, but will accept other tree.
+  // If all else fails, will select from tid with ztol ignored.
+  QVector<Node> nn = nodes(constQuery("select * from nodes where tid==:a"
+				      " and typ==1"
+                                      " and z>=:b and z<=:c"
+                                      " and x>=:d and x<=:e"
+                                      " and y>=:f and y<=:g",
+                                 tid,
+                                 p.z-ztol, p.z+ztol,
+                                 p.x-xytol, p.x+xytol,
+                                 p.y-xytol, p.y+xytol));
+  Node nbest;
+  double dbest = 0;
+  auto sq = [](int x) { return x*x; };
+  for (Node const &n: nn) {
+    double d = sq(n.x - p.x) + sq(n.y - p.y) + sq(n.z - p.z);
+    if (nbest.nid==0 || d<dbest) {
+      nbest = n;
+      dbest = d;
+    }
+  }
+  if (nbest.nid)
+    return nbest;
+
+  nn = nodes(constQuery("select * from nodes where"
+                        " z>=:a and z<=:b"
+			" and typ==1"
+                        " and x>=:c and x<=:d"
+                        " and y>=:e and y<=:f",
+                        p.z-ztol, p.z+ztol,
+                        p.x-xytol, p.x+xytol,
+                        p.y-xytol, p.y+xytol));
+  for (Node const &n: nn) {
+    double d = sq(n.x - p.x) + sq(n.y - p.y) + sq(n.z - p.z);
+    if (nbest.nid==0 || d<dbest) {
+      nbest = n;
+      dbest = d;
+    }
+  }
+  if (nbest.nid)
+    return nbest;
+
+  nn = nodes(constQuery("select * from nodes where tid==:a"
+			" and typ==1"
+                        " and x>=:b and x<=:c"
+                        " and y>=:d and y<=:e",
+                        tid,
+                        p.x-xytol, p.x+xytol,
+                        p.y-xytol, p.y+xytol));
+  for (Node const &n: nn) {
+    double d = sq(n.x - p.x) + sq(n.y - p.y) + sq(n.z - p.z)/1000000.0;
+    if (nbest.nid==0 || d<dbest) {
+      nbest = n;
+      dbest = d;
+    }
+  }
+
+  return nbest;
+}
+
 QString SBEMDB::nodeTypeName(NodeType nt) {
   switch (nt) {
   case Invalid: return "Invalid";

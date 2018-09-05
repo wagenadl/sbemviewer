@@ -94,6 +94,7 @@ public:
   Node nodeAt(class Point const &p, int xytol, int ztol, quint64 tid) const;
   // Prefer to return from tid, but will accept other tree.
   // If all else fails, will select from tid with ztol ignored.
+  Node somaAt(class Point const &p, int xytol, int ztol, quint64 tid) const;
   static QString nodeTypeName(NodeType);
 };
 

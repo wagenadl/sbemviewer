@@ -433,6 +433,10 @@ bool EditOverlay::plainLeftPress(Point const &p, int a) {
     forceUpdate();
   }
   SBEMDB::Node n = db->nodeAt(p, 2*nodeSBEMRadius(a), ZTOLERANCE, tid);
+  qDebug() << "plain left" << n.nid << "(" << tid << ")";
+  if (n.nid<=0) 
+    n = db->somaAt(p, 2*nodeSBEMRadius(a), SOMAZTOLERANCE, tid);
+  qDebug() << "->" << n.nid;
   if (n.nid>0) {
     if (n.tid==tid) {
       nid = n.nid;
