@@ -108,6 +108,25 @@ void EditOverlay::drawNodes(QPainter *p, ViewInfo const &vi,
 }
 
 
+void EditOverlay::drawTreeNames(QPainter *p, ViewInfo const &vi,
+				QVector<SBEMDB::Node> const &nodes,
+				QMap<quint64, QString> const &tnames,
+				QColor (*colorfn)(int)) {
+  int sr = nodeScreenRadius(vi.a);
+  p->setPen(QPen(Qt::NoPen));
+  for (auto const &n: nodes) {
+    int dz = n.z - vi.z;
+    int r = (dz==0) ? sr : sr*3/4;
+    p->setPen(QPen(colorfn(dz)));
+    int x = n.x;
+    int y = n.y;
+    QString tname = tnames[n.tid];
+    QPoint pc((x - vi.xl)>>vi.a, (y - vi.yt)>>vi.a);
+    p->drawText(pc + QPoint(sr, -sr), tname);
+  }
+  p->setPen(QPen(Qt::NoPen));
+}
+
 void EditOverlay::paint(QPainter *p,
 			QRect const &, class ViewInfo const &vi) {
   if (!db->isOpen())
@@ -220,7 +239,8 @@ void EditOverlay::drawOtherTrees(QPainter *p, ViewInfo const &vi) {
 void EditOverlay::drawOtherSomata(QPainter *p, ViewInfo const &vi) {
   int nr = nodeSBEMRadius(vi.a);
   
-  db->query("create temp table visnodes as select nid from nodes"
+  db->query("create temp table visnodes as select nid, tid, tname from nodes"
+	    " natural join trees"
             " where tid!=:a"
             " and tid in (select tid from trees where visible>0)"
             " and typ==1"
@@ -233,10 +253,11 @@ void EditOverlay::drawOtherSomata(QPainter *p, ViewInfo const &vi) {
             vi.yt - nr, vi.yb + nr);
   
   auto visnodes = db->nodes(db->constQuery("select * from nodes where nid in"
-                                           " ( select * from visnodes )"));
-
+                                           " ( select nid from visnodes )"));
+  auto tnames = db->treeNames(db->constQuery("select tid, tname from visnodes"));
 
   drawNodes(p, vi, visnodes, &otherNodeColor);
+  drawTreeNames(p, vi, visnodes, tnames, &otherNodeColor);
 
   db->query("drop table visnodes");
 }

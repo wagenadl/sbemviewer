@@ -93,6 +93,13 @@ QVector<SBEMDB::Tree> SBEMDB::trees(QSqlQuery q) const {
   return lst;
 }
 
+QMap<quint64, QString> SBEMDB::treeNames(QSqlQuery q) const {
+  QMap<quint64, QString> map;
+  while (q.next())
+    map[q.value(0).toULongLong()] = q.value(1).toString();
+  return map;
+}
+
 QVector<SBEMDB::Node> SBEMDB::nodes(QSqlQuery q) const {
   QVector<Node> lst;
   while (q.next()) {

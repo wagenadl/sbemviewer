@@ -87,6 +87,8 @@ public:
   QVector<Node> nodes(QSqlQuery q) const;
   QVector<Tag> tags(QSqlQuery q) const;
   QVector<NodeCon> nodeCons(QSqlQuery q) const;
+  QMap<quint64, QString> treeNames(QSqlQuery q) const;
+  // q must be from "select tid, tname from trees" or equivalent
 public:
   FullSynapse synapseDetails(quint64 sid) const;
   Node nodeAt(class Point const &p, int xytol, int ztol, quint64 tid) const;
