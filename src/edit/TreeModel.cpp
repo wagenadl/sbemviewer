@@ -136,6 +136,14 @@ quint64 TreeModel::newTree() {
   return tid;
 }
 
+QModelIndex TreeModel::indexForTreeID(quint64 tid) const {
+  int row = rowForTreeID(tid);
+  if (row<0)
+    return QModelIndex();
+  else
+    return createIndex(row, 0);
+}
+
 int TreeModel::rowForTreeID(quint64 tid) const {
   int n = db->simpleQuery("select count(1) from trees where tid==:a",
                           qulonglong(tid)).toInt();

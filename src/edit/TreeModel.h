@@ -33,6 +33,7 @@ public:
   void beginReset(); // call before changing the db
   void concludeReset(); // call after changing the db
   SBEMDB *database() const { return db; }
+  QModelIndex indexForTreeID(quint64 tid) const;
   int rowForTreeID(quint64 tid) const; // -1 if invalid
   quint64 treeIDAt(int row) const; // 0 if invalid
   void setAllVisible(bool);

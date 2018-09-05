@@ -63,8 +63,11 @@ void TreeView::actHideAll() {
 void TreeView::updateAfterChangingDB() {
   quint64 tid = tm->database()->selectedTree();
   quint64 nid = tm->database()->selectedNode();
-  int row = tm->rowForTreeID(tid);
-  if (row>=0) {
+  QModelIndex idx = tm->indexForTreeID(tid);
+  if (idx.isValid()) {
+    QModelIndex sidx = sortproxy->mapFromSource(idx);
+    qDebug() << "click" << idx.row() << sidx.row();
+    int row = sidx.row();
     ui->table->selectRow(row);
   }
   emit activeTreeChanged(tid);
@@ -92,7 +95,8 @@ void TreeView::setModel(TreeModel *tm1) {
               tm->database()->selectTree(0);
               activeTreeChanged(0);
             } else {
-              QModelIndex idx = sel.indexes().first();
+              QModelIndex sidx = sel.indexes().first();
+	      QModelIndex idx = sortproxy->mapToSource(sidx);
               qDebug() << "sel row" << idx.row();
               quint64 tid = tm->treeIDAt(idx.row());
               tm->database()->selectTree(tid);
