@@ -116,7 +116,6 @@ void EditOverlay::drawTreeNames(QPainter *p, ViewInfo const &vi,
   p->setPen(QPen(Qt::NoPen));
   for (auto const &n: nodes) {
     int dz = n.z - vi.z;
-    int r = (dz==0) ? sr : sr*3/4;
     p->setPen(QPen(colorfn(dz)));
     int x = n.x;
     int y = n.y;
@@ -333,35 +332,38 @@ Point EditOverlay::goodSpotForTree(quint64 tid1,
 void EditOverlay::drawActiveTree(QPainter *p, ViewInfo const &vi) {
   int nr = nodeSBEMRadius(vi.a);
 
-  if (true) {
-    /* Far away nodes to be drawn thinly */
-    db->query("create temp table visnodes as select nid from nodes"
-              " where tid==:a"
-              " and (z<:b or z>:c)"
-              " and x>=:d and x<:e"
-              " and y>=:f and y<:g",
-              tid,
-              vi.z - ZTOLERANCE, vi.z + ZTOLERANCE,
-              vi.xl - nr, vi.xr + nr,
-              vi.yt - nr, vi.yb + nr);
-    auto selnode = db->nodes(db->constQuery("select * from nodes where nid in"
-                                             " ( select nid from visnodes "
-                                             "   where nid==:a)",
-                                             db->selectedNode()));
-    auto soma = db->nodes(db->constQuery("select * from nodes where nid in"
-                                         " ( select nid from visnodes "
-                                         "   where typ==1)",
-                                         db->selectedNode()));
-    
-    auto viscons = db->nodeCons(db->constQuery("select * from nodecons"
-                                               " where nid1 in"
-                                               " ( select nid from visnodes )"));
-    
-    drawCons(p, vi, viscons, &edgeColor, true);
-    drawNodes(p, vi, selnode, &nodeColor);
-    drawNodes(p, vi, soma, &nodeColor);
-    db->query("drop table visnodes");
-  }
+
+  /* Far away nodes to be drawn thinly */
+  db->query("create temp table visnodes as select nid from nodes"
+	    " where tid==:a"
+	    " and (z<:b or z>:c)"
+	    " and x>=:d and x<:e"
+	    " and y>=:f and y<:g",
+	    tid,
+	    vi.z - ZTOLERANCE, vi.z + ZTOLERANCE,
+	    vi.xl - nr, vi.xr + nr,
+	    vi.yt - nr, vi.yb + nr);
+  auto selnode = db->nodes(db->constQuery("select * from nodes where nid in"
+					  " ( select nid from visnodes "
+					  "   where nid==:a)",
+					  db->selectedNode()));
+  auto soma = db->nodes(db->constQuery("select * from nodes where nid in"
+				       " ( select nid from visnodes "
+				       "   where typ==1)",
+				       db->selectedNode()));
+  
+  auto viscons = db->nodeCons(db->constQuery("select * from nodecons"
+					     " where nid1 in"
+					     " ( select nid from visnodes )"));
+  
+  auto treename = db->treeNames(db->constQuery("select tid, tname from trees"
+					       " where tid==:a", tid));
+  
+  drawCons(p, vi, viscons, &edgeColor, true);
+  drawNodes(p, vi, selnode, &nodeColor);
+  drawNodes(p, vi, soma, &nodeColor);
+  drawTreeNames(p, vi, soma, treename, &nodeColor);
+  db->query("drop table visnodes");
 
   /* Nearby nodes */
   db->query("create temp table visnodes as select nid from nodes"
@@ -376,12 +378,20 @@ void EditOverlay::drawActiveTree(QPainter *p, ViewInfo const &vi) {
   auto visnodes = db->nodes(db->constQuery("select * from nodes where nid in"
                                            " ( select nid from visnodes )"));
   
-  auto viscons = db->nodeCons(db->constQuery("select * from nodecons"
+  viscons = db->nodeCons(db->constQuery("select * from nodecons"
                                             " where nid1 in"
                                             " ( select nid from visnodes )"));
 
   drawCons(p, vi, viscons, &edgeColor);
   drawNodes(p, vi, visnodes, &nodeColor);
+
+  soma = db->nodes(db->constQuery("select * from nodes where nid in"
+                                         " ( select nid from visnodes "
+                                         "   where typ==1)",
+                                         db->selectedNode()));
+  treename = db->treeNames(db->constQuery("select tid, tname from trees"
+					       " where tid==:a", tid));
+  drawTreeNames(p, vi, soma, treename, &nodeColor);
   
   db->query("drop table visnodes");
 }
