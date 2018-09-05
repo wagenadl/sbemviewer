@@ -12,6 +12,7 @@ class EditOverlay: public Overlay {
   Q_OBJECT;
 public:
   static constexpr int ZTOLERANCE = 10; // number of Z layers to show ± current
+  static constexpr int SOMAZTOLERANCE = 20*50; // range for showing somata
 public:
   EditOverlay(SBEMDB *db, QWidget *parent=0);
   ~EditOverlay();
@@ -49,6 +50,7 @@ signals:
 private:
   void drawActiveTree(QPainter *p, ViewInfo const &vi);
   void drawOtherTrees(QPainter *p, ViewInfo const &vi);
+  void drawOtherSomata(QPainter *p, ViewInfo const &vi);
   void drawAuxNid(QPainter *p, ViewInfo const &vi);
   void drawSynapses(QPainter *p, ViewInfo const &vi);
   bool plainLeftPress(Point const &p, int a);

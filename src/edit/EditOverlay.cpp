@@ -114,6 +114,7 @@ void EditOverlay::paint(QPainter *p,
     return;
   drawSynapses(p, vi);
   drawOtherTrees(p, vi);
+  drawOtherSomata(p, vi);
   drawActiveTree(p, vi);
   drawAuxNid(p, vi);
   drawTags(p, vi);
@@ -216,6 +217,30 @@ void EditOverlay::drawOtherTrees(QPainter *p, ViewInfo const &vi) {
   db->query("drop table visnodes");
 }
 
+void EditOverlay::drawOtherSomata(QPainter *p, ViewInfo const &vi) {
+  int nr = nodeSBEMRadius(vi.a);
+  
+  db->query("create temp table visnodes as select nid from nodes"
+            " where tid!=:a"
+            " and tid in (select tid from trees where visible>0)"
+            " and typ==1"
+            " and z>=:b and z<=:c"
+            " and x>=:d and x<:e"
+            " and y>=:f and y<:g",
+            tid,
+            vi.z - SOMAZTOLERANCE, vi.z + SOMAZTOLERANCE,
+            vi.xl - nr, vi.xr + nr,
+            vi.yt - nr, vi.yb + nr);
+  
+  auto visnodes = db->nodes(db->constQuery("select * from nodes where nid in"
+                                           " ( select * from visnodes )"));
+
+
+  drawNodes(p, vi, visnodes, &otherNodeColor);
+
+  db->query("drop table visnodes");
+}
+
 void EditOverlay::drawAuxNid(QPainter *p, ViewInfo const &vi) {
   if (!aux_nid)
     return;
@@ -298,17 +323,22 @@ void EditOverlay::drawActiveTree(QPainter *p, ViewInfo const &vi) {
               vi.z - ZTOLERANCE, vi.z + ZTOLERANCE,
               vi.xl - nr, vi.xr + nr,
               vi.yt - nr, vi.yb + nr);
-    auto visnodes = db->nodes(db->constQuery("select * from nodes where nid in"
+    auto selnode = db->nodes(db->constQuery("select * from nodes where nid in"
                                              " ( select nid from visnodes "
                                              "   where nid==:a)",
                                              db->selectedNode()));
+    auto soma = db->nodes(db->constQuery("select * from nodes where nid in"
+                                         " ( select nid from visnodes "
+                                         "   where typ==1)",
+                                         db->selectedNode()));
     
     auto viscons = db->nodeCons(db->constQuery("select * from nodecons"
                                                " where nid1 in"
                                                " ( select nid from visnodes )"));
     
     drawCons(p, vi, viscons, &edgeColor, true);
-    drawNodes(p, vi, visnodes, &nodeColor);
+    drawNodes(p, vi, selnode, &nodeColor);
+    drawNodes(p, vi, soma, &nodeColor);
     db->query("drop table visnodes");
   }
 
