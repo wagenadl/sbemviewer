@@ -27,6 +27,7 @@ public:
   class Ui_TreeView *ui;
 private:
   class TreeModel *tm;
+  class QSortFilterProxyModel *sortproxy;
 };
 
 #endif

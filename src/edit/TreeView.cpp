@@ -5,11 +5,13 @@
 #include "TreeModel.h"
 #include <QDebug>
 #include <QMessageBox>
+#include <QSortFilterProxyModel>
 
 TreeView::TreeView(QWidget *parent): QWidget(parent) {
   tm = 0;
   ui = new Ui_TreeView();
   ui->setupUi(this);
+  sortproxy = new QSortFilterProxyModel(ui->table);
 }
 
 TreeView::~TreeView() {
@@ -17,7 +19,8 @@ TreeView::~TreeView() {
 }
 
 void TreeView::actNewTree() {
-  if (!tm) return;
+  if (!tm)
+    return;
   tm->newTree();
   ui->table->selectRow(tm->rowCount()-1);
 }
@@ -71,7 +74,10 @@ void TreeView::updateAfterChangingDB() {
 void TreeView::setModel(TreeModel *tm1) {
   // the model may very well not have a db attached yet!
   tm = tm1;
-  ui->table->setModel(tm);
+  sortproxy->setSourceModel(tm);
+  ui->table->setModel(sortproxy);
+  ui->table->setSortingEnabled(true);
+  ui->table->sortByColumn(TreeModel::Col_Id, Qt::AscendingOrder);
   ui->table->resizeColumnToContents(TreeModel::Col_Id);
   ui->table->resizeColumnToContents(TreeModel::Col_Visible);
   ui->table->setSelectionBehavior(QAbstractItemView::SelectRows);
