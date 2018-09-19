@@ -19,12 +19,10 @@ public:
   void setAutoNeighbors(bool);
   QString urlRoot() const;
 public slots:
-  void requestTile(TileID);
+  void requestTile(TileID, bool lowprio=false);
   void requestTileSoon(TileID);
   void notifyNewSliceAvailable(int z);
   void findRS(int r, int s);
-protected:
-  void timerEvent(QTimerEvent *) override;
 signals:
   void loaded(TileID);
   //  void requestTiles(QVector<TileID> const &, TileConsumer *requestor);

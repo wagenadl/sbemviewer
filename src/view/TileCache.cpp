@@ -12,6 +12,8 @@
 #include <QNetworkAccessManager>
 #include <QDateTime>
 
+constexpr int MAXATONCE = 6;
+
 TileCacheData::TileCacheData(QString urlroot, TileCache *parent):
   QObject(parent), urlroot(urlroot), tc(parent) {
   maxret = 1000;
@@ -23,6 +25,23 @@ TileCacheData::TileCacheData(QString urlroot, TileCache *parent):
   nam = new QNetworkAccessManager(this);
   connect(nam, SIGNAL(finished(QNetworkReply*)),
           this, SLOT(receiveQNR(QNetworkReply*)));
+}
+
+void TileCacheData::processPrePending() {
+  while (pending.size() < MAXATONCE && !prepending.isEmpty()) {
+    TileID id = prepending.takeFirst();
+    QUrl url = QString("%1/tile/A%2/Z%3/Y%4/X%5")
+      .arg(urlroot)
+      .arg(id.a)
+      .arg(id.z)
+      .arg(id.y)
+      .arg(id.x);
+    qDebug() << "request" << url.toString() << "for" << id;
+    urlmap[url] = id;
+    pending[id] = nam->get(QNetworkRequest(url));
+    connect(pending[id], &QNetworkReply::readyRead,
+	    [this, id]() { gotsome[id] = true; });
+  }
 }
 
 void TileCacheData::dropOtherRequests(TileID id) {
@@ -38,19 +57,16 @@ void TileCacheData::dropOtherRequests(TileID id) {
       }
     }
   }
-  for (auto it=soonrequests_bytime.begin();
-       it!=soonrequests_bytime.end(); ) {
-    TileID t = it.value();
+
+  for (auto it=prepending.begin(); it!=prepending.end(); ) {
+    TileID t = *it;
     if (t.a != id.a
         || abs(t.z - id.z)>2
-        || abs(t.x - id.x)>maxdx + 2
-        || abs(t.y - id.y)>maxdy + 2) {
-      it = soonrequests_bytime.erase(it);
-      soonrequests_byid.remove(t);
-      qDebug() << "Dropping postponed" << t << maxdx << maxdy << id;
-    } else {
+        || abs(t.x - id.x)>maxdx
+        || abs(t.y - id.y)>maxdy) 
+      it = prepending.erase(it);
+    else
       ++it;
-    }
   }
 }
 
@@ -134,10 +150,10 @@ void TileCacheData::receiveQNR(QNetworkReply *reply) {
     qDebug() << "Received unexpected QNR:" << reply->url().toString();
   }
   reply->deleteLater();
+  processPrePending();
 }
 
 TileCache::TileCache(QString urlroot): d(new TileCacheData(urlroot, this)) {
-  startTimer(100);
 }
 
 TileCache::~TileCache() {
@@ -189,62 +205,38 @@ void TileCache::setAutoNeighbors(bool an) {
 }
 
 void TileCache::requestTileSoon(TileID id) {
+  requestTile(id, true);
+}
+
+void TileCache::requestTile(TileID id, bool lowprio) {
   if (!id.isValid())
     return;
   if (d->tiles.contains(id))
     return;
   if (d->pending.contains(id))
     return;
-  if (d->soonrequests_byid.contains(id))
-    return;
-  qDebug() << "requestilesoon" << id;
-  d->dropOtherRequests(id);
-  QDateTime t = QDateTime::currentDateTime().addMSecs(100);
-  d->soonrequests_byid.insert(id, t);
-  d->soonrequests_bytime.insert(t, id);
-}
-
-void TileCache::timerEvent(QTimerEvent *) {
-  QDateTime now = QDateTime::currentDateTime();
-  while (!d->soonrequests_bytime.isEmpty()) {
-    auto it = d->soonrequests_bytime.begin();
-    if (it.key() < now) {
-      TileID id = it.value();
-      qDebug() << "Requesting postponed" << id;
-      requestTile(id);
-      d->soonrequests_byid.remove(id);
-      d->soonrequests_bytime.erase(it);
-    } else {
-      break;
+  if (d->prepending.contains(id)) {
+    if (!lowprio) {
+      d->prepending.removeOne(id);
+      d->prepending.push_front(id);
+      d->processPrePending();
     }
+    return;
   }
-}
-
-void TileCache::requestTile(TileID id) {
-  if (!id.isValid())
-    return;
-  if (d->tiles.contains(id))
-    return;
-  if (d->pending.contains(id))
-    return;
   if (id.x<0 || id.y<0 || id.z<0)
     return;
 
   // let's cancel far-away layers, and other a
-  d->dropOtherRequests(id);
+  if (!lowprio)
+    d->dropOtherRequests(id);
 
-  QUrl url = QString("%1/tile/A%2/Z%3/Y%4/X%5")
-    .arg(d->urlroot)
-    .arg(id.a)
-    .arg(id.z)
-    .arg(id.y)
-    .arg(id.x);
-  qDebug() << "request" << url.toString() << "for" << id;
-  d->urlmap[url] = id;
   d->gotsome[id] = false;
-  d->pending[id] = d->nam->get(QNetworkRequest(url));
-  connect(d->pending[id], &QNetworkReply::readyRead,
-	  [this, id]() { d->gotsome[id] = true; });
+  if  (lowprio)
+    d->prepending.push_back(id);
+  else
+    d->prepending.push_front(id);
+
+  d->processPrePending();
 }
 
 void TileCache::findRS(int r, int s) {

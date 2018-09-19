@@ -17,6 +17,7 @@ class TileCacheData: public QObject {
   Q_OBJECT;
 public:
   TileCacheData(QString urlroot, TileCache *parent);
+  void processPrePending();
 public slots:
   void receiveQNR(class QNetworkReply *);
 public:
@@ -30,10 +31,9 @@ public:
   class QNetworkAccessManager *nam;
   TileCache *tc;
   QMap<QUrl, TileID> urlmap;
+  QList<TileID> prepending;
   QMap<TileID, QNetworkReply *> pending;
   QMap<TileID, bool> gotsome;
-  QMap<TileID, QDateTime> soonrequests_byid;
-  QMultiMap<QDateTime, TileID> soonrequests_bytime;
   int maxz;
 public:
   void clean();
