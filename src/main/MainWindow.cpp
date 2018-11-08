@@ -204,11 +204,26 @@ public:
     w->resize(w->sizeHint());
   }
   void do3DProjection() {
-    ProjectionWidget *w = new ProjectionWidget(info, db);
-    w->addSelectedTree();
-    w->addVisibleTrees();
-    w->show();
-    w->setAttribute(Qt::WA_DeleteOnClose);
+    if (info && db && db->isOpen()) {
+      ProjectionWidget *w = new ProjectionWidget(info, db);
+      w->addSelectedTree();
+      w->addVisibleTrees();
+      w->resize(800, 800);
+      w->show();
+      w->setAttribute(Qt::WA_DeleteOnClose);
+      QObject::connect(w, &ProjectionWidget::doubleClickOnTree,
+	      [this](int tid, double x, double y, double z) {
+              ui->treeView->setActiveTree(tid);
+	      eo->setActiveNode(0);
+              ui->tileviewer->setPosition(x/xscale(), y/yscale(), z/zscale());
+	      });
+      QObject::connect(ui->treeView, &TreeView::activeTreeChanged,
+		       w, &ProjectionWidget::updateShownTrees);
+      QObject::connect(tm, &TreeModel::visibilityChanged,
+		       w, &ProjectionWidget::updateShownTrees);
+    } else {
+      qDebug() << "Cannot open projection widget w/o db";
+    }
   }
   void centerSelectedNode() {
     int nid = db->selectedNode();

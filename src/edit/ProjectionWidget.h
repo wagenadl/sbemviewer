@@ -5,15 +5,21 @@
 #define PROJECTIONWIDGET_H
 
 #include "SBEMDB.h"
-#include <QWidget>
+#include <QMainWindow>
 
-class ProjectionWidget: public QWidget {
+class ProjectionWidget: public QMainWindow {
+  Q_OBJECT;
 public:
   ProjectionWidget(class ServerInfo *info, SBEMDB *db, QWidget *parent=0);
   virtual ~ProjectionWidget();
   void addTree(quint64 tid);
   void addVisibleTrees();
   void addSelectedTree();
+  void clear();
+signals:
+  void doubleClickOnTree(int tid, double x, double y, double z);
+public slots:
+  void updateShownTrees();
 private:
   class ProjectionData *d;
 };

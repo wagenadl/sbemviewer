@@ -1,3 +1,9 @@
 sbemviewer
 sbemviewer_debug
 build
+release
+Makefile
+Makefile.*
+sbem3dp
+sbem3dp_debug
+

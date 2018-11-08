@@ -8,6 +8,7 @@
 #include <QMap>
 #include <QVector>
 #include "LineF.h"
+#include "Transform3.h"
 
 class ProjectionView: public QWidget {
   Q_OBJECT;
@@ -18,29 +19,30 @@ public:
   void setPoints(int tid, QVector<PointF>);
   void setColor(int tid, PointF near); // rgb [0,1]
   void setPointSize(int tid, float r);
+  void setName(int tid, QString tname);
+  void togglePointGroup(int tidgroup);
   void freeze();
   void thaw();
   bool frozen() const;
   PointF color(int tid) const; // rgb [0,1]
+  void clear();
 public slots:
   void setXAxisLabels(QString neg, QString pos);
   void setYAxisLabels(QString neg, QString pos);
   void setZAxisLabels(QString neg, QString pos);
+signals:
+  void hoveringOnTree(int tid);
+  void doubleClickOnTree(int tid, PointF pos);
 protected:
+  void wheelEvent(QWheelEvent *) override;
   void mousePressEvent(QMouseEvent *) override;
+  void mouseDoubleClickEvent(QMouseEvent *) override;
   void mouseMoveEvent(QMouseEvent *) override;
   void keyPressEvent(QKeyEvent *) override;
   void paintEvent(QPaintEvent *) override;
   void resizeEvent(QResizeEvent *) override;
 private:
-  double tform[3][3];
-  QPoint presspt;
-  QMap< int, QVector<LineF> > lines; // in um
-  QMap< int, QVector<PointF> > points; // in um
-  QMap< int, PointF > nearColor;
-  QMap< int, float > pointSize;
-  QString xneg, xpos, yneg, ypos, zneg, zpos;
-  int freezedepth;
+  class ProjectionViewData *d;
 };
 
 #endif

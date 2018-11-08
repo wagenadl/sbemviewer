@@ -1,36 +1,45 @@
 // ProjectionWidget.cpp
 
 #include "ProjectionWidget.h"
-#include "ui_ProjectionWidget.h"
+#include "ProjectionView.h"
 #include "LineF.h"
 #include "ServerInfo.h"
+#include "DistinctColors.h"
+
+#include <QRegularExpression>
 
 class ProjectionData {
 public:
   ProjectionData(ServerInfo *info, SBEMDB *db): info(info), db(db) {
-    ui = new Ui_ProjectionWidget;
     haveSelectedTree = false;
     dx = info->contains("dx") ? info->real("dx") : 0.0055;
     dy = info->contains("dy") ? info->real("dy") : 0.0055;
     dz = info->contains("dz") ? info->real("dz") : 0.050;
   }
   ~ProjectionData() {
-    delete ui;
   }
   void buildTree(quint64 tid);
 public:
   ServerInfo *info;
   SBEMDB *db;
-  Ui_ProjectionWidget *ui;
+  class ProjectionView *view;
   bool haveSelectedTree;
   double dx, dy, dz;
 };
 
 void ProjectionData::buildTree(quint64 tid) {
-  ui->widget->freeze();
+  view->freeze();
   bool isSelected = tid==db->selectedTree();
   if (isSelected)
     haveSelectedTree = true;
+
+  QString tname = db->simpleQuery("select tname from trees where tid==:a", tid)
+    .toString();
+
+  view->setName(tid, tname);
+  
+  auto mtch = QRegularExpression("(\\d+)").match(tname);
+  int uctid = mtch.hasMatch() ? mtch.captured(1).toInt() : 0;
 
   QVector<LineF> ll;
   QSqlQuery q = db->constQuery("select n1.x, n1.y, n1.z, n2.x, n2.y, n2.z"
@@ -45,13 +54,17 @@ void ProjectionData::buildTree(quint64 tid) {
                 PointF(q.value(3).toInt()*dx,
                        q.value(4).toInt()*dy,
                        q.value(5).toInt()*dz));
-  ui->widget->setLines(tid, ll);
+  view->setLines(tid, ll);
 
-  if (isSelected)
-    ui->widget->setColor(tid, PointF(.5, -.5, .5));
-  else
-    ui->widget->setColor(tid, PointF(-.25, .5, -.25));
-
+  //  if (isSelected)
+  //    view->setColor(tid, PointF(.5, -.5, .5));
+  //  else
+  //    view->setColor(tid, PointF(-.25, .5, -.25));
+  uint32_t c = DistinctColors::instance().color(uctid);
+  PointF col((c&0xff0000)/65536/255.*1.5-.5,
+	     (c&0x00ff00)/256/255.*1.5-.5,
+	     (c&0x0000ff)/1/255.*1.5-.5);
+  view->setColor(tid, isSelected ? PointF(-.5, -.5, -.5) : col);
   if (isSelected) {
     // decorate presynaptic nodes
     QVector<PointF> ll;
@@ -62,9 +75,9 @@ void ProjectionData::buildTree(quint64 tid) {
       ll << PointF(q.value(0).toInt()*dx,
                    q.value(1).toInt()*dy,
                    q.value(2).toInt()*dz);
-    ui->widget->setPoints(100000000+tid, ll);
-    ui->widget->setColor(100000000+tid, PointF(.5, -.25, -.25));
-    ui->widget->setPointSize(100000000+tid, 4);
+    view->setPoints(100000000+tid, ll);
+    view->setColor(100000000+tid, isSelected ? PointF(.5, -.25, -.25) : col);
+    view->setPointSize(100000000+tid, 4);
   }
   if (isSelected) {
     // decorate postsynaptic nodes
@@ -76,9 +89,9 @@ void ProjectionData::buildTree(quint64 tid) {
       ll << PointF(q.value(0).toInt()*dx,
                    q.value(1).toInt()*dy,
                    q.value(2).toInt()*dz);
-    ui->widget->setPoints(200000000+tid, ll);
-    ui->widget->setColor(200000000+tid, PointF(-.25, -.25, .5));
-    ui->widget->setPointSize(200000000+tid, 4);
+    view->setPoints(200000000+tid, ll);
+    view->setColor(200000000+tid, isSelected ? PointF(-.25, -.25, .5) : col);
+    view->setPointSize(200000000+tid, 4);
   }
   { // decorate somata
     QVector<PointF> ll;
@@ -89,9 +102,9 @@ void ProjectionData::buildTree(quint64 tid) {
       ll << PointF(q.value(0).toInt()*dx,
                    q.value(1).toInt()*dy,
                    q.value(2).toInt()*dz);
-    ui->widget->setPoints(300000000+tid, ll);
-    ui->widget->setColor(300000000+tid, ui->widget->color(tid));
-    ui->widget->setPointSize(300000000+tid, 20);
+    view->setPoints(300000000+tid, ll);
+    view->setColor(300000000+tid, view->color(tid));
+    view->setPointSize(300000000+tid, 20);
   }
   { // decorate exit points
     QVector<PointF> ll;
@@ -102,18 +115,24 @@ void ProjectionData::buildTree(quint64 tid) {
       ll << PointF(q.value(0).toInt()*dx,
                    q.value(1).toInt()*dy,
                    q.value(2).toInt()*dz);
-    ui->widget->setPoints(400000000+tid, ll);
-    ui->widget->setColor(400000000+tid, ui->widget->color(tid));
-    ui->widget->setPointSize(400000000+tid, 12);
+    view->setPoints(400000000+tid, ll);
+    view->setColor(400000000+tid, view->color(tid));
+    view->setPointSize(400000000+tid, 12);
   }
     
-  ui->widget->thaw();
+  view->thaw();
 }
   
 ProjectionWidget::ProjectionWidget(ServerInfo *info, SBEMDB *db,
                                    QWidget *parent):
-  QWidget(parent), d(new ProjectionData(info, db)) {
-  d->ui->setupUi(this);
+  QMainWindow(parent), d(new ProjectionData(info, db)) {
+  d->view = new ProjectionView(this);
+  setCentralWidget(d->view);
+  connect(d->view, &ProjectionView::doubleClickOnTree,
+	  [this](int tid, PointF pos) {
+	    emit doubleClickOnTree(tid, pos.x, pos.y, pos.z);
+	  });
+  setWindowTitle("SBEM Viewer 3D Projection");
 }
 
 ProjectionWidget::~ProjectionWidget() {
@@ -124,12 +143,24 @@ void ProjectionWidget::addTree(quint64 tid) {
   d->buildTree(tid);
 }
 
+void ProjectionWidget::updateShownTrees() {
+  d->view->freeze();
+  clear();
+  addVisibleTrees();
+  addSelectedTree();
+  d->view->thaw();
+}
+
+void ProjectionWidget::clear() {
+  d->view->clear();
+}
+
 void ProjectionWidget::addVisibleTrees() {
-  d->ui->widget->freeze();
+  d->view->freeze();
   QSqlQuery q = d->db->constQuery("select tid from trees where visible");
   while (q.next())
     addTree(q.value(0).toULongLong());
-  d->ui->widget->thaw();
+  d->view->thaw();
 }
 
 void ProjectionWidget::addSelectedTree() {
