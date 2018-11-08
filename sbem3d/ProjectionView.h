@@ -28,6 +28,7 @@ public slots:
   void setYAxisLabels(QString neg, QString pos);
   void setZAxisLabels(QString neg, QString pos);
 protected:
+  void wheelEvent(QWheelEvent *) override;
   void mousePressEvent(QMouseEvent *) override;
   void mouseMoveEvent(QMouseEvent *) override;
   void keyPressEvent(QKeyEvent *) override;

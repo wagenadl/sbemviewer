@@ -6,6 +6,7 @@
 #include <QPainter>
 #include <QPen>
 #include <QMouseEvent>
+#include <QWheelEvent>
 
 class Obj3D {
 public:
@@ -41,9 +42,10 @@ public:
   void findCenter(); // calculates pavg, dmax
   void autoCenter(int x, int y);
   void autoScale(int w, int h);
+  void mapCenter();
 public:
   Transform3 tform, invtform;
-  QPoint presspt;
+  QPoint presspt, lastpt;
   QMap< int, QVector<LineF> > lines; // in um
   QMap< int, QVector<PointF> > points; // in um
   QMap< int, PointF > nearColor;
@@ -88,28 +90,30 @@ void ProjectionViewData::doXForm() {
 
   if (!havecenter)
     findCenter();
+  else
+    mapCenter();
+  havexf = true;
+}
 
+void ProjectionViewData::mapCenter() {
   xfpavg = tform.apply(pavg);
-  qDebug() << pavg << xfpavg;
   PointF dp(dmax, 0, 0);
   xfdmax = sqrt((tform.apply(pavg+dp) - xfpavg).L2());
-  
-  havexf = true;
 }
 
 void ProjectionViewData::autoScale(int w, int h) {
   if (!havecenter)
     findCenter();
+  else
+    mapCenter();
   int r = (w<h ? w : h) / 2;
   qDebug() << "autoscale pre " << pavg << dmax << xfpavg << xfdmax << r;
   qDebug() << tform;
   tform = Transform3::scaler(r / xfdmax) * tform;
   invtform = tform.inverse();
+  mapCenter();
   havexf = false;
   resc = false;
-  xfpavg = tform.apply(pavg);
-  PointF dp(dmax, 0, 0);
-  xfdmax = sqrt((tform.apply(pavg+dp) - xfpavg).L2());
   qDebug() << "autoscale post " << pavg << dmax << xfpavg << xfdmax;
   qDebug() << tform;
 }
@@ -121,11 +125,9 @@ void ProjectionViewData::autoCenter(int x0, int y0) {
   qDebug() << "autocenter pre " << pavg << dmax << xfpavg << xfdmax << x0 << y0;
   tform = Transform3::shifter(x0 - xfpavg.x, y0 - xfpavg.y, 0 - xfpavg.z) * tform;
   invtform = tform.inverse();
+  mapCenter();
   havexf = false;
   resc = false;
-  xfpavg = tform.apply(pavg);
-  PointF dp(dmax, 0, 0);
-  xfdmax = sqrt((tform.apply(pavg+dp) - xfpavg).L2());
   qDebug() << "autocenter post " << pavg << dmax << xfpavg << xfdmax;
 }
 
@@ -158,9 +160,7 @@ void ProjectionViewData::findCenter() {
   }
   dmax = sqrt(d2max);
 
-  xfpavg = tform.apply(pavg);
-  PointF dp(dmax, 0, 0);
-  xfdmax = sqrt((tform.apply(pavg+dp) - pavg).L2());
+  mapCenter();
   havecenter = true;
 }
 
@@ -272,7 +272,7 @@ void ProjectionView::setPointSize(int tid, float ps) {
 }
 
 void ProjectionView::mousePressEvent(QMouseEvent *e) {
-  d->presspt = e->pos();
+  d->lastpt = d->presspt = e->pos();
   e->accept();
 }
 
@@ -292,15 +292,27 @@ void ProjectionView::keyPressEvent(QKeyEvent *e) {
   case Qt::Key_Z: d->setTransform(Transform3(zform)); update(); break;
   }
 }
- 
+
+void ProjectionView::wheelEvent(QWheelEvent *e) {
+  QPoint delta = e->angleDelta();
+  QPointF pos = e->pos();
+  d->invtform.scale(exp(-delta.y()/200.), pos.x(), pos.y());
+  d->tform = d->invtform.inverse();
+  d->havexf = false;
+  e->accept();
+  if (!frozen())
+    update();
+}
+
 void ProjectionView::mouseMoveEvent(QMouseEvent *e) {
-  double dx = (e->pos().x() - d->presspt.x()) * 4.0 / width();
-  double dy = -(e->pos().y() - d->presspt.y()) * 4.0 / height();
+  double dx = (e->pos().x() - d->lastpt.x()) * 4.0 / width();
+  double dy = -(e->pos().y() - d->lastpt.y()) * 4.0 / height();
 
   d->havexf = false;
+  //  d->invtform.rotate(dx, dy, d->presspt.x(), d->presspt.y());
   d->invtform.rotate(dx, dy, width()/2, height()/2);
   d->tform = d->invtform.inverse();
-  d->presspt = e->pos();
+  d->lastpt = e->pos();
   e->accept();
   if (!frozen())
     update();
@@ -359,7 +371,7 @@ void ProjectionView::paintEvent(QPaintEvent *) {
       QColor c(QColor::fromRgbF(r,g,b));
       if (radius>3)
 	c.setAlphaF(.5);
-      objs << Obj3D(q, radius, c);
+      objs << Obj3D(q, radius*d->xfdmax/d->dmax, c);
     }
   }
   
