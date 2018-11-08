@@ -9,6 +9,7 @@
 class ServerInfo {
 public:
   ServerInfo(QString urlroot);
+  ServerInfo(); // creates dummy serverinfo object with no contents
   ~ServerInfo();
   QStringList keys() const;  
   QMap<QString, QVariant> const &map() const;

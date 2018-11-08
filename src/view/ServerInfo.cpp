@@ -52,6 +52,11 @@ ServerInfo::ServerInfo(QString urlroot) {
   update();
 }
 
+ServerInfo::ServerInfo() {
+  d = new ServerInfoData;
+  d->nam = 0;
+}
+
 ServerInfo::~ServerInfo() {
   delete d;
 }

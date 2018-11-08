@@ -4,6 +4,8 @@
 
 #define LINEF_H
 
+#include <QDebug>
+
 struct PointF {
   double x, y, z;
   PointF(double x=0, double y=0, double z=0): x(x), y(y), z(z) { }
@@ -47,5 +49,15 @@ struct LineF {
   PointF p1, p2;
   LineF(PointF p1=PointF(), PointF p2=PointF()): p1(p1), p2(p2) { }
 };
+
+inline QDebug operator<<(QDebug dbg, PointF const &p) {
+  dbg << "(" << p.x << p.y << p.z <<")";
+  return dbg;
+}
+
+inline QDebug operator<<(QDebug dbg, LineF const &l) {
+  dbg << "{" << l.p1 << l.p2 << "}";
+  return dbg;
+}
 
 #endif
