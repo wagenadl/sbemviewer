@@ -32,6 +32,8 @@ int main(int argc, char **argv) {
   
   ProjectionWidget pw(&dummy, &db);
   pw.addVisibleTrees();
+  pw.addSelectedTree();
+  pw.resize(800, 800);
   pw.show();
   return app.exec();
 }

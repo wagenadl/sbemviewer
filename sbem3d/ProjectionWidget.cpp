@@ -4,6 +4,9 @@
 #include "ProjectionView.h"
 #include "LineF.h"
 #include "ServerInfo.h"
+#include "DistinctColors.h"
+
+#include <QRegularExpression>
 
 class ProjectionData {
 public:
@@ -30,6 +33,14 @@ void ProjectionData::buildTree(quint64 tid) {
   if (isSelected)
     haveSelectedTree = true;
 
+  QString tname = db->simpleQuery("select tname from trees where tid==:a", tid)
+    .toString();
+
+  view->setName(tid, tname);
+  
+  auto mtch = QRegularExpression("(\\d+)").match(tname);
+  int uctid = mtch.hasMatch() ? mtch.captured(1).toInt() : 0;
+
   QVector<LineF> ll;
   QSqlQuery q = db->constQuery("select n1.x, n1.y, n1.z, n2.x, n2.y, n2.z"
                                " from nodecons as nc"
@@ -45,11 +56,15 @@ void ProjectionData::buildTree(quint64 tid) {
                        q.value(5).toInt()*dz));
   view->setLines(tid, ll);
 
-  if (isSelected)
-    view->setColor(tid, PointF(.5, -.5, .5));
-  else
-    view->setColor(tid, PointF(-.25, .5, -.25));
-
+  //  if (isSelected)
+  //    view->setColor(tid, PointF(.5, -.5, .5));
+  //  else
+  //    view->setColor(tid, PointF(-.25, .5, -.25));
+  uint32_t c = DistinctColors::instance().color(uctid);
+  PointF col((c&0xff0000)/65536/255.*1.5-.5,
+	     (c&0x00ff00)/256/255.*1.5-.5,
+	     (c&0x0000ff)/1/255.*1.5-.5);
+  view->setColor(tid, isSelected ? PointF(-.5, -.5, -.5) : col);
   if (isSelected) {
     // decorate presynaptic nodes
     QVector<PointF> ll;
@@ -61,7 +76,7 @@ void ProjectionData::buildTree(quint64 tid) {
                    q.value(1).toInt()*dy,
                    q.value(2).toInt()*dz);
     view->setPoints(100000000+tid, ll);
-    view->setColor(100000000+tid, PointF(.5, -.25, -.25));
+    view->setColor(100000000+tid, isSelected ? PointF(.5, -.25, -.25) : col);
     view->setPointSize(100000000+tid, 4);
   }
   if (isSelected) {
@@ -75,7 +90,7 @@ void ProjectionData::buildTree(quint64 tid) {
                    q.value(1).toInt()*dy,
                    q.value(2).toInt()*dz);
     view->setPoints(200000000+tid, ll);
-    view->setColor(200000000+tid, PointF(-.25, -.25, .5));
+    view->setColor(200000000+tid, isSelected ? PointF(-.25, -.25, .5) : col);
     view->setPointSize(200000000+tid, 4);
   }
   { // decorate somata
@@ -121,6 +136,18 @@ ProjectionWidget::~ProjectionWidget() {
 
 void ProjectionWidget::addTree(quint64 tid) {
   d->buildTree(tid);
+}
+
+void ProjectionWidget::updateShownTrees() {
+  d->view->freeze();
+  clear();
+  addVisibleTrees();
+  addSelectedTree();
+  d->view->thaw();
+}
+
+void ProjectionWidget::clear() {
+  d->view->clear();
 }
 
 void ProjectionWidget::addVisibleTrees() {

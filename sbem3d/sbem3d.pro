@@ -18,8 +18,8 @@ SOURCES += db/Database.cpp  db/PDebug.cpp  db/SqlFile.cpp
 HEADERS += db/SBEMDB.h
 SOURCES += db/SBEMDB.cpp
 SOURCES += sbem3d.cpp
-HEADERS += ServerInfo.h   ProjectionWidget.h   ProjectionView.h  LineF.h
-SOURCES += ServerInfo.cpp ProjectionWidget.cpp ProjectionView.cpp
+HEADERS += ServerInfo.h   ProjectionWidget.h   ProjectionView.h   LineF.h
+SOURCES += ServerInfo.cpp ProjectionWidget.cpp ProjectionView.cpp LineF.cpp
 HEADERS += Transform3.h   DistinctColors.h
 SOURCES += Transform3.cpp DistinctColors.cpp
 

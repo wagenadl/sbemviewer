@@ -48,6 +48,8 @@ inline PointF operator/(PointF const &b, double a) {
 struct LineF {
   PointF p1, p2;
   LineF(PointF p1=PointF(), PointF p2=PointF()): p1(p1), p2(p2) { }
+  PointF center() const { return (p1+p2)/2; }
+  bool contains(PointF p, double mrg=1) const;
 };
 
 inline QDebug operator<<(QDebug dbg, PointF const &p) {

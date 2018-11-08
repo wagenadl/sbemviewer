@@ -8,12 +8,14 @@
 
 class DistinctColors {
 public:
-  DistinctColors();
   ~DistinctColors();
   uint32_t color(uint16_t n) const {
     return n<N ? data[n] : 0;
   }
+  int count() const;
+  static DistinctColors const &instance();
 private:
+  DistinctColors();
   uint32_t *data;
   int N;
 };

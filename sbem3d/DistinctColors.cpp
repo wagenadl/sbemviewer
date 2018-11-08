@@ -4,6 +4,15 @@
 #include <QVector>
 #include <QDebug>
 
+DistinctColors const &DistinctColors::instance() {
+  static DistinctColors dc;
+  return dc;
+}
+
+int DistinctColors::count() const {
+  return N;
+}
+
 DistinctColors::DistinctColors() {
   data = 0;
   QVector<float> flt{

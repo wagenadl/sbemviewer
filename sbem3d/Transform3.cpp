@@ -94,7 +94,7 @@ void Transform3::rotatez(double dxy, double x0, double y0) {
 }
 
 void Transform3::scale(double s, double x0, double y0) {
-  // I want to rotate such that the mapping of (x0,y0,0) is unchanged.
+  // I want to scale such that the mapping of (x0,y0,0) is unchanged.
   PointF p0 = apply(PointF(x0, y0, 0));
   *this = *this * scaler(s);
   PointF p1 = apply(PointF(x0, y0, 0));
