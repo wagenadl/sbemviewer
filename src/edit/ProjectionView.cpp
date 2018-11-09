@@ -1,3 +1,4 @@
+
 // ProjectionView.cpp
 
 #include "ProjectionView.h"
@@ -494,24 +495,8 @@ bool ProjectionViewData::updateOnWhat(QPoint p_) {
   int idbest = -1;
   double l2best = INF;
   PointF pbest;
-  // first let's look at line series
-  double mrg = .55*(xfdmax / dmax);
-  if (mrg<4)
-    mrg = 4;
-  for (int id: xformedlines.keys()) {
-    QVector<LineF> const &v(xformedlines[id]);
-    for (LineF const &l: v) {
-      double l2 = (l.center()-p).L2xy();
-      if (l2<l2best) {
-	if (l.contains(p, mrg)) {
-	  l2best = l2;
-	  idbest = id;
-	  pbest = l.center();
-	}
-      }
-    }
-  }
-  // then let's look at point series
+
+  // First, let's look at point series
   for (int id: xformedpoints.keys()) {
     QVector<PointF> const &v(xformedpoints[id]);
     for (PointF const &l: v) {
@@ -526,6 +511,27 @@ bool ProjectionViewData::updateOnWhat(QPoint p_) {
       }
     }
   }
+
+  if (idbest<0) {
+    // If that didn't yield anything, let's look at line series
+    double mrg = .55*(xfdmax / dmax);
+    if (mrg<4)
+      mrg = 4;
+    for (int id: xformedlines.keys()) {
+      QVector<LineF> const &v(xformedlines[id]);
+      for (LineF const &l: v) {
+        double l2 = (l.center()-p).L2xy();
+        if (l2<l2best) {
+          if (l.contains(p, mrg)) {
+            l2best = l2;
+            idbest = id;
+            pbest = l.center();
+          }
+        }
+      }
+    }
+  }
+
   idbest %= 100000000;
   if (idbest != onid) {
     onid = idbest;

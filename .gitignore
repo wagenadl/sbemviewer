@@ -6,4 +6,6 @@ Makefile
 Makefile.*
 sbem3dp
 sbem3dp_debug
+ui_*.h
+.qmake.stash
 
