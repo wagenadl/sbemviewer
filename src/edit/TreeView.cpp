@@ -109,7 +109,9 @@ void TreeView::setModel(TreeModel *tm1) {
 void TreeView::setActiveTree(quint64 tid) {
   if (!tm)
     return;
-  int row = tm->rowForTreeID(tid);
   tm->database()->selectTree(tid);
-  ui->table->selectRow(row);
+  QModelIndex idx = tm->indexForTreeID(tid);
+  QModelIndex srtidx = sortproxy->mapFromSource(idx);
+  qDebug() << "setactivetree" << tid << idx << srtidx;
+  ui->table->selectRow(srtidx.row());
 }

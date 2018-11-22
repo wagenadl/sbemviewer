@@ -36,7 +36,7 @@ void TileCacheData::processPrePending() {
       .arg(id.z)
       .arg(id.y)
       .arg(id.x);
-    qDebug() << "request" << url.toString() << "for" << id;
+    //    qDebug() << "request" << url.toString() << "for" << id;
     urlmap[url] = id;
     pending[id] = nam->get(QNetworkRequest(url));
     connect(pending[id], &QNetworkReply::readyRead,
@@ -132,8 +132,8 @@ void TileCacheData::receiveQNR(QNetworkReply *reply) {
       qDebug() << "(Canceled)";
       break;
     default:
-      qDebug() << "Received error" << reply->error() << reply->errorString()
-               << "from" << reply->url().toString();
+      //qDebug() << "Received error" << reply->error() << reply->errorString()
+      //         << "from" << reply->url().toString();
       break;
     }
   } else if (reply->url().toString().contains("findRS/")) {
