@@ -10,6 +10,7 @@
 
 #include "Settings.h"
 #include "TileViewer.h"
+#include "UDPSocket.h"
 
 const QString defaultServer = "http://leechem.caltech.edu:9090";
 
@@ -46,7 +47,15 @@ int main(int argc, char **argv) {
   TileCache cache(server);
   ServerInfo info(server);
 
+  UDPSocket::Server udpserver(UDPSocket::sbemPath());
   MainWindow mw(&cache, &info);
+  QObject::connect(&udpserver, &UDPSocket::Server::messageReceived,
+                   [&mw, &info](UDPSocket::Message msg) {
+              mw.tileViewer()->setPosition(msg.x / info.real("dx", 0.0055),
+                                           msg.y / info.real("dy", 0.0055),
+                                           msg.z / info.real("dz", 0.050));
+              // mw.tileViewer()->selectTreeByName(msg.id);
+            });
   mw.show();
   mw.setWindowTitle(mw.windowTitle() + " at " + server);
   if (cleanexit) {

@@ -16,6 +16,7 @@ public:
   QVariant value(QString) const;
   bool contains(QString) const;
   double real(QString k) const { return value(k).toDouble(); }
+  double real(QString k, double dflt) const;
   int integer(QString k) const { return value(k).toInt(); }
   QString string(QString k) const { return value(k).toString(); }
   void update();

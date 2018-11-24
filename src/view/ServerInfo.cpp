@@ -88,3 +88,10 @@ QVariant ServerInfo::value(QString k) const {
 bool ServerInfo::contains(QString k) const {
   return d->infos.contains(k);
 }
+
+double ServerInfo::real(QString k, double dflt) const {
+  if (contains(k))
+    return real(k);
+  else
+    return dflt;
+}
