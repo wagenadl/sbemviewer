@@ -53,6 +53,7 @@ public:
   TreeModel *tm; // we create
   EditOverlay *eo; // we create
   QTimer *timer;
+  QString servername;
 public:
   double xscale() {
     return info->contains("dx") ? info->real("dx") : 0.0055;
@@ -103,6 +104,7 @@ public:
   void openDB(QString fn) {
     tm->beginReset();
     db->open(fn);
+    updateTitle();
     tm->concludeReset();
     ui->mode->ui->editTrees->setEnabled(true);
     ui->treeView->updateAfterChangingDB();
@@ -185,6 +187,19 @@ public:
       mw->addDockWidget(Qt::RightDockWidgetArea, ui->treeDock);
       ui->treeDock->show();
       mw->resizeDocks({ui->modeDock}, {10}, Qt::Vertical);
+    }
+  }
+  void updateTitle() {
+    if (db && !db->name().isEmpty()) {
+      if (servername.isEmpty())
+	mw->setWindowTitle(db->name() + " at " + servername);
+      else
+	mw->setWindowTitle(db->name() + " at " + servername);
+    } else {
+      if (servername.isEmpty())
+	mw->setWindowTitle("SBEM Viewer");
+      else
+	mw->setWindowTitle(servername);
     }
   }
   void doFindNodeDialog() {
@@ -578,4 +593,9 @@ TileViewer *MainWindow::tileViewer() const {
 
 void MainWindow::closeEvent(QCloseEvent *) {
   QApplication::quit();
+}
+
+void MainWindow::setServerName(QString s) {
+  d->servername = s;
+  d->updateTitle();
 }

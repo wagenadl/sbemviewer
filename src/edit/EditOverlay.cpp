@@ -206,7 +206,7 @@ void EditOverlay::drawSynapses(QPainter *p, ViewInfo const &vi) {
     int dz = ball.center().z - vi.z;
 
     QColor c = isActive ? nodeColor(dz) : otherNodeColor(dz);
-    p->setPen(QPen(c, 5, Qt::DotLine));
+    p->setPen(QPen(c, 2, Qt::DotLine));
     p->setBrush(Qt::NoBrush);
     int r = (ball.radius()>>vi.a) + sr/2;
     p->drawEllipse(QPoint((ball.center().x - vi.xl)>>vi.a,
@@ -615,6 +615,14 @@ void warnNotPartOfSynapse(Overlay *ovl) {
   QMessageBox::warning(ovl->parentWidget(), "SBEMViewer warning",
                  "Cannot change node type:"
                  " A “Synapse Contour” can only be created from a node"
+                 " that is part of a synapse (and not connected to"
+                 " anything else).");
+}
+
+void warnOverlyConnected(Overlay *ovl) {
+  QMessageBox::warning(ovl->parentWidget(), "SBEMViewer warning",
+                 "Cannot change node type:"
+                 " A “Synapse Contour” can only be created from a node"
                  " that is part of a synapse and not connected to"
                  " anything else.");
 }
@@ -653,19 +661,19 @@ void EditOverlay::actSetNodeType(SBEMDB::NodeType typ) {
     // we are creating a syncontour. We must have a synapse.
     // we are right now presumably a treenode. Certainly we are
     // not a pre- or postsynterm that is part of a synapse
+    int n = db->simpleQuery("select count(*) from nodecons where nid1==:a",
+			    nid).toInt();
+    if (n>1) {
+      qDebug() << "overly connected" << nid << n;
+      ::warnOverlyConnected(this);
+      qDebug() << "warned overly connected" << nid << n;
+      return;
+    }
     QSqlQuery q = db->constQuery("select sid from syncons"
                                  " inner join nodecons"
                                  " on syncons.nid==nodecons.nid1"
                                  " where nodecons.nid2==:a", nid);
     if (!q.next()) {
-      ::warnNotPartOfSynapse(this);
-      return;
-    }
-    if (!q.next()) {
-      ::warnDBInconsistent(this);
-      return;
-    }
-    if (q.next()) {
       ::warnNotPartOfSynapse(this);
       return;
     }

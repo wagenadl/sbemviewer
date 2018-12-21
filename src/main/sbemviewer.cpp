@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
               // mw.tileViewer()->selectTreeByName(msg.id);
             });
   mw.show();
-  mw.setWindowTitle(mw.windowTitle() + " at " + server);
+  mw.setServerName(server);
   if (cleanexit) {
     TileViewer *tv = mw.tileViewer();
     tv->setPosition(settings.get("x", tv->x()).toInt(),

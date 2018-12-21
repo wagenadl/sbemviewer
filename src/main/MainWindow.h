@@ -19,6 +19,7 @@ protected:
 public:
   void aboutAct();
   void openDB(QString fn);
+  void setServerName(QString);
 private:
   class Ui_MainWindow *ui;
   class MWData *d;
