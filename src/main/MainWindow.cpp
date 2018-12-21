@@ -152,6 +152,7 @@ public:
     ui->actionTypePostsynapticDensity->setEnabled(en);
     ui->actionTypeSoma->setEnabled(en);
     ui->actionTypeNeuropilExitPoint->setEnabled(en);
+    ui->actionTypeSynapseContour->setEnabled(en);
     ui->actionEditMemo->setEnabled(en);
     ui->actionConnectNodes->setEnabled(en);
     ui->actionDisconnectNodes->setEnabled(en);
@@ -195,7 +196,9 @@ public:
     QObject::connect(w, &NodeListWidget::selected,
             [this, nodes](int k) {
               SBEMDB::Node n(nodes[k]);
+              qDebug() << "nodelist" << k << n.tid << n.nid << n.typ;
               ui->treeView->setActiveTree(n.tid);
+              db->selectNode(n.nid);
               eo->setActiveNode(n.nid);
               ui->tileviewer->setPosition(n.x, n.y, n.z);
             });
@@ -328,6 +331,9 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
   connect(ui->actionTypeNeuropilExitPoint, &QAction::triggered,
           [this]() { d->eo->actSetNodeType(SBEMDB::ExitPoint); });
   ui->actionTypeNeuropilExitPoint->setShortcut(tr("T, E"));
+  connect(ui->actionTypeSynapseContour, &QAction::triggered,
+          [this]() { d->eo->actSetNodeType(SBEMDB::SynContour); });
+  ui->actionTypeSynapseContour->setShortcut(tr("T, C"));
   connect(ui->actionEditMemo, &QAction::triggered,
           d->eo, &EditOverlay::actEditMemo);
   connect(ui->actionConnectNodes, &QAction::triggered,

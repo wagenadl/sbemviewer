@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QKeyEvent>
 #include <QInputDialog>
+#include <QMessageBox>
 #include "TileViewer.h"
 #include "Miniball.h"
 
@@ -85,6 +86,10 @@ static void drawNode(QPainter *p, ViewInfo const &vi, int r,
   case SBEMDB::ExitPoint:
     p->drawRect(QRect(pc-rx-ry, pc+rx+ry));
     break;
+  case SBEMDB::SynContour:
+    p->drawLine(QLine(pc-rx, pc+rx));
+    p->drawLine(QLine(pc-ry, pc+ry));
+    break;
   default:
     break;
   }
@@ -101,8 +106,10 @@ void EditOverlay::drawNodes(QPainter *p, ViewInfo const &vi,
     p->setBrush(QBrush(colorfn(dz)));
     if (n.nid==nid) 
       p->setPen(QPen(QColor(255, 0, 0), 5));
+    else if (n.typ==SBEMDB::SynContour)
+      p->setPen(QPen(colorfn(dz), 2));
     drawNode(p, vi, r, n);
-    if (n.nid==nid)
+    if (n.nid==nid || n.typ==SBEMDB::SynContour)
       p->setPen(QPen(Qt::NoPen));
   }
 }
@@ -460,21 +467,40 @@ bool EditOverlay::plainLeftPress(Point const &p, int a) {
         db->selectNode(nid);
         forceUpdate();
       } else {
-        qDebug() << "no node selected. Won't expand.";
+        QMessageBox::warning(parentWidget(), "SBEMViewer", 
+                             "Cannot create a new node:"
+                             " No node selected to connect it to.");
       }
     } else {
-      // have current selection; connect to it.
-      quint64 nid1 = db->query("insert into nodes(tid,typ,x,y,z)"
-                               " values(:a,:b,:c,:d,:e)",
-                               tid, SBEMDB::TreeNode,
-                               p.x, p.y, p.z).lastInsertId().toULongLong();
-      db->query("insert into nodecons(nid1,nid2) values(:a,:b)",
-                nid, nid1);
-      db->query("insert into nodecons(nid1,nid2) values(:a,:b)",
-                nid1, nid);
-      nid = nid1;
-      db->selectNode(nid);
-      forceUpdate();
+      // have current selection.
+      if (db->simpleQuery("select typ from nodes where nid==:a", nid).toInt()
+          == SBEMDB::SynContour) {
+        // create another syn contour to the same synapse
+        quint64 sid = db->simpleQuery("select sid from syncons where nid==:a",
+                                      nid).toULongLong();
+        quint64 nid1 = db->query("insert into nodes(tid,typ,x,y,z)"
+                                 " values(:a,:b,:c,:d,:e)",
+                                 tid, SBEMDB::SynContour,
+                                 p.x, p.y, p.z).lastInsertId().toULongLong();
+        db->query("insert into syncons(sid, nid) values(:a,:b)",
+                  sid, nid1);
+        nid = nid1;
+        db->selectNode(nid);
+        forceUpdate();
+      } else {
+        // create tree node and connect to previous selection
+        quint64 nid1 = db->query("insert into nodes(tid,typ,x,y,z)"
+                                 " values(:a,:b,:c,:d,:e)",
+                                 tid, SBEMDB::TreeNode,
+                                 p.x, p.y, p.z).lastInsertId().toULongLong();
+        db->query("insert into nodecons(nid1,nid2) values(:a,:b)",
+                  nid, nid1);
+        db->query("insert into nodecons(nid1,nid2) values(:a,:b)",
+                  nid1, nid);
+        nid = nid1;
+        db->selectNode(nid);
+        forceUpdate();
+      }
     }
     take = true;
   }
@@ -536,6 +562,7 @@ void EditOverlay::setActiveNode(quint64 nid1) {
   if (nid) {
     auto n = db->node(nid);
     tid = n.tid;
+    qDebug() << "setactivenode" << nid1 << tid;
   }
   forceUpdate();
 }
@@ -568,15 +595,80 @@ void EditOverlay::actEditMemo() {
   }
 }
 
+void warnNothingSelected(Overlay *ovl) {
+  QMessageBox::warning(ovl->parentWidget(), "SBEMViewer warning",
+                       "Cannot change node type: Nothing selected");
+}
+
+void warnCannotDissolveSynapse(Overlay *ovl) {
+  QMessageBox::warning(ovl->parentWidget(), "SBEMViewer warning",
+                 "Cannot change node type: Doing so would dissolve synapse");
+}
+
+void warnCannotConvertFromSynContour(Overlay *ovl) {
+  QMessageBox::warning(ovl->parentWidget(), "SBEMViewer warning",
+                 "Cannot change node type:"
+                 " A “Synapse Contour” can only be deleted, not converted.");
+}
+
+void warnNotPartOfSynapse(Overlay *ovl) {
+  QMessageBox::warning(ovl->parentWidget(), "SBEMViewer warning",
+                 "Cannot change node type:"
+                 " A “Synapse Contour” can only be created from a node"
+                 " that is part of a synapse.");
+}
+
+
 void EditOverlay::actSetNodeType(SBEMDB::NodeType typ) {
-  if (nid) {
-    // Probably we should check that a synaptic terminal isn't being
-    // changed into something else while it is still part of a synapse.
-    // For now, this issue is not critical.
+  if (!nid) {
+    ::warnNothingSelected(this);
+    return;
+  }
+
+  SBEMDB::NodeType oldtyp
+    = (SBEMDB::NodeType)(db->simpleQuery("select typ from nodes"
+                                         " where nid==:a", nid).toInt());
+  if (oldtyp==typ)
+    return; // trivial
+  if (oldtyp==SBEMDB::PresynTerm || oldtyp==SBEMDB::PostsynTerm) {
+    if (typ!=SBEMDB::PresynTerm && typ!=SBEMDB::PostsynTerm) {
+      int issyn = db->simpleQuery("select count(1) from syncons"
+                                  " where nid==:a", nid).toInt();
+      if (issyn>0) {
+        ::warnCannotDissolveSynapse(this);
+        return;
+      }
+    }
+  } else if (oldtyp==SBEMDB::SynContour) {
+    ::warnCannotConvertFromSynContour(this);
+    return;
+  } else if (typ==SBEMDB::SynContour) {
+    // we are creating a syncontour. We must have a synapse.
+    // we are right now presumably a treenode. Certainly we are
+    // not a pre- or postsynterm that is part of a synapse
+    QSqlQuery q = db->constQuery("select sid from syncons"
+                                 " inner join nodecons"
+                                 " on syncons.nid==nodecons.nid1"
+                                 " where nodecons.nid2==:a", nid);
+    if (!q.next()) {
+      ::warnNotPartOfSynapse(this);
+      return;
+    }
+    quint64 sid = q.value(0).toULongLong();
+    qDebug() << "Syncontour" << sid << nid;
+    db->begin();
+    db->query("delete from nodecons where nid1==:a or nid2==:b", nid, nid);
+    db->query("insert into syncons ( sid, nid ) values (:a, :b)", sid, nid);
     db->query("update nodes set typ=:a where nid==:b",
               typ, nid);
+    db->commit();
     forceUpdate();
+    return;
   }
+
+  db->query("update nodes set typ=:a where nid==:b",
+            typ, nid);
+  forceUpdate();
 }
 
 void EditOverlay::actDeleteNode() {
@@ -766,6 +858,9 @@ void EditOverlay::actDissolveSynapse() {
   if (!q.next())
     return;
   quint64 sid = q.value(0).toULongLong();
+  db->query("delete from nodes where nid in"
+            " (select nid from nodes inner join syncons"
+            "  where sid==:a and typ==:b)", sid, SBEMDB::SynContour);
   db->query("delete from synapses where sid==:a", sid);
   forceUpdate();
 }

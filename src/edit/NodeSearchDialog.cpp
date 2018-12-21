@@ -88,6 +88,9 @@ void NodeSearchDialog::reset() {
 
 QVector<SBEMDB::Node> NodeSearchDialog::exec1(SBEMDB *db) {
   NodeSearchDialog nsd(db);
+  nsd.d->ui->typePrePartner->hide();
+  nsd.d->ui->typePostPartner->hide();
+
   if (nsd.exec()) {
     return nsd.nodes();
   } else {

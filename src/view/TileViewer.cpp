@@ -469,7 +469,7 @@ void TileViewer::enforceX() {
 }
 
 void TileViewer::enforceY() {
-  int y0 = info->contains("y0") ? info->integer("y0") : 50000;
+  int y0 = info->contains("y0") ? info->integer("y0") : 30000;
   int y1 = info->contains("y1") ? info->integer("y1") : 99000;
   y1 -= (9*height()/10) << a;
   y0 -= (height()/10) << a;

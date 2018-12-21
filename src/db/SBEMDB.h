@@ -15,6 +15,7 @@ public:
     TreeNode = 3,
     PresynTerm = 5,
     PostsynTerm = 6,
+    SynContour = 7,
   };
   struct Tree {
     quint64 tid;

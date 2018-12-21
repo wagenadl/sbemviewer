@@ -51,6 +51,7 @@
      <addaction name="actionTypePostsynapticDensity"/>
      <addaction name="actionTypeSoma"/>
      <addaction name="actionTypeNeuropilExitPoint"/>
+     <addaction name="actionTypeSynapseContour"/>
     </widget>
     <addaction name="actionNewTree"/>
     <addaction name="actionDeleteTree"/>
@@ -304,6 +305,11 @@
    </property>
    <property name="shortcut">
     <string>G</string>
+   </property>
+  </action>
+  <action name="actionTypeSynapseContour">
+   <property name="text">
+    <string>Synapse &amp;countour</string>
    </property>
   </action>
  </widget>

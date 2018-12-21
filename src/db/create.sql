@@ -88,4 +88,5 @@ insert into nodetypes values(2, "ExitPoint");
 insert into nodetypes values(3, "TreeNode");
 insert into nodetypes values(5, "PresynTerm");
 insert into nodetypes values(6, "PostsynTerm");
-	       
+insert into nodetypes values(7, "SynContour");
+
