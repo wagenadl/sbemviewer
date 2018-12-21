@@ -615,7 +615,14 @@ void warnNotPartOfSynapse(Overlay *ovl) {
   QMessageBox::warning(ovl->parentWidget(), "SBEMViewer warning",
                  "Cannot change node type:"
                  " A “Synapse Contour” can only be created from a node"
-                 " that is part of a synapse.");
+                 " that is part of a synapse and not connected to"
+                 " anything else.");
+}
+
+void warnDBInconsistent(Overlay *ovl) {
+  QMessageBox::warning(ovl->parentWidget(), "SBEMViewer warning",
+                 "Cannot change node type:"
+                 " I am confused by the connection status of this node.");
 }
 
 
@@ -651,6 +658,14 @@ void EditOverlay::actSetNodeType(SBEMDB::NodeType typ) {
                                  " on syncons.nid==nodecons.nid1"
                                  " where nodecons.nid2==:a", nid);
     if (!q.next()) {
+      ::warnNotPartOfSynapse(this);
+      return;
+    }
+    if (!q.next()) {
+      ::warnDBInconsistent(this);
+      return;
+    }
+    if (q.next()) {
       ::warnNotPartOfSynapse(this);
       return;
     }
