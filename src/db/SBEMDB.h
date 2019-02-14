@@ -67,6 +67,7 @@ public:
   };
 public:
   SBEMDB(QString id="");
+  void open(QString filename) override;
   static void create(QString fn);
 public:
   Synapse synapse(quint64 sid) const;

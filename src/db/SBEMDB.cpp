@@ -26,6 +26,26 @@ void SBEMDB::create(QString fn) {
   db.close();
 }
 
+void SBEMDB::open(QString fn) {
+  Database::open(fn);
+  if (!isOpen())
+    return;
+  QString vsn = simpleQuery("select version from info where id==\"sbemviewer\"")
+    .toString();
+  if (vsn < "0.2") {
+    pDebug() << "cdate does not exist";
+    Transaction t(this);
+    query("alter table trees add column cdate");
+    query("alter table nodes add column cdate");
+    query("alter table tags add column cdate");
+    query("alter table nodecons add column cdate");
+    query("alter table synapses add column cdate");
+    query("alter table syncons add column cdate");
+    query("update info set version = \"0.2\" where id==\"sbemviewer\"");
+    t.commit();
+  }
+}
+
 SBEMDB::Synapse SBEMDB::synapse(quint64 sid) const {
   auto lst
     = synapses(constQuery("select * from synapses where sid==:a",

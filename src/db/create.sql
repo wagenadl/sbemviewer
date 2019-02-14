@@ -11,7 +11,8 @@ create table nodetypes (
 create table trees (
        tid integer primary key,
        tname text,
-       visible boolean );
+       visible boolean,
+       cdate date);
 
 create table nodes (
        nid integer primary key,
@@ -20,6 +21,7 @@ create table nodes (
        x integer,
        y integer,
        z integer,
+       cdate date,
        foreign key(tid) references trees(tid)
        	       on delete restrict
        );
@@ -28,6 +30,7 @@ create table tags (
        tagid integer primary key,
        nid integer,
        tag text,
+       cdate date,
        foreign key(nid) references nodes(nid)
                on delete cascade
                on update cascade );
@@ -37,6 +40,7 @@ create table nodecons (
        ncid integer primary key,
        nid1 integer,
        nid2 integer,
+       cdate date,
        foreign key(nid1) references nodes(nid)
        	       on delete cascade
        	       on update cascade,
@@ -45,7 +49,8 @@ create table nodecons (
        	       on update cascade );
 
 create table synapses (
-       sid integer primary key
+       sid integer primary key,
+       cdate date
        );
 
 create table syncons (
@@ -53,6 +58,7 @@ create table syncons (
        scid integer primary key,
        sid integer,
        nid integer,
+       cdate date,
        foreign key(sid) references synapses(sid)
        	       on delete cascade
        	       on update cascade,
@@ -77,7 +83,7 @@ create index if not exists treeidx on nodes(tid);
 
 ----------------------------------------------------------------------
 
-insert into info values("sbemviewer", "0.1");
+insert into info values("sbemviewer", "0.2");
 insert into selectedtree values(null);
 insert into selectednode values(null);
 

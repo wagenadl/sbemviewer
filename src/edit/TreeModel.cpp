@@ -1,6 +1,7 @@
 // TreeModel.cpp
 
 #include "TreeModel.h"
+#include <QDateTime>
 
 TreeModel::TreeModel(SBEMDB *db, QObject *parent):
   QAbstractTableModel(parent), db(db) {
@@ -129,8 +130,9 @@ Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const {
 quint64 TreeModel::newTree() {
   int R = rowCount();
   beginInsertRows(QModelIndex(), R, R);
-  quint64 tid = db->query("insert into trees(visible,tname) values(1,:a)",
-                          QVariant("-"))
+  quint64 tid
+    = db->query("insert into trees(visible,tname,cdate) values(1,:a,:b)",
+		QVariant("-"), QVariant(QDateTime::currentDateTime()))
     .lastInsertId().toULongLong();
   endInsertRows();
   return tid;
