@@ -38,8 +38,15 @@ void ProjectionData::buildTree(quint64 tid) {
 
   view->setName(tid, tname);
   
-  auto mtch = QRegularExpression("(\\d+)").match(tname);
-  int uctid = mtch.hasMatch() ? mtch.captured(1).toInt() : 0;
+  int uctid = 0;
+  auto mtch = QRegularExpression("^(\\d+)[^\\.]").match(tname);
+  if (mtch.hasMatch()) 
+    uctid = mtch.captured(1).toInt();
+  if (uctid==0) {
+    auto mtch = QRegularExpression("1\\.pre[sp]\\.p\\.(\\d+)").match(tname);
+    if (mtch.hasMatch())
+      uctid = mtch.captured(1).toInt() + 400;
+  }
 
   QVector<LineF> ll;
   QSqlQuery q = db->constQuery("select n1.x, n1.y, n1.z, n2.x, n2.y, n2.z"
