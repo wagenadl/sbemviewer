@@ -11,12 +11,16 @@
 #include "Settings.h"
 #include "TileViewer.h"
 #include "UDPSocket.h"
+#include <stdlib.h>
 
 const QString defaultServer = "http://leechem.caltech.edu:9090";
 
 QString getServer(QString dflt) {
   QString server = QInputDialog::getText(0, "SBEM Viewer", "Server name",
                                          QLineEdit::Normal, dflt);
+  if (server.isEmpty()) {
+    exit(1);
+  }
   if (!server.startsWith("http://") && !server.startsWith("https://"))
     server = "http://" + server;
   if (server.lastIndexOf(":") <= server.indexOf(":"))

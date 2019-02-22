@@ -461,10 +461,12 @@ bool EditOverlay::plainLeftPress(Point const &p, int a) {
                                    " where tid==:a", tid).toInt();
       if (nnodes==0) {
         // create first node for tree
-        nid = db->query("insert into nodes(tid,typ,x,y,z,cdate)"
-                        " values(:a,:b,:c,:d,:e,:f)",
+        nid = db->query("insert into nodes(tid,typ,x,y,z,cdate,uid)"
+                        " values(:a,:b,:c,:d,:e,:f,:g)",
                         tid, SBEMDB::TreeNode,
-                        p.x, p.y, p.z, QVariant(QDateTime::currentDateTime()))
+                        p.x, p.y, p.z,
+			QVariant(QDateTime::currentDateTime()),
+			db->uid())
 	  .lastInsertId().toULongLong();
         db->selectNode(nid);
         forceUpdate();
@@ -480,29 +482,36 @@ bool EditOverlay::plainLeftPress(Point const &p, int a) {
         // create another syn contour to the same synapse
         quint64 sid = db->simpleQuery("select sid from syncons where nid==:a",
                                       nid).toULongLong();
-        quint64 nid1 = db->query("insert into nodes(tid,typ,x,y,z,cdate)"
-                                 " values(:a,:b,:c,:d,:e,:f)",
+        quint64 nid1 = db->query("insert into nodes(tid,typ,x,y,z,cdate,uid)"
+                                 " values(:a,:b,:c,:d,:e,:f,:g)",
                                  tid, SBEMDB::SynContour,
                                  p.x, p.y, p.z,
-				 QVariant(QDateTime::currentDateTime()))
+				 QVariant(QDateTime::currentDateTime()),
+				 db->uid())
 	  .lastInsertId().toULongLong();
-        db->query("insert into syncons(sid, nid, cdate) values(:a,:b,:c)",
-                  sid, nid1, QVariant(QDateTime::currentDateTime()));
+        db->query("insert into syncons(sid, nid, cdate,uid)"
+		  " values(:a,:b,:c,:d)",
+                  sid, nid1,
+		  QVariant(QDateTime::currentDateTime()),
+		  db->uid());
         nid = nid1;
         db->selectNode(nid);
         forceUpdate();
       } else {
         // create tree node and connect to previous selection
-        quint64 nid1 = db->query("insert into nodes(tid,typ,x,y,z,cdate)"
-                                 " values(:a,:b,:c,:d,:e,:f)",
+        quint64 nid1 = db->query("insert into nodes(tid,typ,x,y,z,cdate,uid)"
+                                 " values(:a,:b,:c,:d,:e,:f,:g)",
                                  tid, SBEMDB::TreeNode,
                                  p.x, p.y, p.z,
-				 QVariant(QDateTime::currentDateTime()))
+				 QVariant(QDateTime::currentDateTime()),
+				 db->uid())
 	  .lastInsertId().toULongLong();
-        db->query("insert into nodecons(nid1,nid2,cdate) values(:a,:b,:c)",
-                  nid, nid1, QVariant(QDateTime::currentDateTime()));
-        db->query("insert into nodecons(nid1,nid2,cdate) values(:a,:b,:c)",
-                  nid1, nid, QVariant(QDateTime::currentDateTime()));
+        db->query("insert into nodecons(nid1,nid2,cdate,uid)"
+		  " values(:a,:b,:c,:d)",
+                  nid, nid1, QVariant(QDateTime::currentDateTime()),db->uid());
+        db->query("insert into nodecons(nid1,nid2,cdate,uid)"
+		  " values(:a,:b,:c,:d)",
+                  nid1, nid, QVariant(QDateTime::currentDateTime()),db->uid());
         nid = nid1;
         db->selectNode(nid);
         forceUpdate();
@@ -591,8 +600,9 @@ void EditOverlay::actEditMemo() {
           db->query("delete from tags where tagid==:a", tags.first().tagid);
       } else {
         if (tags.isEmpty())
-          db->query("insert into tags (nid, tag, cdate) values(:a, :b, :c)",
-                    nid, tag, QVariant(QDateTime::currentDateTime()));
+          db->query("insert into tags (nid, tag, cdate, uid)"
+		    " values(:a, :b, :c, :d)",
+                    nid, tag, QVariant(QDateTime::currentDateTime()), db->uid());
         else
           db->query("update tags set tag=:a where tagid==:b",
                     tag, tags.first().tagid);
@@ -687,8 +697,9 @@ void EditOverlay::actSetNodeType(SBEMDB::NodeType typ) {
     qDebug() << "Syncontour" << sid << nid;
     db->begin();
     db->query("delete from nodecons where nid1==:a or nid2==:b", nid, nid);
-    db->query("insert into syncons ( sid, nid, cdate ) values (:a, :b, :c)",
-	      sid, nid, QVariant(QDateTime::currentDateTime()));
+    db->query("insert into syncons ( sid, nid, cdate, uid )"
+	      " values (:a, :b, :c, :d)",
+	      sid, nid, QVariant(QDateTime::currentDateTime()), db->uid());
     db->query("update nodes set typ=:a where nid==:b",
               typ, nid);
     db->commit();
@@ -720,12 +731,12 @@ void EditOverlay::actDeleteNode() {
                         cons.first().nid2,
                         cons.last().nid2) == 0) {
       // must reconnect
-      db->query("insert into nodecons(nid1,nid2,cdate) values(:a,:b,:c)",
+      db->query("insert into nodecons(nid1,nid2,cdate,uid) values(:a,:b,:c,:d)",
                 cons.first().nid2, cons.last().nid2,
-		QVariant(QDateTime::currentDateTime()));
-      db->query("insert into nodecons(nid1,nid2,cdate) values(:a,:b,:c)",
+		QVariant(QDateTime::currentDateTime()),db->uid());
+      db->query("insert into nodecons(nid1,nid2,cdate,uid) values(:a,:b,:c,:d)",
                 cons.last().nid2, cons.first().nid2,
-		QVariant(QDateTime::currentDateTime()));
+		QVariant(QDateTime::currentDateTime()),db->uid());
     }
     break;
   default:
@@ -785,9 +796,10 @@ void EditOverlay::actDisconnectNodes() {
   }
   QString name = db->simpleQuery("select tname from trees where tid==:a",
                                  n1.tid).toString();
-  quint64 newtid = db->query("insert into trees (tname, visible, cdate)"
-                             " values (:a, :b, :c)", name + "'", true,
-			     QVariant(QDateTime::currentDateTime()))
+  quint64 newtid = db->query("insert into trees (tname, visible, cdate, uid)"
+                             " values (:a, :b, :c, :d)",
+			     name + "'", true,
+			     QVariant(QDateTime::currentDateTime()), db->uid())
     .lastInsertId().toULongLong();
   for (quint64 n: seennodes) 
     db->query("update nodes set tid=:a where nid==:b", newtid, n);
@@ -819,10 +831,12 @@ void EditOverlay::actConnectNodes() {
                                     n2.tid).toString();
     db->query("update nodes set tid=:a where tid==:b", n1.tid, n2.tid);
     db->query("delete from trees where tid==:a", n2.tid);
-    db->query("insert into nodecons (nid1, nid2, cdate)"
-	      " values (:a,:b,:c), (:d,:e,:f)",
-              n1.nid, n2.nid, QVariant(QDateTime::currentDateTime()),
-              n2.nid, n1.nid, QVariant(QDateTime::currentDateTime()));
+    db->query("insert into nodecons (nid1, nid2, cdate, uid)"
+	      " values (:a,:b,:c,:d)",
+              n1.nid, n2.nid, QVariant(QDateTime::currentDateTime()), db->uid());
+    db->query("insert into nodecons (nid1, nid2, cdate, uid)"
+	      " values (:a,:b,:c,:d)",
+              n2.nid, n1.nid, QVariant(QDateTime::currentDateTime()), db->uid());
     QStringList nn1 = name1.split(" ");
     QStringList nn2 = name2.split(" ");
     for (QString n: nn1) 
@@ -864,22 +878,26 @@ void EditOverlay::actConnectTerminals() {
   if (sid==0 && aux_sid==0) {
     // must make a brand new synapse
     db->begin();
-    sid = db->query("insert into synapses (cdate) values ( :a )"
-		    , QVariant(QDateTime::currentDateTime()))
+    sid = db->query("insert into synapses (cdate, uid) values ( :a, :b )"
+		    , QVariant(QDateTime::currentDateTime()), db->uid())
       .lastInsertId().toULongLong();
-    db->query("insert into syncons ( sid, nid, cdate ) values (:a, :b, :c)",
-	      sid, nid, QVariant(QDateTime::currentDateTime()));
-    db->query("insert into syncons ( sid, nid, cdate ) values (:a, :b, :c)",
-	      sid, aux_nid, QVariant(QDateTime::currentDateTime()));
+    db->query("insert into syncons ( sid, nid, cdate, uid )"
+	      " values (:a, :b, :c, :d)",
+	      sid, nid, QVariant(QDateTime::currentDateTime()), db->uid());
+    db->query("insert into syncons ( sid, nid, cdate, uid )"
+	      " values (:a, :b, :c, :d)",
+	      sid, aux_nid, QVariant(QDateTime::currentDateTime()), db->uid());
     db->commit();
   } else if (sid==0) {
     // must insert nid into existing synapse
-    db->query("insert into syncons ( sid, nid, cdate ) values (:a, :b, :c)",
-	      aux_sid, nid, QVariant(QDateTime::currentDateTime()));
+    db->query("insert into syncons ( sid, nid, cdate, uid )"
+	      " values (:a, :b, :c, :d)",
+	      aux_sid, nid, QVariant(QDateTime::currentDateTime()), db->uid());
   } else if (aux_sid==0) {
     // must insert aux_nid into existing synapse
-    db->query("insert into syncons ( sid, nid, cdate ) values (:a, :b, :c)",
-	      sid, aux_nid, QVariant(QDateTime::currentDateTime()));
+    db->query("insert into syncons ( sid, nid, cdate, uid )"
+	      " values (:a, :b, :c, :d)",
+	      sid, aux_nid, QVariant(QDateTime::currentDateTime()), db->uid());
   } else {
     // must merge synapses
     db->begin();

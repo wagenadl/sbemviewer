@@ -7,6 +7,7 @@
 #include "Point.h"
 
 SBEMDB::SBEMDB(QString id): Database(id) {
+  uid_ = 0;
 }
 
 void SBEMDB::create(QString fn) {
@@ -43,6 +44,29 @@ void SBEMDB::open(QString fn) {
     query("alter table syncons add column cdate");
     query("update info set version = \"0.2\" where id==\"sbemviewer\"");
     t.commit();
+  }
+  if (vsn < "0.3") {
+    pDebug() << "uid does not exist";
+    Transaction t(this);
+    query("alter table trees add column uid integer");
+    query("alter table nodes add column uid integer");
+    query("alter table tags add column uid integer");
+    query("alter table nodecons add column uid integer");
+    query("alter table synapses add column uid integer");
+    query("alter table syncons add column uid integer");
+    query("create table users ( uid integer, home text )");
+    query("update info set version = \"0.3\" where id==\"sbemviewer\"");
+    t.commit();
+  }
+  QString user = QDir::homePath();
+  int have
+    = constQuery("select count * from users where home==:a", user).toInt();
+  if (have) {
+    uid_ = simpleQuery("select uid from users where home==:a").toULongLong();
+  } else {
+    QString uuid = QUuid::createUuid().toString(QUid::Id128);
+    uid_ = uuid.toULongLong(0, 16);
+    query("insert into users (uid, home) values (:a, :b)", uuid_, user);
   }
 }
 

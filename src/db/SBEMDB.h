@@ -80,6 +80,7 @@ public:
   quint64 selectedTree() const;
   void selectNode(quint64 nid);
   quint64 selectedNode() const;
+  quint64 uid() const; // user ID
 public:
   QVector<Synapse> synapses(QSqlQuery q) const;
   /* q must be of the form "select * from synapses" followed by
@@ -98,6 +99,10 @@ public:
   // If all else fails, will select from tid with ztol ignored.
   Node somaAt(class Point const &p, int xytol, int ztol, quint64 tid) const;
   static QString nodeTypeName(NodeType);
+public:
+  quint64 createNodeCon(quint64 nid1, quint64 nid2); // returns id
+private:
+  quint64 uid_;
 };
 
 #endif

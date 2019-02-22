@@ -131,8 +131,9 @@ quint64 TreeModel::newTree() {
   int R = rowCount();
   beginInsertRows(QModelIndex(), R, R);
   quint64 tid
-    = db->query("insert into trees(visible,tname,cdate) values(1,:a,:b)",
-		QVariant("-"), QVariant(QDateTime::currentDateTime()))
+    = db->query("insert into trees(visible,tname,cdate,uid)"
+		" values(1,:a,:b,:c)",
+		QVariant("-"), QVariant(QDateTime::currentDateTime()), db->uid())
     .lastInsertId().toULongLong();
   endInsertRows();
   return tid;

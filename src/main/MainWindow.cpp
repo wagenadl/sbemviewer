@@ -563,10 +563,10 @@ MainWindow::~MainWindow() {
 void MainWindow::aboutAct() {
   QString me0 = "SBEM Viewer";
   QString me = "<b>" + me0 + "</b>";
-  QString vsn = "0.1";
+  QString vsn = "0.3";
   QMessageBox::about(0, "About " + me0,
                      me + " " + vsn
-                     + "<p>" + "(C) 2018 Daniel A. Wagenaar\n"
+                     + "<p>" + "(C) 2018–2019 Daniel A. Wagenaar\n"
                      + "<p>" + me + " is a program for visualizing the SBEM data presently being collected by the Wagenaar Lab at Caltech and NCMIR at UCSD.\n"
                      + "<p>" + me + " is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\n"
                      + "<p>" + me + " is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\n"

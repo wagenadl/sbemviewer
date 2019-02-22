@@ -12,7 +12,8 @@ create table trees (
        tid integer primary key,
        tname text,
        visible boolean,
-       cdate date);
+       cdate date,
+       uid integer);
 
 create table nodes (
        nid integer primary key,
@@ -22,6 +23,7 @@ create table nodes (
        y integer,
        z integer,
        cdate date,
+       uid integer,
        foreign key(tid) references trees(tid)
        	       on delete restrict
        );
@@ -31,6 +33,7 @@ create table tags (
        nid integer,
        tag text,
        cdate date,
+       uid integer,
        foreign key(nid) references nodes(nid)
                on delete cascade
                on update cascade );
@@ -41,6 +44,7 @@ create table nodecons (
        nid1 integer,
        nid2 integer,
        cdate date,
+       uid integer,
        foreign key(nid1) references nodes(nid)
        	       on delete cascade
        	       on update cascade,
@@ -50,7 +54,8 @@ create table nodecons (
 
 create table synapses (
        sid integer primary key,
-       cdate date
+       cdate date,
+       uid integer
        );
 
 create table syncons (
@@ -59,6 +64,7 @@ create table syncons (
        sid integer,
        nid integer,
        cdate date,
+       uid integer,
        foreign key(sid) references synapses(sid)
        	       on delete cascade
        	       on update cascade,
@@ -75,6 +81,10 @@ create table selectednode (
        nid integer,
        foreign key(nid) references nodes(nid)
               on delete set null );
+
+create table users (
+       uid integer,
+       home text );
 
 ----------------------------------------------------------------------
 
