@@ -5,6 +5,13 @@
 #include "PDebug.h"
 #include "SqlFile.h"
 #include "Point.h"
+#include <QDateTime>
+#include <QDir>
+#include <QUuid>
+
+static QVariant now() {
+  return QVariant(QDateTime::currentDateTime());
+}
 
 SBEMDB::SBEMDB(QString id): Database(id) {
   uid_ = 0;
@@ -60,13 +67,18 @@ void SBEMDB::open(QString fn) {
   }
   QString user = QDir::homePath();
   int have
-    = constQuery("select count * from users where home==:a", user).toInt();
+    = simpleQuery("select count(*) from users where home==:a", user).toInt();
   if (have) {
     uid_ = simpleQuery("select uid from users where home==:a").toULongLong();
   } else {
-    QString uuid = QUuid::createUuid().toString(QUid::Id128);
-    uid_ = uuid.toULongLong(0, 16);
-    query("insert into users (uid, home) values (:a, :b)", uuid_, user);
+    QString uuid = QUuid::createUuid().toString();
+    qDebug() << "new uuid" << uuid;
+    uuid.replace("-", "");
+    uuid.replace("{", "");
+    uuid.replace("}", "");
+    uid_ = uuid.left(16).toULongLong(0, 16);
+    qDebug() << "new uuid" << uuid << uid_;
+    query("insert into users (uid, home) values (:a, :b)", uid_, user);
   }
 }
 
@@ -351,3 +363,55 @@ QString SBEMDB::nodeTypeName(NodeType nt) {
   }
 }
 
+quint64 SBEMDB::createNodeCon(quint64 nid1, quint64 nid2) {
+  return query("insert into nodecons(nid1,nid2,cdate,uid)"
+               " values(:a,:b,:c,:d)",
+               nid1, nid2,
+               now(), uid()).lastInsertId().toULongLong();
+}
+
+void SBEMDB::createNodeConPair(quint64 nid1, quint64 nid2) {
+  createNodeCon(nid1, nid2);
+  createNodeCon(nid2, nid1);
+}
+
+quint64 SBEMDB::createSynCon(quint64 sid, quint64 nid) {
+  return query("insert into syncons(sid, nid, cdate,uid)"
+               " values(:a,:b,:c,:d)",
+               sid, nid,
+               now(), uid()).lastInsertId().toULongLong();
+}
+
+quint64 SBEMDB::createNode(quint64 tid, NodeType typ, Point const &p) {
+  return query("insert into nodes(tid,typ,x,y,z,cdate,uid)"
+               " values(:a,:b,:c,:d,:e,:f,:g)",
+               tid, typ, p.x, p.y, p.z,
+               now(), uid()).lastInsertId().toULongLong();
+}
+
+quint64 SBEMDB::createTag(quint64 nid, QString tag) {
+  return query("insert into tags (nid, tag, cdate, uid)"
+               " values(:a, :b, :c, :d)",
+               nid, tag, now(), uid()).lastInsertId().toULongLong();
+}
+
+void SBEMDB::updateTag(quint64 tagid, QString tag) {
+  query("update tags set tag=:a where tagid==:b",
+        tag, tagid);
+}
+
+quint64 SBEMDB::createTree(QString tname, bool vis) {
+  return query("insert into trees (tname, visible, cdate, uid)"
+               " values (:a, :b, :c, :d)",
+               tname, vis, now(), uid()).lastInsertId().toULongLong();
+}
+
+quint64 SBEMDB::createSynapse() {
+  return query("insert into synapses (cdate, uid) values ( :a, :b )",
+               now(), uid()).lastInsertId().toULongLong();
+}
+
+
+quint64 SBEMDB::uid() const {
+  return uid_;
+}

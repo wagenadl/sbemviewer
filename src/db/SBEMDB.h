@@ -101,6 +101,13 @@ public:
   static QString nodeTypeName(NodeType);
 public:
   quint64 createNodeCon(quint64 nid1, quint64 nid2); // returns id
+  void createNodeConPair(quint64 nid1, quint64 nid2); // bidrectional
+  quint64 createSynCon(quint64 sid, quint64 nid); // returns id
+  quint64 createNode(quint64 tid, NodeType typ, Point const &p); // returns id
+  quint64 createTag(quint64 nid, QString tag); // returns id
+  quint64 createTree(QString tname="-", bool vis=true);
+  quint64 createSynapse();
+  void updateTag(quint64 tagid, QString tag);
 private:
   quint64 uid_;
 };
