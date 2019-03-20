@@ -60,7 +60,7 @@ int NSQuery::count() const {
 }
 
 QVector<SBEMDB::Node> NSQuery::nodes() const {
-  QString q = "select nid, tid, typ, x, y, z from nodes";
+  QString q = "select nodes.nid, nodes.tid, typ, x, y, z from nodes";
   if (!joins.isEmpty())
     q += " " + joins.join(" ");
   if (!wheres.isEmpty())
@@ -84,12 +84,12 @@ QVector<SBEMDB::Node> NSQuery::nodes() const {
 void NSQuery::createTempTable() {
   tempTableName = QString("edgecount%08x").arg(rand());
   QString q = "create temp table " + tempTableName
-    + " as select nid, count(1) as cnt"
+    + " as select nodes.nid, count(1) as cnt"
     + " from nodecons inner join nodes on nid1==nid";
   if (onlySelectedTree) {
     q += QString(" where tid==%1").arg(db->selectedTree());
   } else if (onlyVisibleTrees) {
-    q += " natural join trees where visible";
+    q += " inner join trees on nodes.tid==trees.tid where visible";
   }
   q += " group by nid";
   qDebug() << "query" << q;
@@ -108,7 +108,7 @@ void NSQuery::makeTreeClauses() {
   if (onlySelectedTree) {
     wheres << QString("tid==%1").arg(db->selectedTree());
   } else if (onlyVisibleTrees) {
-    joins << "natural join trees";
+    joins << "inner join trees on nodes.tid==trees.tid";
     wheres << QString("visible");
   }
 }
@@ -155,7 +155,7 @@ void NSQuery::makeMemoClauses() {
   if (!useMemo)
     return;
   
-  joins << "natural join tags";
+  joins << "inner join tags on nodes.nid==tags.nid";
 
   if (memoMustEqual) {
     wheres << "tag==" + nextArgRef();

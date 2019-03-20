@@ -17,6 +17,15 @@ SBEMDB::SBEMDB(QString id): Database(id) {
   uid_ = 0;
 }
 
+bool SBEMDB::canDoRegExps() const {
+  QSqlQuery q(db);
+  q.prepare("select count(*) from info where id regexp \"sbem\"");
+  if (q.exec()) 
+    return true;
+  else
+    return false;
+}
+
 void SBEMDB::create(QString fn) {
   QFile f(fn);
   if (f.exists())
@@ -66,10 +75,9 @@ void SBEMDB::open(QString fn) {
     t.commit();
   }
   QString user = QDir::homePath();
-  int have
-    = simpleQuery("select count(*) from users where home==:a", user).toInt();
-  if (have) {
-    uid_ = simpleQuery("select uid from users where home==:a").toULongLong();
+  QSqlQuery q = constQuery("select uid from users where home==:a", user);
+  if (q.next()) {
+    uid_ = q.value(0).toULongLong();
   } else {
     QString uuid = QUuid::createUuid().toString();
     qDebug() << "new uuid" << uuid;
@@ -193,8 +201,9 @@ SBEMDB::FullSynapse SBEMDB::synapseDetails(quint64 sid) const {
 
   res.sid = q.value(0).toULongLong();
 
-  q = constQuery("select scid, nid, typ from syncons"
-                 " natural join nodes where sid==:a", sid);
+  q = constQuery("select scid, nodes.nid, typ from syncons"
+                 " inner join nodes on syncons.nid==nodes.nid where sid==:a",
+		 sid);
   while (q.next()) {
     quint64 scid = q.value(0).toULongLong();
     quint64 nid = q.value(1).toULongLong();

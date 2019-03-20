@@ -17,6 +17,7 @@
 #include "NodeSearchDialog.h"
 #include "NodeListWidget.h"
 #include "ProjectionWidget.h"
+#include "TreeSearchDialog.h"
 
 #include <QTime>
 #include <QDoubleValidator>
@@ -36,6 +37,7 @@ public:
     db = new SBEMDB;
     tm = new TreeModel(db);
     eo = new EditOverlay(db, ui->tileviewer);
+    tsd = 0;
     ui->tileviewer->addOverlay(eo);
     QObject::connect(timer, &QTimer::timeout, [this]() { timeout(); });
   }
@@ -44,6 +46,8 @@ public:
     delete eo;
     delete tm;
     delete db;
+    if (tsd)
+      delete tsd;
   }
 public:
   MainWindow *mw;
@@ -54,6 +58,7 @@ public:
   EditOverlay *eo; // we create
   QTimer *timer;
   QString servername;
+  TreeSearchDialog *tsd;
 public:
   double xscale() {
     return info->contains("dx") ? info->real("dx") : 0.0055;
@@ -201,6 +206,11 @@ public:
       else
 	mw->setWindowTitle(servername);
     }
+  }
+  void doFindTreeDialog() {
+    if (!tsd)
+      tsd = new TreeSearchDialog(db, tm);
+    tsd->open();
   }
   void doFindNodeDialog() {
     QVector<SBEMDB::Node> nodes = NodeSearchDialog::exec1(db);
@@ -372,6 +382,8 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
           ui->treeView, &TreeView::actHideAll);
   connect(ui->actionFindNode, &QAction::triggered,
           [this]() { d->doFindNodeDialog(); });
+  connect(ui->actionFindTree, &QAction::triggered,
+          [this]() { d->doFindTreeDialog(); });
   connect(ui->action3DProjection, &QAction::triggered,
           [this]() { d->do3DProjection(); });
   connect(ui->actionCenterSelectedNode, &QAction::triggered,

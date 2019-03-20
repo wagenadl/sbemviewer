@@ -27,6 +27,13 @@ public:
   double dx, dy, dz;
 };
 
+static void applyGapShift(PointF &p) {
+  if (p.z>=328.7) {
+    p.x -= 4.285;
+    p.y += 25.857;
+  }
+}
+
 void ProjectionData::buildTree(quint64 tid) {
   view->freeze();
   bool isSelected = tid==db->selectedTree();
@@ -54,13 +61,17 @@ void ProjectionData::buildTree(quint64 tid) {
                                " inner join nodes as n1 on n1.nid==nc.nid1"
                                " inner join nodes as n2 on n2.nid==nc.nid2"
                                " where n1.tid==:a and n1.nid<n2.nid", tid);
-  while (q.next())
-    ll << LineF(PointF(q.value(0).toInt()*dx,
-                       q.value(1).toInt()*dy,
-                       q.value(2).toInt()*dz),
-                PointF(q.value(3).toInt()*dx,
+  while (q.next()) {
+    PointF p1(q.value(0).toInt()*dx,
+	      q.value(1).toInt()*dy,
+	      q.value(2).toInt()*dz);
+    PointF p2(q.value(3).toInt()*dx,
                        q.value(4).toInt()*dy,
-                       q.value(5).toInt()*dz));
+	      q.value(5).toInt()*dz);
+    applyGapShift(p1);
+    applyGapShift(p2);
+    ll << LineF(p1, p2);
+  }
   view->setLines(tid, ll);
 
   //  if (isSelected)
@@ -78,10 +89,13 @@ void ProjectionData::buildTree(quint64 tid) {
     QSqlQuery q = db->constQuery("select x, y, z from nodes"
                                  " where tid==:a and typ==:b",
                                  tid, SBEMDB::PresynTerm);
-    while (q.next())
-      ll << PointF(q.value(0).toInt()*dx,
-                   q.value(1).toInt()*dy,
-                   q.value(2).toInt()*dz);
+    while (q.next()) {
+      PointF p(q.value(0).toInt()*dx,
+	       q.value(1).toInt()*dy,
+	       q.value(2).toInt()*dz);
+      applyGapShift(p);
+      ll << p;
+    }
     view->setPoints(100000000+tid, ll);
     view->setColor(100000000+tid, isSelected ? PointF(.5, -.25, -.25) : col);
     view->setPointSize(100000000+tid, 4);
@@ -92,10 +106,13 @@ void ProjectionData::buildTree(quint64 tid) {
     QSqlQuery q = db->constQuery("select x, y, z from nodes"
                                  " where tid==:a and typ==:b",
                                  tid, SBEMDB::PostsynTerm);
-    while (q.next())
-      ll << PointF(q.value(0).toInt()*dx,
-                   q.value(1).toInt()*dy,
-                   q.value(2).toInt()*dz);
+    while (q.next()) {
+      PointF p(q.value(0).toInt()*dx,
+	       q.value(1).toInt()*dy,
+	       q.value(2).toInt()*dz);
+      applyGapShift(p);
+      ll << p;
+    }
     view->setPoints(200000000+tid, ll);
     view->setColor(200000000+tid, isSelected ? PointF(-.25, -.25, .5) : col);
     view->setPointSize(200000000+tid, 4);
@@ -105,10 +122,13 @@ void ProjectionData::buildTree(quint64 tid) {
     QSqlQuery q = db->constQuery("select x, y, z from nodes"
                                  " where tid==:a and typ==:b",
                                  tid, SBEMDB::Soma);
-    while (q.next())
-      ll << PointF(q.value(0).toInt()*dx,
-                   q.value(1).toInt()*dy,
-                   q.value(2).toInt()*dz);
+    while (q.next()) {
+      PointF p(q.value(0).toInt()*dx,
+	       q.value(1).toInt()*dy,
+	       q.value(2).toInt()*dz);
+      applyGapShift(p);
+      ll << p;
+    }
     view->setPoints(300000000+tid, ll);
     view->setColor(300000000+tid, view->color(tid));
     view->setPointSize(300000000+tid, 20);
@@ -118,10 +138,13 @@ void ProjectionData::buildTree(quint64 tid) {
     QSqlQuery q = db->constQuery("select x, y, z from nodes"
                                  " where tid==:a and typ==:b",
                                  tid, SBEMDB::ExitPoint);
-    while (q.next())
-      ll << PointF(q.value(0).toInt()*dx,
-                   q.value(1).toInt()*dy,
-                   q.value(2).toInt()*dz);
+    while (q.next()) {
+      PointF p(q.value(0).toInt()*dx,
+	       q.value(1).toInt()*dy,
+	       q.value(2).toInt()*dz);
+      applyGapShift(p);
+      ll << p;
+    }
     view->setPoints(400000000+tid, ll);
     view->setColor(400000000+tid, view->color(tid));
     view->setPointSize(400000000+tid, 12);

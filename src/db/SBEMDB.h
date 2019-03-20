@@ -81,6 +81,7 @@ public:
   void selectNode(quint64 nid);
   quint64 selectedNode() const;
   quint64 uid() const; // user ID
+  bool canDoRegExps() const;
 public:
   QVector<Synapse> synapses(QSqlQuery q) const;
   /* q must be of the form "select * from synapses" followed by

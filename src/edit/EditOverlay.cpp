@@ -149,9 +149,9 @@ void EditOverlay::drawTags(QPainter *p, ViewInfo const &vi) {
   int nr = nodeSBEMRadius(vi.a);
   int sr = nodeScreenRadius(vi.a);
   
-  QSqlQuery q = db->query("select x, y, z, tag, tid, visible from tags"
-                          " natural join nodes"
-                          " natural join trees"
+  QSqlQuery q = db->query("select x, y, z, tag, nodes.tid, visible from tags"
+                          " inner join nodes on tags.nid==nodes.nid"
+                          " inner join trees on nodes.tid==trees.tid"
                           " where z>=:a and z<=:b"
                           " and x>=:c and x<:d"
                           " and y>=:e and y<:f",
@@ -179,7 +179,7 @@ void EditOverlay::drawSynapses(QPainter *p, ViewInfo const &vi) {
   int nr = nodeSBEMRadius(vi.a);
 
   QSqlQuery q = db->query("select distinct sid from syncons"
-                          " natural join nodes"
+                          " inner join nodes on syncons.nid==nodes.nid"
                           " where z>=:a and z<=:b"
                           " and x>=:c and x<:d"
                           " and y>=:e and y<:f",
@@ -193,7 +193,8 @@ void EditOverlay::drawSynapses(QPainter *p, ViewInfo const &vi) {
   for (quint64 sid: sids) {
     QVector<Point> nodepos;
     bool isActive = false;
-    q = db->query("select x,y,z,tid from nodes natural join syncons"
+    q = db->query("select x,y,z,tid from nodes"
+		  " inner join syncons on nodes.nid==syncons.nid"
                   " where sid==:a", sid);
     while (q.next()) {
       nodepos << Point(q.value(0).toInt(),
@@ -245,10 +246,11 @@ void EditOverlay::drawOtherTrees(QPainter *p, ViewInfo const &vi) {
 void EditOverlay::drawOtherSomata(QPainter *p, ViewInfo const &vi) {
   int nr = nodeSBEMRadius(vi.a);
   
-  db->query("create temp table visnodes as select nid, tid, tname from nodes"
-	    " natural join trees"
-            " where tid!=:a"
-            " and tid in (select tid from trees where visible>0)"
+  db->query("create temp table visnodes as select nid, nodes.tid, tname"
+	    " from nodes"
+	    " inner join trees on nodes.tid==trees.tid"
+            " where trees.tid!=:a"
+            " and trees.tid in (select tid from trees where visible>0)"
             " and typ==1"
             " and z>=:b and z<=:c"
             " and x>=:d and x<:e"

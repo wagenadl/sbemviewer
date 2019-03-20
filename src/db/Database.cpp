@@ -5,6 +5,8 @@
 #include <QSqlError>
 #include <system_error>
 #include <QSqlQuery>
+//#include <sqlite3.h>
+#include <QSqlDriver>
 
 Database::Database(QString id0): id(id0), transWait(new QAtomicInt()) {
   if (id.isEmpty())
@@ -17,6 +19,7 @@ void Database::open(QString filename) {
 
   db = QSqlDatabase::addDatabase("QSQLITE", id);
   db.setDatabaseName(filename);
+  db.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
   if (!db.open())
     CRASH("Could not open database " + filename);
   query("pragma foreign_keys = on");
@@ -38,6 +41,7 @@ void Database::clone(Database const &src) {
   if (db.isOpen())
     close();
   db = QSqlDatabase::cloneDatabase(src.db, id);
+  db.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
   if (!db.open()) 
     CRASH("Could not open cloned database:" + db.databaseName());
   transWait = src.transWait;

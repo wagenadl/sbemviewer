@@ -20,7 +20,7 @@
      <x>0</x>
      <y>0</y>
      <width>987</width>
-     <height>23</height>
+     <height>39</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -63,6 +63,7 @@
     <addaction name="actionDisconnectNodes"/>
     <addaction name="actionEditMemo"/>
     <addaction name="separator"/>
+    <addaction name="actionFindTree"/>
     <addaction name="actionConnectTerminals"/>
     <addaction name="actionDissolveSynapse"/>
    </widget>
@@ -310,6 +311,14 @@
   <action name="actionTypeSynapseContour">
    <property name="text">
     <string>Synapse &amp;countour</string>
+   </property>
+  </action>
+  <action name="actionFindTree">
+   <property name="text">
+    <string>Find tree...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+F</string>
    </property>
   </action>
  </widget>
