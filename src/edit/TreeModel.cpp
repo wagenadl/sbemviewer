@@ -188,3 +188,9 @@ void TreeModel::setAllVisible(bool v) {
   emit dataChanged(index(0, Col_Visible),
                   index(rowCount()-1, Col_Visible));
 }
+
+void TreeModel::updateVisibilityFromDatabase() {
+  emit visibilityChanged();
+  emit dataChanged(index(0, Col_Visible),
+                  index(rowCount()-1, Col_Visible));
+}  

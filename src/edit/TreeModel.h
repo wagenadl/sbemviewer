@@ -37,6 +37,7 @@ public:
   int rowForTreeID(quint64 tid) const; // -1 if invalid
   quint64 treeIDAt(int row) const; // 0 if invalid
   void setAllVisible(bool);
+  void updateVisibilityFromDatabase();
 signals:
   void visibilityChanged();
 private:

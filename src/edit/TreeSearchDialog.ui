@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>TreeSearchDialog</class>
+ <widget class="QDialog" name="TreeSearchDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Select visible trees</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -25,6 +25,13 @@
      </item>
      <item>
       <widget class="QLineEdit" name="searchTerm"/>
+     </item>
+     <item>
+      <widget class="QToolButton" name="help">
+       <property name="text">
+        <string>?</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
