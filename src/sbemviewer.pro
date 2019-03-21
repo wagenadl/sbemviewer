@@ -11,6 +11,7 @@ INCLUDEPATH += edit
 INCLUDEPATH += miniball
 QT += gui widgets network sql
 CONFIG += debug_and_release
+LIBS += -lsqlite3
 
 DEFINES += QT_DEPRECATED_WARNINGS
 

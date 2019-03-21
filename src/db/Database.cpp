@@ -5,7 +5,7 @@
 #include <QSqlError>
 #include <system_error>
 #include <QSqlQuery>
-//#include <sqlite3.h>
+#include <sqlite3.h>
 #include <QSqlDriver>
 
 Database::Database(QString id0): id(id0), transWait(new QAtomicInt()) {
@@ -360,3 +360,29 @@ Untransaction::~Untransaction() {
 bool Database::transactionsWaiting() const {
   return *transWait > 0;
 }
+
+bool Database::enableExtensions() {
+  QVariant v = db.driver()->handle();
+  if (!v.isValid())
+    return false;
+  QString type = v.typeName();
+  if (type!="sqlite3*")
+    return false;
+  sqlite3_initialize(); // this probably already happened?
+  sqlite3 *db_handle = *static_cast<sqlite3 **>(v.data());
+  if (!db_handle)
+    return false;
+  sqlite3_enable_load_extension(db_handle, 1);
+  return true;
+}
+
+bool Database::enableRegExp() {
+  if (!enableExtensions())
+    return false;
+  QSqlQuery query(db);
+  query.exec("select load_extension('/usr/lib/sqlite3/pcre.so');");
+  if (query.lastError().isValid())
+    return false;
+  return true;
+}
+

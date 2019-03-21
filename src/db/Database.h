@@ -27,6 +27,8 @@ public:
   static void enableDebug();
   static void disableDebug();
   bool transactionsWaiting() const;
+  bool enableExtensions();
+  bool enableRegExp();
 public:
   QSqlQuery query();
   // The following execute the query and return the value(0) from the
