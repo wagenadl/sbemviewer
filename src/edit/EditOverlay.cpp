@@ -551,7 +551,6 @@ void EditOverlay::setActiveNode(quint64 nid1) {
   if (nid) {
     auto n = db->node(nid);
     tid = n.tid;
-    qDebug() << "setactivenode" << nid1 << tid;
   }
   forceUpdate();
 }
@@ -665,7 +664,6 @@ void EditOverlay::actSetNodeType(SBEMDB::NodeType typ) {
       return;
     }
     quint64 sid = q.value(0).toULongLong();
-    qDebug() << "Syncontour" << sid << nid;
     db->begin();
     db->query("delete from nodecons where nid1==:a or nid2==:b", nid, nid);
     db->createSynCon(sid, nid);

@@ -18,6 +18,7 @@
 #include "NodeListWidget.h"
 #include "ProjectionWidget.h"
 #include "TreeSearchDialog.h"
+#include "MovieMaker.h"
 
 #include <QTime>
 #include <QDoubleValidator>
@@ -231,6 +232,14 @@ public:
     w->setAttribute(Qt::WA_DeleteOnClose);
     w->resize(w->sizeHint());
   }
+  void doMakeMovie() {
+    if (info && db && db->isOpen()) {
+      MovieMaker *w = new MovieMaker(info, db);
+      w->resize(800, 800);
+      w->show();
+    }
+  }
+    
   void do3DProjection() {
     if (info && db && db->isOpen()) {
       ProjectionWidget *w = new ProjectionWidget(info, db);
@@ -386,6 +395,8 @@ MainWindow::MainWindow(TileCache *cache, ServerInfo *info) {
           [this]() { d->doFindTreeDialog(); });
   connect(ui->action3DProjection, &QAction::triggered,
           [this]() { d->do3DProjection(); });
+  connect(ui->actionMakeMovie, &QAction::triggered,
+          [this]() { d->doMakeMovie(); });
   connect(ui->actionCenterSelectedNode, &QAction::triggered,
           [this]() { d->centerSelectedNode(); });
   connect(ui->actionGoRS, &QAction::triggered,

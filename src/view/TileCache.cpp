@@ -36,7 +36,6 @@ void TileCacheData::processPrePending() {
       .arg(id.z)
       .arg(id.y)
       .arg(id.x);
-    //    qDebug() << "request" << url.toString() << "for" << id;
     urlmap[url] = id;
     pending[id] = nam->get(QNetworkRequest(url));
     connect(pending[id], &QNetworkReply::readyRead,
@@ -120,7 +119,6 @@ void TileCacheData::receiveQNR(QNetworkReply *reply) {
           age[id] = ++t;
         } else {
           // got an image!
-	  qDebug() << "Got image from" << reply->url().toString() << "for" << id  << "size" << img.size();
           tiles[id] = img;
           age[id] = ++t;
           tc->loaded(id);

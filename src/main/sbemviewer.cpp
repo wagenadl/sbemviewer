@@ -7,7 +7,7 @@
 #include <QDebug>
 #include <QFileInfo>
 #include <QInputDialog>
-
+#include <QTime>
 #include "Settings.h"
 #include "TileViewer.h"
 #include "UDPSocket.h"
@@ -35,8 +35,11 @@ int main(int argc, char **argv) {
   QString srv0 = settings.get("server", defaultServer).toString();
 
   settings.set("cleanexit", false);
-  if (!cleanexit)
+  if (!cleanexit) {
     settings.set("database", "");
+    cleanexit = true;
+  }
+    
 
   QApplication app(argc, argv);
 
@@ -50,7 +53,9 @@ int main(int argc, char **argv) {
   
   TileCache cache(server);
   ServerInfo info(server);
-
+  QTime t0; t0.start();
+  bool got = info.waitForResponse();
+  qDebug() << "After" << t0.elapsed() << "ms got response" << got;
   UDPSocket::Server udpserver(UDPSocket::sbemPath());
   MainWindow mw(&cache, &info);
   QObject::connect(&udpserver, &UDPSocket::Server::messageReceived,

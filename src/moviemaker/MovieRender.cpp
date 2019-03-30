@@ -187,6 +187,7 @@ public:
   double z() const {
     return isline ? (p1.z + p2.z)/2 : p1.z;
   }
+  static double totalLength(QList<MR_Object> const &lst);
 public:
   PointF p1;
   PointF p2;
@@ -196,11 +197,19 @@ public:
   int somaid;
 };
 
+double MR_Object::totalLength(QList<MR_Object> const &lst) {
+  double l = 0;
+  for (MR_Object const &obj: lst) 
+    if (obj.isline)
+      l += std::sqrt((obj.p1 - obj.p2).L2());
+  return l;
+}
+
 QImage MR_Data::render(int n) {
   QImage img(s.resolution, QImage::Format_ARGB32_Premultiplied);
   img.fill(QColor(0,0,0));
   QList<MR_Object> objs;
-  qDebug() << "MR_Data::render" << s.keyTrees;
+  double l0 = 0;
   for (quint64 tid: s.keyTrees) {
     PointF color(1, 1, 1);
     MRD_Tree const &t{tree(tid)};
@@ -214,19 +223,38 @@ QImage MR_Data::render(int n) {
     }
     for (LineF l: t.segments)
       objs << MR_Object(l, color, s.keyWidth);
-    if (s.alsoPresynaptic) {
+    double l1 = MR_Object::totalLength(objs);
+    qDebug() << "Neurite length in object" << tid << "is" << l1 - l0;
+    l0 = l1;
+  }
+
+  if (s.alsoPresynaptic) {
+    int ppcount = 0;
+    QList<PointF> somapos;
+    for (quint64 tid: s.keyTrees) {
       for (quint64 t1: presynapticPartners(tid)) {
+	ppcount++;
 	MRD_Tree const &t{tree(t1)};
 	for (LineF l: t.segments)
 	  objs << MR_Object(l, t.color, s.keyWidth);
 	for (PointF p: t.soma) {
+	  somapos << p;
 	  objs << MR_Object(p, t.color, s.somaDiameter);
 	  objs.last().somaid = t1;
 	}
       }
     }
-    if (s.alsoPostsynaptic) {
+    qDebug() << "Found" << ppcount << "presynaptic partners";
+    double l1 = MR_Object::totalLength(objs);
+    qDebug() << "Neurite length in presynaptic partners is" << l1 - l0;
+    l0 = l1;
+  }
+  
+  if (s.alsoPostsynaptic) {
+    int ppcount = 0;
+    for (quint64 tid: s.keyTrees) {
       for (quint64 t1: postsynapticPartners(tid)) {
+	ppcount++;
 	MRD_Tree const &t{tree(t1)};
 	for (LineF l: t.segments)
 	  objs << MR_Object(l, t.color, s.keyWidth);
@@ -236,6 +264,10 @@ QImage MR_Data::render(int n) {
 	}
       }
     }
+    qDebug() << "Found" << ppcount << "postsynaptic partners";
+    double l1 = MR_Object::totalLength(objs);
+    qDebug() << "Neurite length in postsynaptic partners is" << l1 - l0;
+    l0 = l1;
   }
 
   PointF p0(0,0,0);
@@ -249,10 +281,10 @@ QImage MR_Data::render(int n) {
     if (L2a > L2)
       L2 = L2a;
   }
-  qDebug() << "render" << p0 << std::sqrt(L2) << s.resolution;
 
   Transform3 xf;
   xf.shift(s.resolution.width()/2, s.resolution.height()/2, 0);
+  xf.flipy();
   xf.scale(s.resolution.width()/std::sqrt(L2)/2, 0, 0);
   xf.rotate(n * 2 * 3.141592 / s.frameCount, 0, 0, 0);
   xf.rotate(3.141592/180 * s.theta, 3.141592/180 * s.phi, 0, 0);
@@ -262,7 +294,6 @@ QImage MR_Data::render(int n) {
     if (obj.isline)
       obj.p2 = xf.apply(obj.p2);
   }
-  qDebug() << "object count" << objs.size();
 
   std::sort(objs.begin(), objs.end(),
 	    [](MR_Object const &a, MR_Object const &b) {

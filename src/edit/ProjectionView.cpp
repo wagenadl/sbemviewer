@@ -114,28 +114,22 @@ void ProjectionViewData::autoScale(int w, int h) {
   else
     mapCenter();
   int r = (w<h ? w : h) / 2;
-  qDebug() << "autoscale pre " << pavg << dmax << xfpavg << xfdmax << r;
-  qDebug() << tform;
   tform = Transform3::scaler(r / xfdmax) * tform;
   invtform = tform.inverse();
   mapCenter();
   havexf = false;
   resc = false;
-  qDebug() << "autoscale post " << pavg << dmax << xfpavg << xfdmax;
-  qDebug() << tform;
 }
 
 void ProjectionViewData::autoCenter(int x0, int y0) {
   if (!havecenter)
     findCenter();
   PointF p1(x0, y0, 0);
-  qDebug() << "autocenter pre " << pavg << dmax << xfpavg << xfdmax << x0 << y0;
   tform = Transform3::shifter(x0 - xfpavg.x, y0 - xfpavg.y, 0 - xfpavg.z) * tform;
   invtform = tform.inverse();
   mapCenter();
   havexf = false;
   resc = false;
-  qDebug() << "autocenter post " << pavg << dmax << xfpavg << xfdmax;
 }
 
 void ProjectionViewData::findCenter() {
@@ -335,15 +329,12 @@ void ProjectionView::wheelEvent(QWheelEvent *e) {
   QPointF pos = e->pos();
   QPointF delta(e->angleDelta());
   delta /= 300.0;
-  qDebug() << "w1" << d->xfpavg.z;
   d->invtform.scale(exp(-delta.y()), pos.x(), pos.y());
   d->tform = d->invtform.inverse();
   d->mapCenter();
-  qDebug() << "w2" << d->xfpavg.z;
   d->invtform.shift(0, 0, d->xfpavg.z);
   d->tform = d->invtform.inverse();
   d->mapCenter();
-  qDebug() << "w3" << d->xfpavg.z;
   d->havexf = false;
   e->accept();
   if (!frozen())
@@ -474,7 +465,6 @@ void ProjectionView::resizeEvent(QResizeEvent *e) {
 		    + .5*sq(s0.height()/s1.height()));
   d->invtform.scale(scl, s1.width()/2, s1.height()/2);
   PointF cntr1 = d->invtform.apply(PointF(s1.width()/2, s1.height()/2, 0));
-  qDebug() << "scale" << cntr0 << scl<< cntr1;
   d->invtform = Transform3::shifter(cntr0.x-cntr1.x,
 				    cntr0.y-cntr1.y,
 				    cntr0.z-cntr1.z) * d->invtform;

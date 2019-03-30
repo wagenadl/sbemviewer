@@ -27,6 +27,7 @@ public:
   void rotate(double dxz, double dyz, double x0, double y0);
   void rotatez(double dxy, double x0, double y0);
   void scale(double s, double x0, double y0);
+  void flipy();
   void report() const;
   Transform3 inverse() const;
   double det() const;

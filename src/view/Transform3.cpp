@@ -59,6 +59,12 @@ Transform3 Transform3::scaler(double s) {
   return mm;
 }
 
+void Transform3::flipy() {
+  Transform3 mm;
+  mm.m[1][1] = -1;
+  *this =  *this * mm;
+}  
+
 Transform3 operator*(Transform3 const &l, Transform3 const &r) {
   Transform3 res;
   for (int n=0; n<4; n++) {

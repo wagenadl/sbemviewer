@@ -473,12 +473,10 @@ void TileViewer::enforceY() {
   int y1 = info->contains("y1") ? info->integer("y1") : 99000;
   y1 -= (9*height()/10) << a;
   y0 -= (height()/10) << a;
-  qDebug() << "enforceY" << y_ << y0 << y1;
   if (y_<y0)
     y_ = y0;
   if (y_>y1)
     y_ = y1;
-  qDebug() << " => " << y_;
 }
   
 void TileViewer::enforceZ() {

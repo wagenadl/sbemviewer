@@ -78,6 +78,7 @@
     <addaction name="separator"/>
     <addaction name="actionCenterSelectedNode"/>
     <addaction name="action3DProjection"/>
+    <addaction name="actionMakeMovie"/>
     <addaction name="separator"/>
     <addaction name="actionGoRS"/>
    </widget>
@@ -319,6 +320,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+F</string>
+   </property>
+  </action>
+  <action name="actionMakeMovie">
+   <property name="text">
+    <string>&amp;Make movie</string>
    </property>
   </action>
  </widget>
