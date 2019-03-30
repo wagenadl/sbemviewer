@@ -93,7 +93,7 @@ create index if not exists treeidx on nodes(tid);
 
 ----------------------------------------------------------------------
 
-insert into info values("sbemviewer", "0.2");
+insert into info values("sbemviewer", "0.3");
 insert into selectedtree values(null);
 insert into selectednode values(null);
 
