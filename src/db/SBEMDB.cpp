@@ -106,7 +106,7 @@ SBEMDB::SynCon SBEMDB::synCon(quint64 scid) const {
 
 SBEMDB::Tree SBEMDB::tree(quint64 tid) const {
   auto lst
-    = trees(constQuery("select * from tree where tid==:a",
+    = trees(constQuery("select * from trees where tid==:a",
                        tid));
   return lst.isEmpty() ? Tree() : lst.first();  
 }
