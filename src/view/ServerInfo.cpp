@@ -3,6 +3,7 @@
 #include "ServerInfo.h"
 #include <QNetworkReply>
 #include <QNetworkAccessManager>
+#include <QEventLoop>
 
 class ServerInfoData {
 public:
@@ -14,6 +15,17 @@ public:
       delete nam;
   }
 public:
+  QVariant splitVector(QString s) {
+    QStringList bits = s.split(":", QString::SkipEmptyParts);
+    QVariantList vv;
+    if (s.contains(".")) 
+      for (QString b: bits)
+	vv << b.toDouble();
+    else 
+      for (QString b: bits)
+	vv << b.toInt();
+    return QVariant(vv);
+  }
   void respond(QNetworkReply *r) {
     QByteArray data = r->read(1000*1000);
     QString s(data);
@@ -24,8 +36,11 @@ public:
       if (bits.size()>=2) {
         QString k = bits.takeFirst();
         QString v = bits.join("=");
+	orig[k] = v;
         if (v.startsWith("\"") && v.endsWith("\""))
           infos[k] = v.mid(1, v.size()-2);
+	else if (v.contains(":"))
+	  infos[k] = splitVector(v);
         else if (v.contains("."))
           infos[k] = v.toDouble();
         else
@@ -43,6 +58,7 @@ public:
   QNetworkAccessManager *nam;
   QString urlroot;
   QMap<QString, QVariant> infos;
+  QMap<QString, QString> orig;
 };
 
 ServerInfo::ServerInfo(QString urlroot) {
@@ -94,4 +110,27 @@ double ServerInfo::real(QString k, double dflt) const {
     return real(k);
   else
     return dflt;
+}
+
+QString ServerInfo::original(QString k) const {
+  if (contains(k))
+    return d->orig[k];
+  else
+    return QString();
+}
+
+bool ServerInfo::waitForResponse(int timeout_ms) {
+  if (d->nam==0)
+    return true;
+  QTime t0;
+  t0.start();
+  QEventLoop loop;
+  int dt = timeout_ms - t0.elapsed();
+  while (dt>0) {
+    if (d->nam==0)
+      return true;
+    loop.processEvents(QEventLoop::ExcludeUserInputEvents, dt);
+    dt = timeout_ms - t0.elapsed();
+  }
+  return false;
 }

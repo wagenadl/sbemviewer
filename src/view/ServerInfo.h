@@ -19,7 +19,9 @@ public:
   double real(QString k, double dflt) const;
   int integer(QString k) const { return value(k).toInt(); }
   QString string(QString k) const { return value(k).toString(); }
+  QString original(QString k) const;
   void update();
+  bool waitForResponse(int timeout_ms=1000);
 private:
   class ServerInfoData *d;
 };
