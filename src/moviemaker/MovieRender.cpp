@@ -29,10 +29,10 @@ public:
 
 class MR_Data {
 public:
-  MR_Data(ServerInfo const *info, SBEMDB const *db): info(info), db(db) {
-    dx = info->contains("dx") ? info->real("dx") : 0.0055;
-    dy = info->contains("dy") ? info->real("dy") : 0.0055;
-    dz = info->contains("dz") ? info->real("dz") : 0.050;
+  MR_Data(SBEMDB const *db): db(db), info(db->serverInfo()) {
+    dx = info.real("dx");
+    dy = info.real("dy");
+    dz = info.real("dz");
     setSomaLabels();
   }
   void reset(); // trees are scanned on request
@@ -42,8 +42,8 @@ public:
   QList<quint64> presynapticPartners(quint64 tid);
   QList<quint64> postsynapticPartners(quint64 tid);
 public:
-  ServerInfo const *info;
   SBEMDB const *db;
+  ServerInfo info;
   MMSettings s;
 public:
   double dx, dy, dz;
@@ -363,9 +363,8 @@ QImage MR_Data::render(int n) {
   return img;
 }
 
-MovieRender::MovieRender(ServerInfo const *info, SBEMDB const *db,
-			 QObject *parent):
-  QObject(parent), d(new MR_Data(info, db)) {
+MovieRender::MovieRender(SBEMDB const *db, QObject *parent):
+  QObject(parent), d(new MR_Data(db)) {
 }
 
 MovieRender::~MovieRender() {

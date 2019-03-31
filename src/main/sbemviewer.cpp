@@ -55,7 +55,6 @@ int main(int argc, char **argv) {
   ServerInfo info(server);
   QTime t0; t0.start();
   bool got = info.waitForResponse();
-  qDebug() << "After" << t0.elapsed() << "ms got response" << got;
   UDPSocket::Server udpserver(UDPSocket::sbemPath());
   MainWindow mw(&cache, &info);
   QObject::connect(&udpserver, &UDPSocket::Server::messageReceived,
@@ -63,7 +62,6 @@ int main(int argc, char **argv) {
               mw.tileViewer()->setPosition(msg.x / info.real("dx", 0.0055),
                                            msg.y / info.real("dy", 0.0055),
                                            msg.z / info.real("dz", 0.050));
-              // mw.tileViewer()->selectTreeByName(msg.id);
             });
   mw.show();
   mw.setServerName(server);

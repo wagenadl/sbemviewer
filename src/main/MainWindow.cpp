@@ -235,7 +235,7 @@ public:
   }
   void doMakeMovie() {
     if (info && db && db->isOpen()) {
-      MovieMaker *w = new MovieMaker(info, db);
+      MovieMaker *w = new MovieMaker(db);
       w->resize(800, 800);
       w->show();
     }

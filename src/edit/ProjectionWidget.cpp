@@ -11,7 +11,6 @@
 class ProjectionData {
 public:
   ProjectionData(SBEMDB *db): db(db), info(db->serverInfo()) {
-    QMap<QString, QVariant> const &mp = info.map();
     haveSelectedTree = false;
     dx = info.real("dx");
     dy = info.real("dy");
