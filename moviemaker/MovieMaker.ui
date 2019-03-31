@@ -82,7 +82,7 @@
   <customwidget>
    <class>MMControls</class>
    <extends>QWidget</extends>
-   <header>moviemaker/MMControls.h</header>
+   <header>MMControls.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

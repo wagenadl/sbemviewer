@@ -1,7 +1,7 @@
-all: SBEMVIEWER
+all: SBEMVIEWER MOVIEMAKER
 
 clean:
-	+rm -rf build
+	+rm -rf build buildmm
 
 SBEMVIEWER: PREP
 	+make -C build
@@ -13,4 +13,10 @@ PREP:
 	mkdir -p build
 	( cd build; qmake ../src/sbemviewer.pro )
 
-.PHONY: PREP SBEMVIEWER clean
+MOVIEMAKER: PREPMM
+	+make -C buildmm
+PREPMM:
+	mkdir -p buildmm
+	( cd buildmm; qmake ../moviemaker/moviemaker.pro )
+
+.PHONY: PREP SBEMVIEWER PREPMM MOVIEMAKER clean
