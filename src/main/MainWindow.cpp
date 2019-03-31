@@ -110,6 +110,7 @@ public:
   void openDB(QString fn) {
     tm->beginReset();
     db->open(fn);
+    db->incorporateServerInfo(info);
     updateTitle();
     tm->concludeReset();
     ui->mode->ui->editTrees->setEnabled(true);

@@ -1,0 +1,6 @@
+Version history of the database schema
+
+0.1 - Original
+0.2 - Added cdate to most tables
+0.3 - Created users table and added uid to most tables
+0.4 - Created serverinfo table

@@ -8,6 +8,7 @@
 #include <QDateTime>
 #include <QDir>
 #include <QUuid>
+#include "ServerInfo.h"
 
 static QVariant now() {
   return QVariant(QDateTime::currentDateTime());
@@ -73,6 +74,13 @@ void SBEMDB::open(QString fn) {
     query("create table users ( uid integer, home text )");
     query("update info set version = \"0.3\" where id==\"sbemviewer\"");
     t.commit();
+  }
+  if (vsn < "0.4") {
+    pDebug() << "serverinfo does not exist";
+    Transaction t(this);
+    query("create table serverinfo ( k text, v text, unique(k) )");
+    query("update info set version = \"0.4\" where id==\"sbemviewer\"");
+    t.commit();   
   }
   QString user = QDir::homePath();
   QSqlQuery q = constQuery("select uid from users where home==:a", user);
@@ -423,4 +431,18 @@ quint64 SBEMDB::createSynapse() {
 
 quint64 SBEMDB::uid() const {
   return uid_;
+}
+
+void SBEMDB::incorporateServerInfo(ServerInfo const *info) {
+  for (QString k: info->keys())
+    query("insert or replace into serverinfo (k, v) values (:a, :b)",
+	  k, info->original(k));
+}
+
+QMap<QString, QString> SBEMDB::serverInfo() const {
+  QMap<QString, QString> res;
+  QSqlQuery q("select k, v from serverinfo");
+  while (q.next())
+    res[q.value(0).toString()] = q.value(1).toString();
+  return res;
 }

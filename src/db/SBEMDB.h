@@ -100,6 +100,8 @@ public:
   // If all else fails, will select from tid with ztol ignored.
   Node somaAt(class Point const &p, int xytol, int ztol, quint64 tid) const;
   static QString nodeTypeName(NodeType);
+  void incorporateServerInfo(class ServerInfo const *info);
+  QMap<QString, QString> serverInfo() const;
 public:
   quint64 createNodeCon(quint64 nid1, quint64 nid2); // returns id
   void createNodeConPair(quint64 nid1, quint64 nid2); // bidrectional

@@ -27,6 +27,7 @@ public:
     return QVariant(vv);
   }
   void respond(QNetworkReply *r) {
+    orig["urlroot"] = "\"" + urlroot + "\"";
     QByteArray data = r->read(1000*1000);
     QString s(data);
     QStringList lines = s.split("\n");
@@ -37,22 +38,29 @@ public:
         QString k = bits.takeFirst();
         QString v = bits.join("=");
 	orig[k] = v;
-        if (v.startsWith("\"") && v.endsWith("\""))
-          infos[k] = v.mid(1, v.size()-2);
-	else if (v.contains(":"))
-	  infos[k] = splitVector(v);
-        else if (v.contains("."))
-          infos[k] = v.toDouble();
-        else
-          infos[k] = v.toInt();
       } else if (!kv.isEmpty()) {
-        qDebug() << "ServerInfo: Cannot parse" << kv;
+	qDebug() << "ServerInfo: Cannot parse" << kv;
       }
     }
+    interpretOrig();
     qDebug() << "Got info: " << infos;
     r->deleteLater();
     nam->deleteLater();
     nam = 0;
+  }
+  void interpretOrig() {
+    for (auto it=orig.begin(); it!=orig.end(); it++) {
+      QString k = it.key();
+      QString v = it.value();
+      if (v.startsWith("\"") && v.endsWith("\""))
+	infos[k] = v.mid(1, v.size()-2);
+      else if (v.contains(":"))
+	infos[k] = splitVector(v);
+      else if (v.contains("."))
+	infos[k] = v.toDouble();
+      else
+	infos[k] = v.toInt();
+    }
   }
 public:
   QNetworkAccessManager *nam;
@@ -71,6 +79,13 @@ ServerInfo::ServerInfo(QString urlroot) {
 ServerInfo::ServerInfo() {
   d = new ServerInfoData;
   d->nam = 0;
+}
+
+ServerInfo::ServerInfo(QMap<QString, QString> const &origmap) {
+  d = new ServerInfoData;
+  d->nam = 0;
+  d->orig = origmap;
+  d->interpretOrig();
 }
 
 ServerInfo::~ServerInfo() {
@@ -134,3 +149,8 @@ bool ServerInfo::waitForResponse(int timeout_ms) {
   }
   return false;
 }
+
+QMap<QString, QString> const &ServerInfo::originalMap() const {
+  return d->orig;
+}
+

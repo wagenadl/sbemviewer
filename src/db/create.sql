@@ -1,3 +1,7 @@
+----------------------------------------------------------------------
+-- When changing anything, change the version, update history file,
+-- and augment SBEMDB.cpp to auto-upgrade.
+
 pragma foreign_keys = on;
 
 create table info (
@@ -86,6 +90,11 @@ create table users (
        uid integer,
        home text );
 
+create table serverinfo (
+       k text,
+       v text,
+       unique (k) );
+
 ----------------------------------------------------------------------
 
 create index if not exists zidx on nodes(z);
@@ -93,7 +102,7 @@ create index if not exists treeidx on nodes(tid);
 
 ----------------------------------------------------------------------
 
-insert into info values("sbemviewer", "0.3");
+insert into info values("sbemviewer", "0.4");
 insert into selectedtree values(null);
 insert into selectednode values(null);
 
