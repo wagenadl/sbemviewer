@@ -11,6 +11,8 @@ public:
   ServerInfo(QString urlroot);
   ServerInfo(); // creates dummy serverinfo object with no contents
   ServerInfo(QMap<QString, QString> const &origmap);
+  ServerInfo(ServerInfo const &) = delete;
+  ServerInfo &operator=(ServerInfo const &) = delete;
   ~ServerInfo();
   QStringList keys() const;  
   QMap<QString, QVariant> const &map() const;

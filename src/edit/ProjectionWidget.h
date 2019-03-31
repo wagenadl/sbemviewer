@@ -10,7 +10,7 @@
 class ProjectionWidget: public QMainWindow {
   Q_OBJECT;
 public:
-  ProjectionWidget(class ServerInfo *info, SBEMDB *db, QWidget *parent=0);
+  ProjectionWidget(SBEMDB *db, QWidget *parent=0);
   virtual ~ProjectionWidget();
   void addTree(quint64 tid);
   void addVisibleTrees();

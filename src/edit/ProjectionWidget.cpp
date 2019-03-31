@@ -10,29 +10,42 @@
 
 class ProjectionData {
 public:
-  ProjectionData(ServerInfo *info, SBEMDB *db): info(info), db(db) {
+  ProjectionData(SBEMDB *db): db(db), info(db->serverInfo()) {
+    QMap<QString, QVariant> const &mp = info.map();
     haveSelectedTree = false;
-    dx = info->contains("dx") ? info->real("dx") : 0.0055;
-    dy = info->contains("dy") ? info->real("dy") : 0.0055;
-    dz = info->contains("dz") ? info->real("dz") : 0.050;
+    dx = info.real("dx");
+    dy = info.real("dy");
+    dz = info.real("dz");
+    QVariantList gs = info.value("gapshift").toList();
+    while (gs.size() >= 3) {
+      double z = gs.takeFirst().toDouble();
+      double dx = gs.takeFirst().toDouble();
+      double dy = gs.takeFirst().toDouble();
+      gapshifts << PointF(dx, dy, z);
+    }
+    qDebug() << "gapshifts: " << gapshifts;
+    if (!gs.isEmpty())
+      qDebug() << "uneven gapshift data";
   }
   ~ProjectionData() {
   }
   void buildTree(quint64 tid);
+  void applyGapShift(PointF &p) {
+    for (PointF const &gs: gapshifts) {
+      if (p.z>=gs.z) {
+	p.x += gs.x;
+	p.y += gs.y;
+      }
+    }
+  }
 public:
-  ServerInfo *info;
   SBEMDB *db;
+  ServerInfo info;
   class ProjectionView *view;
   bool haveSelectedTree;
   double dx, dy, dz;
+  QList<PointF> gapshifts;
 };
-
-static void applyGapShift(PointF &p) {
-  if (p.z>=328.7) {
-    p.x -= 4.285;
-    p.y += 25.857;
-  }
-}
 
 void ProjectionData::buildTree(quint64 tid) {
   view->freeze();
@@ -153,9 +166,8 @@ void ProjectionData::buildTree(quint64 tid) {
   view->thaw();
 }
   
-ProjectionWidget::ProjectionWidget(ServerInfo *info, SBEMDB *db,
-                                   QWidget *parent):
-  QMainWindow(parent), d(new ProjectionData(info, db)) {
+ProjectionWidget::ProjectionWidget(SBEMDB *db, QWidget *parent):
+  QMainWindow(parent), d(new ProjectionData(db)) {
   d->view = new ProjectionView(this);
   setCentralWidget(d->view);
   connect(d->view, &ProjectionView::doubleClickOnTree,

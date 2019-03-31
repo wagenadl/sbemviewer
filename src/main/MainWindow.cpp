@@ -243,7 +243,7 @@ public:
     
   void do3DProjection() {
     if (info && db && db->isOpen()) {
-      ProjectionWidget *w = new ProjectionWidget(info, db);
+      ProjectionWidget *w = new ProjectionWidget(db);
       w->addSelectedTree();
       w->addVisibleTrees();
       w->resize(800, 800);

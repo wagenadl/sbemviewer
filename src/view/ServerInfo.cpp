@@ -43,7 +43,6 @@ public:
       }
     }
     interpretOrig();
-    qDebug() << "Got info: " << infos;
     r->deleteLater();
     nam->deleteLater();
     nam = 0;

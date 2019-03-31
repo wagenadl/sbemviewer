@@ -79,6 +79,10 @@ void SBEMDB::open(QString fn) {
     pDebug() << "serverinfo does not exist";
     Transaction t(this);
     query("create table serverinfo ( k text, v text, unique(k) )");
+    // Following is a hack for the 170428 data. There are no other data out in
+    // the wild with vsn < 0.4, so this is safe.
+    query("insert into serverinfo (k, v)"
+	  " values (:a,:b)", "gapshift", "328.7:-4.285:25.857");
     query("update info set version = \"0.4\" where id==\"sbemviewer\"");
     t.commit();   
   }
@@ -441,7 +445,7 @@ void SBEMDB::incorporateServerInfo(ServerInfo const *info) {
 
 QMap<QString, QString> SBEMDB::serverInfo() const {
   QMap<QString, QString> res;
-  QSqlQuery q("select k, v from serverinfo");
+  QSqlQuery q{constQuery("select k, v from serverinfo")};
   while (q.next())
     res[q.value(0).toString()] = q.value(1).toString();
   return res;
