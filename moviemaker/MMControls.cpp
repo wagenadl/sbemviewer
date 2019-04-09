@@ -113,6 +113,7 @@ void MMControls::reset() {
   MMSettings s;
   d->ui->presyn->setChecked(s.alsoPresynaptic);
   d->ui->postsyn->setChecked(s.alsoPostsynaptic);
+  d->ui->buildup->setChecked(s.buildup);
   d->ui->trees->clear();
   d->ui->theta->setValue(s.theta);
   d->ui->phi->setValue(s.phi);
@@ -140,6 +141,7 @@ MMSettings MMControls::settings() const {
   }
   s.alsoPresynaptic = d->ui->presyn->isChecked();
   s.alsoPostsynaptic = d->ui->postsyn->isChecked();
+  s.buildup = d->ui->buildup->isChecked();
   s.resolution = QSize(d->ui->width->value(), d->ui->height->value());
   s.frameCount = d->ui->steps->value();
   s.lineWidth = d->ui->linewidth->value();

@@ -3,11 +3,12 @@
 #include "MMSettings.h"
 
 MMSettings::MMSettings() {
-  theta = 288;
+  theta = 270;
   phi = 90;
   alsoPresynaptic = true;
   alsoPostsynaptic = false;
-  resolution = QSize(720, 720);
+  buildup = true;
+  resolution = QSize(720, 480);
   frameCount = 360;
   lineWidth = 1;
   keyWidth = 2;

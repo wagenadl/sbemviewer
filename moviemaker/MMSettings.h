@@ -16,6 +16,7 @@ public:
   QList<quint64> keyTrees;
   bool alsoPresynaptic;
   bool alsoPostsynaptic;
+  bool buildup;
   QSize resolution;
   int frameCount;
   double lineWidth;
