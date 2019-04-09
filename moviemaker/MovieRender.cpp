@@ -19,10 +19,10 @@ static void applyGapShift(PointF &p) {
 
 struct MRD_Tree {
 public:
-  QVector<PointF> presyn, postsyn;
-  QVector<PointF> soma;
+  QMap<quint64, PointF> nodes;
+  QVector<quint64> presyn, postsyn, soma; // index into nodes
+  QVector<QPair<quint64,quint64>> segments; // indices into nodes
   QString somalabel;
-  QVector<LineF> segments;
   PointF color;
 };
 
@@ -105,54 +105,37 @@ MRD_Tree const &MR_Data::tree(quint64 tid) {
     return trees[tid];
   
   MRD_Tree tree;
-  QSqlQuery q = db->constQuery("select n1.x, n1.y, n1.z, n2.x, n2.y, n2.z"
+  QSqlQuery q = db->constQuery("select nid, x, y, z, typ from nodes"
+			       " where tid==:a", tid);
+  while (q.next()) {
+    quint64 nid = q.value(0).toULongLong();
+    PointF p(q.value(1).toInt()*dx,
+	     q.value(2).toInt()*dy,
+	     q.value(3).toInt()*dz);
+    applyGapShift(p);
+    tree.nodes[nid] = p;
+    switch (SBEMDB::NodeType(q.value(4).toInt())) {
+    case SBEMDB::PresynTerm:
+      tree.presyn << nid;
+      break;
+    case SBEMDB::PostsynTerm:
+      tree.postsyn << nid;
+      break;
+    case SBEMDB::Soma:
+      tree.soma << nid;
+    default:
+      break;
+    }
+  }
+						  
+  q = db->constQuery("select n1.nid, n2.nid"
                                " from nodecons as nc"
                                " inner join nodes as n1 on n1.nid==nc.nid1"
                                " inner join nodes as n2 on n2.nid==nc.nid2"
                                " where n1.tid==:a and n1.nid<n2.nid", tid);
-  while (q.next()) {
-    PointF p1(q.value(0).toInt()*dx,
-	      q.value(1).toInt()*dy,
-	      q.value(2).toInt()*dz);
-    PointF p2(q.value(3).toInt()*dx,
-	      q.value(4).toInt()*dy,
-	      q.value(5).toInt()*dz);
-    applyGapShift(p1);
-    applyGapShift(p2);
-    tree.segments << LineF(p1, p2);
-  }
-
-  q = db->constQuery("select x, y, z from nodes"
-		     " where tid==:a and typ==:b",
-		     tid, SBEMDB::PresynTerm);
-  while (q.next()) {
-    PointF p(q.value(0).toInt()*dx,
-	     q.value(1).toInt()*dy,
-	     q.value(2).toInt()*dz);
-    applyGapShift(p);
-    tree.presyn << p;
-  }
-  q = db->constQuery("select x, y, z from nodes"
-		     " where tid==:a and typ==:b",
-		     tid, SBEMDB::PostsynTerm);
-  while (q.next()) {
-    PointF p(q.value(0).toInt()*dx,
-	     q.value(1).toInt()*dy,
-	     q.value(2).toInt()*dz);
-    applyGapShift(p);
-    tree.postsyn << p;
-  }
-
-  q = db->constQuery("select x, y, z from nodes"
-		     " where tid==:a and typ==:b",
-		     tid, SBEMDB::Soma);
-  while (q.next()) {
-    PointF p(q.value(0).toInt()*dx,
-	     q.value(1).toInt()*dy,
-	     q.value(2).toInt()*dz);
-    applyGapShift(p);
-    tree.soma << p;
-  }
+  while (q.next()) 
+    tree.segments << QPair<quint64, quint64>(q.value(0).toULongLong(),
+					     q.value(1).toULongLong());
 
   q = db->constQuery("select tname from trees where tid==:a", tid);
   QString tname = q.next() ? q.value(0).toString() : "";
@@ -213,16 +196,17 @@ QImage MR_Data::render(int n) {
   for (quint64 tid: s.keyTrees) {
     PointF color(1, 1, 1);
     MRD_Tree const &t{tree(tid)};
-    for (PointF p: t.presyn)
-      objs << MR_Object(p, color, s.synapseDiameter);
-    for (PointF p: t.postsyn)
-      objs << MR_Object(p, color, s.synapseDiameter);
-    for (PointF p: t.soma) {
-      objs << MR_Object(p, color, s.somaDiameter);
+    for (quint64 nid: t.presyn)
+      objs << MR_Object(t.nodes[nid], color, s.synapseDiameter);
+    for (quint64 nid: t.postsyn)
+      objs << MR_Object(t.nodes[nid], color, s.synapseDiameter);
+    for (quint64 nid: t.soma) {
+      objs << MR_Object(t.nodes[nid], color, s.somaDiameter);
       objs.last().somaid = tid;
     }
-    for (LineF l: t.segments)
-      objs << MR_Object(l, color, s.keyWidth);
+    for (auto seg: t.segments)
+      objs << MR_Object(LineF(t.nodes[seg.first], t.nodes[seg.second]),
+			color, s.keyWidth);
     double l1 = MR_Object::totalLength(objs);
     qDebug() << "Neurite length in object" << tid << "is" << l1 - l0;
     l0 = l1;
@@ -235,9 +219,11 @@ QImage MR_Data::render(int n) {
       for (quint64 t1: presynapticPartners(tid)) {
 	ppcount++;
 	MRD_Tree const &t{tree(t1)};
-	for (LineF l: t.segments)
-	  objs << MR_Object(l, t.color, s.keyWidth);
-	for (PointF p: t.soma) {
+	for (auto seg: t.segments)
+	  objs << MR_Object(LineF(t.nodes[seg.first], t.nodes[seg.second]),
+			    t.color, s.keyWidth);
+	for (quint64 nid: t.soma) {
+	  PointF p(t.nodes[nid]);
 	  somapos << p;
 	  objs << MR_Object(p, t.color, s.somaDiameter);
 	  objs.last().somaid = t1;
@@ -256,9 +242,11 @@ QImage MR_Data::render(int n) {
       for (quint64 t1: postsynapticPartners(tid)) {
 	ppcount++;
 	MRD_Tree const &t{tree(t1)};
-	for (LineF l: t.segments)
-	  objs << MR_Object(l, t.color, s.keyWidth);
-	for (PointF p: t.soma) {
+	for (auto seg: t.segments)
+	  objs << MR_Object(LineF(t.nodes[seg.first], t.nodes[seg.second]),
+			    t.color, s.keyWidth);
+	for (quint64 nid: t.soma) {
+	  PointF p(t.nodes[nid]);
 	  objs << MR_Object(p, t.color, s.somaDiameter);
 	  objs.last().somaid = t1;
 	}

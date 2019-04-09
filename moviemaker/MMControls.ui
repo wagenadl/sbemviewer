@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>461</width>
-    <height>1417</height>
+    <width>272</width>
+    <height>524</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -31,28 +31,21 @@
      <property name="title">
       <string>Angles</string>
      </property>
-     <layout class="QFormLayout" name="formLayout">
+     <layout class="QHBoxLayout" name="horizontalLayout">
       <property name="topMargin">
        <number>6</number>
       </property>
       <property name="bottomMargin">
        <number>6</number>
       </property>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>φ</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
+      <item>
        <widget class="QLabel" name="label_2">
         <property name="text">
          <string>θ</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
+      <item>
        <widget class="QSpinBox" name="theta">
         <property name="suffix">
          <string>°</string>
@@ -62,7 +55,14 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>φ</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QSpinBox" name="phi">
         <property name="suffix">
          <string>°</string>
@@ -215,24 +215,29 @@
      <property name="title">
       <string>Resolution</string>
      </property>
-     <layout class="QFormLayout" name="formLayout_2">
+     <layout class="QGridLayout" name="gridLayout">
       <property name="topMargin">
        <number>6</number>
       </property>
       <property name="bottomMargin">
        <number>6</number>
       </property>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Y</string>
+      <item row="3" column="1">
+       <widget class="QSpinBox" name="steps">
+        <property name="suffix">
+         <string/>
         </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>X</string>
+        <property name="minimum">
+         <number>90</number>
+        </property>
+        <property name="maximum">
+         <number>720</number>
+        </property>
+        <property name="singleStep">
+         <number>0</number>
+        </property>
+        <property name="value">
+         <number>360</number>
         </property>
        </widget>
       </item>
@@ -255,7 +260,28 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>X</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Y</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>N</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
        <widget class="QSpinBox" name="height">
         <property name="suffix">
          <string/>
@@ -274,32 +300,6 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QSpinBox" name="steps">
-        <property name="suffix">
-         <string/>
-        </property>
-        <property name="minimum">
-         <number>90</number>
-        </property>
-        <property name="maximum">
-         <number>720</number>
-        </property>
-        <property name="singleStep">
-         <number>0</number>
-        </property>
-        <property name="value">
-         <number>360</number>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_10">
-        <property name="text">
-         <string>N</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </widget>
    </item>
@@ -308,51 +308,13 @@
      <property name="title">
       <string>Options</string>
      </property>
-     <layout class="QFormLayout" name="formLayout_3">
+     <layout class="QGridLayout" name="gridLayout_2">
       <property name="topMargin">
        <number>6</number>
       </property>
       <property name="bottomMargin">
        <number>6</number>
       </property>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>Width</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>Key w.</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Syn. ⌀</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>Soma ⌀</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QDoubleSpinBox" name="somadiam">
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <double>40.000000000000000</double>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="1">
        <widget class="QDoubleSpinBox" name="syndiam">
         <property name="decimals">
@@ -363,10 +325,31 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QDoubleSpinBox" name="keywidth">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Syn. ⌀</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Soma ⌀</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Width</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="linewidth">
         <property name="toolTip">
-         <string>Line width for key neurites</string>
+         <string>Line width for most neurites</string>
         </property>
         <property name="decimals">
          <number>1</number>
@@ -376,10 +359,10 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QDoubleSpinBox" name="linewidth">
+      <item row="0" column="3">
+       <widget class="QDoubleSpinBox" name="keywidth">
         <property name="toolTip">
-         <string>Line width for most neurites</string>
+         <string>Line width for key neurites</string>
         </property>
         <property name="decimals">
          <number>1</number>
@@ -403,6 +386,30 @@
         </property>
         <property name="maximum">
          <double>100.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QDoubleSpinBox" name="somadiam">
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <double>40.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Key w.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2" colspan="2">
+       <widget class="QCheckBox" name="buildup">
+        <property name="text">
+         <string>Build up</string>
         </property>
        </widget>
       </item>
