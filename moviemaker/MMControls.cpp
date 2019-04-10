@@ -2,28 +2,34 @@
 
 #include "MMControls.h"
 #include "ui_MMControls.h"
+#include "MovieRender.h"
 #include <QDebug>
 
 class MMC_Data {
 public:
   MMC_Data(MMControls *w): w(w) {
     db = 0;
+    render = 0;
     ui = new Ui_MMControls;
   }
   void clearTrees();
   void removeTree();
   void addTree();
+  void recalcFrameCount();
 public:
   MMControls *w;
   SBEMDB const *db;
+  MovieRender *render;
   Ui_MMControls *ui;
 };
 
 void MMC_Data::clearTrees() {
   bool any = ui->trees->count() > 0;
   ui->trees->clear();
-  if (any)
+  if (any) {
+    recalcFrameCount();    
     w->settingsChanged();
+  }
 }
 
 void MMC_Data::removeTree() {
@@ -33,8 +39,10 @@ void MMC_Data::removeTree() {
     delete i;
     any = true;
   }
-  if (any)
+  if (any) {
+    recalcFrameCount();
     w->settingsChanged();
+  }
 }
 
 void MMC_Data::addTree() {
@@ -49,6 +57,7 @@ void MMC_Data::addTree() {
     = ui->trees->findItems(lbl, Qt::MatchExactly);
   if (existing.isEmpty()) {
     ui->trees->addItem(lbl);
+    recalcFrameCount();
     w->settingsChanged();
   }
 }
@@ -65,19 +74,17 @@ MMControls::MMControls(QWidget *parent):
   connect(d->ui->trees, &QListWidget::itemChanged,
 	  [this]() { settingsChanged(); });
   connect(d->ui->presyn, &QCheckBox::toggled,
-	  [this]() { settingsChanged(); });
+	  [this]() { d->recalcFrameCount(); settingsChanged(); });
   connect(d->ui->postsyn, &QCheckBox::toggled,
-	  [this]() { settingsChanged(); });
+	  [this]() { d->recalcFrameCount(); settingsChanged(); });
+  connect(d->ui->buildup, &QCheckBox::toggled,
+	  [this]() { d->recalcFrameCount(); settingsChanged(); });
   connect(d->ui->width, QOverload<int>::of(&QSpinBox::valueChanged),
 	  [this]() { settingsChanged(); });
   connect(d->ui->height, QOverload<int>::of(&QSpinBox::valueChanged),
 	  [this]() { settingsChanged(); });
   connect(d->ui->steps, QOverload<int>::of(&QSpinBox::valueChanged),
-	  [this](int N) {
-	    if (d->ui->preview->value()>=N)
-	      d->ui->preview->setValue(N-1);
-	    settingsChanged();
-	  });
+	  [this]() { d->recalcFrameCount(); settingsChanged(); });
   connect(d->ui->linewidth, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
 	  [this]() { settingsChanged(); });
   connect(d->ui->keywidth, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
@@ -156,3 +163,16 @@ int MMControls::previewFrame() const {
   return d->ui->preview->sliderPosition();
 }
 
+void MMC_Data::recalcFrameCount() {
+  int N = ui->steps->value();
+  if (render) {
+    render->setSettings(w->settings());
+    N += render->buildupFrameCount();
+  }
+  qDebug() << "recalcFramecount" << N;
+ ui->preview->setMaximum(N-1);
+}
+
+void MMControls::setRender(MovieRender *mr) {
+  d->render = mr;
+}

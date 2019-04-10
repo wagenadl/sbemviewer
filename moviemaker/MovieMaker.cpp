@@ -26,6 +26,7 @@ MovieMaker::MovieMaker(SBEMDB const *db, QWidget *parent):
   d->ui->setupUi(this);
   d->ui->controls->setDatabase(db);
   d->render->setSettings(d->ui->controls->settings());
+  d->ui->controls->setRender(d->render);
   QImage img(d->render->render(d->ui->controls->previewFrame()));
   d->ui->preview->setPixmap(QPixmap::fromImage(img));
   connect(d->ui->controls, &MMControls::settingsChanged,
@@ -51,7 +52,7 @@ MovieMaker::~MovieMaker() {
 void MM_Data::doRender() {
   QString odir = "/tmp/moviemaker";
   QDir::root().mkpath(odir);
-  int N = ui->controls->settings().frameCount;
+  int N = ui->controls->settings().frameCount + render->buildupFrameCount();
   for (int n=0; n<N; n++) {
     QImage img = render->render(n);
     img.save(QString("%1/%2.png").arg(odir).arg(n));

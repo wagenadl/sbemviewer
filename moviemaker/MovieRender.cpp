@@ -31,7 +31,6 @@ public:
   PointF color;
 };
 
-
 class MR_Data {
 public:
   MR_Data(SBEMDB const *db): db(db), info(db->serverInfo()) {
@@ -43,9 +42,15 @@ public:
   void reset(); // trees are scanned on request
   void setSomaLabels(); // really ugly hack!
   QImage render(int);
+  int keyBuildupLength();
+  int partnerBuildupLength();
   MRD_Tree const &tree(quint64 tid, quint64 fromnid=0); // 0 means from soma
-  QList<quint64> presynapticPartners(quint64 tid);
-  QList<quint64> postsynapticPartners(quint64 tid);
+  QMap<quint64, QVector<quint64>> presynapticPartners(quint64 tid);
+  // return is map of partner tid to list of presynaptic nodes in that partner
+  // by construction, the vector is not empty.
+  QMap<quint64, QVector<quint64>> postsynapticPartners(quint64 tid);
+  // return is map of partner tid to list of postsynaptic nodes in that tree
+  // by construction, the vector is not empty.
 public:
   SBEMDB const *db;
   ServerInfo info;
@@ -56,8 +61,10 @@ private:
   void scanPartners(quint64 tid, bool prenotpost);
 private:
   QMap<quint64, MRD_Tree> trees; // tid to tree
-  QMap<quint64, QList<quint64>> prepartners; // tid to tids
-  QMap<quint64, QList<quint64>> postpartners; // tid to tids
+  QMap<quint64, QMap<quint64, QVector<quint64>>> prepartners; // tid to map
+  // ... as from presynapticPartners.
+  QMap<quint64, QMap<quint64, QVector<quint64>>> postpartners; // tid to map
+  // ... as from postsynapticPartners.
   QMap<int, QString> soma; // soma labels
 };
 
@@ -73,32 +80,32 @@ void MR_Data::reset() {
 }
 
 void MR_Data::scanPartners(quint64 tid, bool prenotpost) {
-  QList<quint64> tids;
+  QMap<quint64, QVector<quint64>> map;
   SBEMDB::NodeType typ(prenotpost ? SBEMDB::NodeType::PresynTerm
 		       : SBEMDB::NodeType::PostsynTerm);
-  QSqlQuery q = db->constQuery("select n.tid from syncons as sc"
+  QSqlQuery q = db->constQuery("select n.nid, n.tid from syncons as sc"
 			       " inner join nodes as n on sc.nid==n.nid"
 			       " inner join synapses as s on sc.sid==s.sid"
 			       " inner join syncons as sc2 on sc2.sid==s.sid"
 			       " inner join nodes as n2 on sc2.nid==n2.nid"
-			       " where n2.tid=:a and n.typ==:b group by n.tid",
+			       " where n2.tid=:a and n.typ==:b",
 			       tid, int(typ));
   while (q.next())
-    tids << q.value(0).toULongLong();
-  tids.removeAll(tid);
+    map[q.value(1).toULongLong()] << q.value(0).toULongLong();
+  map.remove(tid);
   if (prenotpost)
-    prepartners[tid] = tids;
+    prepartners[tid] = map;
   else
-    postpartners[tid] = tids;
+    postpartners[tid] = map;
 }
 
-QList<quint64> MR_Data::presynapticPartners(quint64 tid) {
+QMap<quint64, QVector<quint64>> MR_Data::presynapticPartners(quint64 tid) {
   if (!prepartners.contains(tid))
     scanPartners(tid, true);
   return prepartners[tid];
 }
 
-QList<quint64> MR_Data::postsynapticPartners(quint64 tid) {
+QMap<quint64, QVector<quint64>> MR_Data::postsynapticPartners(quint64 tid) {
   if (!postpartners.contains(tid))
     scanPartners(tid, false);
   return postpartners[tid];
@@ -137,6 +144,12 @@ MRD_Tree const &MR_Data::tree(quint64 tid, quint64 fromnid) {
     return trees[tid];
   }
 
+ 
+  q = db->constQuery("select n1.nid, n2.nid"
+		     " from nodecons as nc"
+		     " inner join nodes as n1 on n1.nid==nc.nid1"
+		     " inner join nodes as n2 on n2.nid==nc.nid2"
+		     " where n1.tid==:a and n1.nid<n2.nid", tid);
   if (s.buildup) {
     if (fromnid==0) {
       if (tree.soma.isEmpty())
@@ -144,38 +157,30 @@ MRD_Tree const &MR_Data::tree(quint64 tid, quint64 fromnid) {
       else
 	fromnid = tree.soma.first(); // there ought to be precisely one
     }
-    db->constQuery("delete from buildup.frontier");
-    db->constQuery("delete from buildup.interior");
-    db->constQuery("insert into buildup.frontier values (:a)", fromnid);
-    while (true) {
-      db->constQuery("delete from buildup.edges");
-      db->constQuery("insert into buildup.edges"
-		     " select nc.nid1, nc.nid2 from buildup.frontier as n"
-		     " inner join nodecons as nc on n.nid==nc.nid1"
-		     " where not n.nid in buildup.interior");
-      db->constQuery("insert into buildup.interior"
-		     " select nid from buildup.frontier");
-      db->constQuery("delete from buildup.frontier");
-      db->constQuery("insert into buildup.frontier"
-		     " select nid2 from buildup.edges");
-      QVector<MRD_Segment> seglist;
-      QSqlQuery q(db->constQuery("select * from buildup.edges"));
-      while (q.next())
-	seglist << MRD_Segment(q.value(0).toULongLong(),
-			       q.value(1).toULongLong());
-      qDebug() << "At level" << tree.segments.size()
-	       << "adding" << seglist.size();
-      if (seglist.isEmpty())
-	break;
-      else
-	tree.segments << seglist;
+    QMap<quint64, QVector<quint64>> segmap; // bidirectional
+    while (q.next()) {
+      quint64 nid1 = q.value(0).toULongLong();
+      quint64 nid2 = q.value(1).toULongLong();
+      segmap[nid1] << nid2;
+      segmap[nid2] << nid1;
+    }
+    QSet<quint64> frontier;
+    QSet<quint64> interior;
+    frontier << fromnid;
+    while (!frontier.isEmpty()) {
+      QVector<MRD_Segment> outreach;
+      for (quint64 from: frontier) {
+	for (quint64 to: segmap[from])
+	  if (!interior.contains(to))
+	    outreach << MRD_Segment(from, to);
+	interior << from;
+      }
+      tree.segments << outreach;
+      frontier.clear();
+      for (MRD_Segment const &seg: outreach)
+	frontier << seg.to;
     }
   } else {
-    q = db->constQuery("select n1.nid, n2.nid"
-		       " from nodecons as nc"
-		       " inner join nodes as n1 on n1.nid==nc.nid1"
-		       " inner join nodes as n2 on n2.nid==nc.nid2"
-		       " where n1.tid==:a and n1.nid<n2.nid", tid);
     QVector<MRD_Segment> seg;
     while (q.next()) 
       seg << MRD_Segment(q.value(0).toULongLong(), q.value(1).toULongLong());
@@ -233,28 +238,78 @@ double MR_Object::totalLength(QList<MR_Object> const &lst) {
   return l;
 }
 
+int MR_Data::keyBuildupLength() {
+  if (!s.buildup)
+    return 0;
+  int maxlen = 0;
+  for (quint64 tid: s.keyTrees) {
+    MRD_Tree const &t{tree(tid)};
+    if (t.segments.size() > maxlen)
+      maxlen = t.segments.size();
+  }
+  return maxlen;
+}
+
+int MR_Data::partnerBuildupLength() {
+  if (!s.buildup)
+    return 0;
+  int maxlen = 0;
+  for (quint64 tid: s.keyTrees) {
+    if (s.alsoPresynaptic) {
+      auto const &map = presynapticPartners(tid);
+      for (auto it=map.begin(); it!=map.end(); it++) {
+	quint64 t1 = it.key();
+	QVector<quint64> const &nids = it.value();
+	MRD_Tree const &t{tree(t1, nids.first())};
+	if (t.segments.size() > maxlen)
+	  maxlen = t.segments.size();
+      }
+    }
+    if (s.alsoPostsynaptic) {
+      auto const &map = postsynapticPartners(tid);
+      for (auto it=map.begin(); it!=map.end(); it++) {
+	quint64 t1 = it.key();
+	QVector<quint64> const &nids = it.value();
+	MRD_Tree const &t{tree(t1, nids.first())};
+	if (t.segments.size() > maxlen)
+	  maxlen = t.segments.size();
+      }
+    }
+  }
+  return maxlen;
+}
+
 QImage MR_Data::render(int n) {
   QImage img(s.resolution, QImage::Format_ARGB32_Premultiplied);
   img.fill(QColor(0,0,0));
   QList<MR_Object> objs;
+  QList<MR_Object> allobjs;
   double l0 = 0;
+  int keylen = keyBuildupLength();
+  int partnerlen = partnerBuildupLength();
   for (quint64 tid: s.keyTrees) {
     PointF color(1, 1, 1);
     MRD_Tree const &t{tree(tid)};
-    for (quint64 nid: t.presyn)
-      objs << MR_Object(t.nodes[nid], color, s.synapseDiameter);
-    for (quint64 nid: t.postsyn)
-      objs << MR_Object(t.nodes[nid], color, s.synapseDiameter);
     for (quint64 nid: t.soma) {
       objs << MR_Object(t.nodes[nid], color, s.somaDiameter);
       objs.last().somaid = tid;
     }
-    for (auto const &seglist: t.segments)
-      for (auto const &seg: seglist)
+    int N = s.buildup ? (n>keylen ? keylen : n) : t.segments.size();
+    Q_ASSERT(N<=t.segments.size());
+    for (int n=0; n<N; n++) {
+      auto const &seglist{t.segments[n]};
+      for (auto const &seg: seglist) {
 	objs << MR_Object(LineF(t.nodes[seg.from], t.nodes[seg.to]),
 			  color, s.keyWidth);
+	if (t.presyn.contains(seg.to) || t.postsyn.contains(seg.to))
+	  objs << MR_Object(t.nodes[seg.to], color, s.synapseDiameter);
+	  
+      }
+    }
+    for (PointF const &p: t.nodes)
+      allobjs << MR_Object(p, color, 1);
     double l1 = MR_Object::totalLength(objs);
-    //    qDebug() << "Neurite length in object" << tid << "is" << l1 - l0;
+    qDebug() << "Neurite length in object" << tid << "is" << l1 - l0;
     l0 = l1;
   }
 
@@ -262,18 +317,32 @@ QImage MR_Data::render(int n) {
     int ppcount = 0;
     QList<PointF> somapos;
     for (quint64 tid: s.keyTrees) {
-      for (quint64 t1: presynapticPartners(tid)) {
+      auto const &map = presynapticPartners(tid);
+      for (auto it=map.begin(); it!=map.end(); it++) {
+	quint64 t1 = it.key();
+	QVector<quint64> const &nids = it.value();
 	ppcount++;
-	MRD_Tree const &t{tree(t1)};
-	for (auto const &seglist: t.segments)
+	MRD_Tree const &t{tree(t1, nids.first())};
+	int N = t.segments.size();
+	if (s.buildup) {
+	  if (n<=keylen)
+	    N = 0;
+	  else if (n <= keylen + N)
+	    N = n - keylen;
+	}
+	for (int n=0; n<N; n++) {
+	  auto const &seglist{t.segments[n]};
 	  for (auto const &seg: seglist)
 	    objs << MR_Object(LineF(t.nodes[seg.from], t.nodes[seg.to]),
 			      t.color, s.keyWidth);
-	for (quint64 nid: t.soma) {
-	  PointF p(t.nodes[nid]);
-	  somapos << p;
-	  objs << MR_Object(p, t.color, s.somaDiameter);
-	  objs.last().somaid = t1;
+	}
+	if (N == t.segments.size()) {
+	  for (quint64 nid: t.soma) {
+	    PointF p(t.nodes[nid]);
+	    somapos << p;
+	    objs << MR_Object(p, t.color, s.somaDiameter);
+	    objs.last().somaid = t1;
+	  }
 	}
       }
     }
@@ -286,9 +355,12 @@ QImage MR_Data::render(int n) {
   if (s.alsoPostsynaptic) {
     int ppcount = 0;
     for (quint64 tid: s.keyTrees) {
-      for (quint64 t1: postsynapticPartners(tid)) {
+      auto const &map = postsynapticPartners(tid);
+      for (auto it=map.begin(); it!=map.end(); it++) {
+	quint64 t1 = it.key();
+	QVector<quint64> const &nids = it.value();
 	ppcount++;
-	MRD_Tree const &t{tree(t1)};
+	MRD_Tree const &t{tree(t1, nids.first())};
 	for (auto const &seglist: t.segments)
 	  for (auto const &seg: seglist)
 	    objs << MR_Object(LineF(t.nodes[seg.from], t.nodes[seg.to]),
@@ -307,12 +379,12 @@ QImage MR_Data::render(int n) {
   }
 
   PointF p0(0,0,0);
-  for (MR_Object const &obj: objs) {
+  for (MR_Object const &obj: allobjs) {
     p0 += obj.p1;
   }
-  p0 /= objs.size();
+  p0 /= allobjs.size();
   double L2 = 0;
-  for (MR_Object const &obj: objs) {
+  for (MR_Object const &obj: allobjs) {
     double L2a = (obj.p1-p0).L2();
     if (L2a > L2)
       L2 = L2a;
@@ -322,7 +394,8 @@ QImage MR_Data::render(int n) {
   xf.shift(s.resolution.width()/2, s.resolution.height()/2, 0);
   xf.flipy();
   xf.scale(s.resolution.width()/std::sqrt(L2)/2, 0, 0);
-  xf.rotate(n * 2 * 3.141592 / s.frameCount, 0, 0, 0);
+  if (n>keylen + partnerlen)
+    xf.rotate((n-keylen-partnerlen) * 2 * 3.141592 / s.frameCount, 0, 0, 0);
   xf.rotate(3.141592/180 * s.theta, 3.141592/180 * s.phi, 0, 0);
   xf.shift(-p0.x, -p0.y, -p0.z);
   for (MR_Object &obj: objs) {
@@ -417,4 +490,10 @@ void MovieRender::setSettings(MMSettings const &s) {
 
 QImage MovieRender::render(int n) {
   return d->render(n);
+}
+
+int MovieRender::buildupFrameCount() {
+  qDebug() << "buildupframecount"
+	   <<  d->keyBuildupLength() << d->partnerBuildupLength();
+  return d->keyBuildupLength() + d->partnerBuildupLength();
 }

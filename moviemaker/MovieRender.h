@@ -16,6 +16,7 @@ public:
   virtual ~MovieRender();
   void rereadDatabase();
   void setSettings(MMSettings const &);
+  int buildupFrameCount();
   QImage render(int frame);
 private:
   class MR_Data *d;

@@ -14,6 +14,7 @@ public:
   MMControls(QWidget *parent=0);
   virtual ~MMControls();
   void setDatabase(SBEMDB const *db);
+  void setRender(class MovieRender *);
   void reset();
   MMSettings settings() const;
   int previewFrame() const;
