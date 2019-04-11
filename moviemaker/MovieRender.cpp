@@ -1,6 +1,7 @@
 // MovieRender.cpp
 
 #include "MovieRender.h"
+#include "SomaLabel.h"
 #include "DistinctColors.h"
 #include <QImage>
 #include <QMap>
@@ -33,7 +34,7 @@ public:
 
 class MR_Data {
 public:
-  MR_Data(SBEMDB const *db): db(db), info(db->serverInfo()) {
+  MR_Data(SBEMDB const *db, SomaLabel const *sm): db(db), sm(sm), info(db->serverInfo()) {
     dx = info.real("dx");
     dy = info.real("dy");
     dz = info.real("dz");
@@ -53,6 +54,7 @@ public:
   // by construction, the vector is not empty.
 public:
   SBEMDB const *db;
+  SomaLabel const *sm;
   ServerInfo info;
   MMSettings s;
 public:
@@ -65,12 +67,17 @@ private:
   // ... as from presynapticPartners.
   QMap<quint64, QMap<quint64, QVector<quint64>>> postpartners; // tid to map
   // ... as from postsynapticPartners.
-  QMap<int, QString> soma; // soma labels
+  QMap<quint64, QString> soma; // soma labels map from tid
 };
 
 void MR_Data::setSomaLabels() {
   // what a hack!
-  #include "somalabel.h"
+  soma.clear();
+  if (sm) {
+    QSqlQuery q{db->constQuery("select tid, tname from trees")};
+    while (q.next())
+      soma[q.value(0).toULongLong()] = sm->lookup(q.value(1).toString());
+  }
 }
 
 void MR_Data::reset() {
@@ -227,7 +234,7 @@ public:
   PointF color;
   double radius;
   bool isline;
-  int somaid;
+  int somaid; // tid, actually
 };
 
 double MR_Object::totalLength(QList<MR_Object> const &lst) {
@@ -472,8 +479,8 @@ QImage MR_Data::render(int n) {
   return img;
 }
 
-MovieRender::MovieRender(SBEMDB const *db, QObject *parent):
-  QObject(parent), d(new MR_Data(db)) {
+MovieRender::MovieRender(SBEMDB const *db, SomaLabel const *sm, QObject *parent):
+  QObject(parent), d(new MR_Data(db, sm)) {
 }
 
 MovieRender::~MovieRender() {
@@ -482,6 +489,7 @@ MovieRender::~MovieRender() {
 
 void MovieRender::rereadDatabase() {
   d->reset();
+  d->setSomaLabels();
 }
 
 void MovieRender::setSettings(MMSettings const &s) {

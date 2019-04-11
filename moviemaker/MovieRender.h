@@ -12,7 +12,7 @@
 
 class MovieRender: public QObject {
 public:
-  MovieRender(SBEMDB const *, QObject *parent);
+  MovieRender(SBEMDB const *, class SomaLabel const *sm, QObject *parent);
   virtual ~MovieRender();
   void rereadDatabase();
   void setSettings(MMSettings const &);

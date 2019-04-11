@@ -8,21 +8,19 @@
 
 class MM_Data {
 public:
-  MM_Data(MovieMaker *w, SBEMDB const *db):
-    w(w), db(db) {
+  MM_Data(MovieMaker *w, SBEMDB const *db, SomaLabel const *sm): w(w) {
     ui = new Ui_MovieMaker;
-    render = new MovieRender(db, w);
+    render = new MovieRender(db, sm, w);
   }
   void doRender();
 public:
   MovieMaker *w;
-  SBEMDB const *db;
   MovieRender *render;
   Ui_MovieMaker *ui;
 };
 
-MovieMaker::MovieMaker(SBEMDB const *db, QWidget *parent):
-  QMainWindow(parent), d(new MM_Data(this, db)) {
+MovieMaker::MovieMaker(SBEMDB const *db, SomaLabel const *sm, QWidget *parent):
+  QMainWindow(parent), d(new MM_Data(this, db, sm)) {
   d->ui->setupUi(this);
   d->ui->controls->setDatabase(db);
   d->render->setSettings(d->ui->controls->settings());
