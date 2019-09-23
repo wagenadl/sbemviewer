@@ -15,7 +15,10 @@ public:
 private:
   void createTempTable();
   void dropTempTable();
+  void createProxTable();
+  void dropProxTable();
   void makeTreeClauses();
+  void makeSynPartClauses();
   void makeNodeTypeClauses();
   void makeMemoClauses(); 
   QString nextArgRef();
@@ -38,6 +41,8 @@ private:
   bool usePostsyn;
   bool usePrePartner;
   bool usePostPartner;
+  bool synWithSelected;
+  bool synWithVisible;
   bool useMemo;
   bool memoMustEqual;
   bool memoMustContain;
@@ -45,6 +50,7 @@ private:
   QString memoAndText;
   QString memoNotText;
   QString tempTableName;
+  QString proxTableName;
 };
 
 #endif

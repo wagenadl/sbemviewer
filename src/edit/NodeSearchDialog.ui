@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>378</width>
-    <height>434</height>
+    <width>692</width>
+    <height>803</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -228,6 +228,90 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="partOfSynapse">
+     <property name="text">
+      <string>Part of synapse with</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_6" native="true">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_8">
+      <property name="spacing">
+       <number>2</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QFrame" name="frame_3">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Sunken</enum>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <property name="leftMargin">
+          <number>16</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <property name="horizontalSpacing">
+          <number>2</number>
+         </property>
+         <property name="verticalSpacing">
+          <number>0</number>
+         </property>
+         <item row="1" column="0">
+          <widget class="QRadioButton" name="synWithVisible">
+           <property name="text">
+            <string>Visible tree</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QRadioButton" name="synWithSelected">
+           <property name="text">
+            <string>Selected tree</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QWidget" name="widget" native="true">
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <property name="spacing">
@@ -418,8 +502,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>698</x>
-     <y>938</y>
+     <x>685</x>
+     <y>662</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -434,8 +518,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>766</x>
-     <y>944</y>
+     <x>685</x>
+     <y>662</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
@@ -450,12 +534,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>122</x>
-     <y>683</y>
+     <x>128</x>
+     <y>493</y>
     </hint>
     <hint type="destinationlabel">
-     <x>260</x>
-     <y>723</y>
+     <x>266</x>
+     <y>604</y>
     </hint>
    </hints>
   </connection>
@@ -466,12 +550,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>131</x>
-     <y>228</y>
+     <x>137</x>
+     <y>202</y>
     </hint>
     <hint type="destinationlabel">
-     <x>788</x>
-     <y>325</y>
+     <x>685</x>
+     <y>313</y>
     </hint>
    </hints>
   </connection>
@@ -482,12 +566,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>139</x>
-     <y>788</y>
+     <x>162</x>
+     <y>546</y>
     </hint>
     <hint type="destinationlabel">
-     <x>137</x>
-     <y>828</y>
+     <x>160</x>
+     <y>572</y>
     </hint>
    </hints>
   </connection>
@@ -498,12 +582,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>56</x>
-     <y>769</y>
+     <x>79</x>
+     <y>546</y>
     </hint>
     <hint type="destinationlabel">
-     <x>84</x>
-     <y>866</y>
+     <x>107</x>
+     <y>599</y>
     </hint>
    </hints>
   </connection>
@@ -518,8 +602,8 @@
      <y>152</y>
     </hint>
     <hint type="destinationlabel">
-     <x>192</x>
-     <y>500</y>
+     <x>531</x>
+     <y>286</y>
     </hint>
    </hints>
   </connection>
@@ -530,12 +614,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>159</x>
-     <y>157</y>
+     <x>184</x>
+     <y>153</y>
     </hint>
     <hint type="destinationlabel">
-     <x>355</x>
-     <y>543</y>
+     <x>684</x>
+     <y>312</y>
     </hint>
    </hints>
   </connection>
@@ -546,12 +630,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>193</x>
-     <y>817</y>
+     <x>190</x>
+     <y>572</y>
     </hint>
     <hint type="destinationlabel">
-     <x>357</x>
-     <y>812</y>
+     <x>554</x>
+     <y>572</y>
     </hint>
    </hints>
   </connection>
@@ -562,12 +646,28 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>180</x>
-     <y>852</y>
+     <x>172</x>
+     <y>599</y>
     </hint>
     <hint type="destinationlabel">
-     <x>382</x>
-     <y>855</y>
+     <x>579</x>
+     <y>599</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>partOfSynapse</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>frame_3</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>345</x>
+     <y>339</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>345</x>
+     <y>406</y>
     </hint>
    </hints>
   </connection>

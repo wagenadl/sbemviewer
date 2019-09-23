@@ -71,6 +71,13 @@ NodeSearchDialog::NodeSearchDialog(SBEMDB *db, QWidget *parent):
   connect(d->ui->memoNotText, &QLineEdit::textEdited,
           [this]() { d->recount(); });
 
+  connect(d->ui->partOfSynapse, &QCheckBox::toggled,
+          [this]() { d->recount(); });
+  connect(d->ui->synWithSelected, &QCheckBox::toggled,
+          [this]() { d->recount(); });
+  connect(d->ui->synWithVisible, &QCheckBox::toggled,
+          [this]() { d->recount(); });
+  
   d->recount();
 }
 

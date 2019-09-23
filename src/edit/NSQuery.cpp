@@ -18,6 +18,10 @@ NSQuery::NSQuery(SBEMDB *db, Ui_NodeSearchDialog *ui):
   usePostsyn = ui->typePostsyn->isChecked();
   usePrePartner = ui->typePrePartner->isChecked();
   usePostPartner = ui->typePostPartner->isChecked();
+  synWithSelected = ui->partOfSynapse->isChecked()
+    && ui->synWithSelected->isChecked();
+  synWithVisible = ui->partOfSynapse->isChecked()
+    && ui->synWithVisible->isChecked();
   useMemo = ui->memo->isChecked();
   memoMustEqual = ui->memoEquals->isChecked();
   memoText = ui->memoText->text();
@@ -30,10 +34,12 @@ NSQuery::NSQuery(SBEMDB *db, Ui_NodeSearchDialog *ui):
   makeTreeClauses();
   makeNodeTypeClauses();
   makeMemoClauses();
+  makeSynPartClauses();
 }
 
 NSQuery::~NSQuery() {
   dropTempTable();
+  dropProxTable();
 }
 
 int NSQuery::count() const {
@@ -81,6 +87,32 @@ QVector<SBEMDB::Node> NSQuery::nodes() const {
   }
 }
 
+void NSQuery::createProxTable() {
+  proxTableName = QString("prox%08x").arg(rand());
+  QString q = "create temp table " + proxTableName
+    + " as select nodes.nid as nid"
+    + " from nodes"
+    + " inner join syncons as sc on nodes.nid==sc.nid"
+    + " inner join synapses as s on sc.sid==s.sid"
+    + " inner join syncons as sc2 on s.sid==sc2.sid"
+    + " inner join nodes as n2 on sc2.nid==n2.nid";
+  if (synWithSelected)
+    q += QString(" where n2.tid==%1").arg(db->selectedTree());
+  else if (synWithVisible)
+    q += " inner join trees on n2.tid==trees.tid where trees.visible";
+  qDebug() << "query" << q;
+  db->query(q);
+}
+
+void NSQuery::dropProxTable() {
+  if (!proxTableName.isEmpty()) {
+    QString q = "drop table " + proxTableName;
+    qDebug() << "query" << q;
+    db->query(q);
+    proxTableName = "";
+  }
+}
+
 void NSQuery::createTempTable() {
   tempTableName = QString("edgecount%08x").arg(rand());
   QString q = "create temp table " + tempTableName
@@ -101,6 +133,7 @@ void NSQuery::dropTempTable() {
     QString q = "drop table " + tempTableName;
     qDebug() << "query" << q;
     db->query(q);
+    tempTableName = "";
   }
 }
 
@@ -111,6 +144,13 @@ void NSQuery::makeTreeClauses() {
     joins << "inner join trees on nodes.tid==trees.tid";
     wheres << QString("visible");
   }
+}
+
+void NSQuery::makeSynPartClauses() {
+  if (!synWithSelected && !synWithVisible)
+    return;
+  createProxTable();
+  wheres << "nid in (select nid from " + proxTableName + ")";
 }
 
 void NSQuery::makeNodeTypeClauses() {
