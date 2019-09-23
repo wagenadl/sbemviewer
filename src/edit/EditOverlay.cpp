@@ -78,7 +78,8 @@ static void drawNode(QPainter *p, ViewInfo const &vi, int r,
     p->drawPolygon(QPolygon() << pc - rx - ry << pc - rx + ry << pc + rx);
     break;
   case SBEMDB::PostsynTerm:
-    p->drawPolygon(QPolygon() << pc + rx - ry << pc + rx + ry << pc - rx);
+    // p->drawPolygon(QPolygon() << pc + rx - ry << pc + rx + ry << pc - rx);
+    p->drawRect(QRect(pc - QPoint(r,r), QSize(2*r, 2*r)));
     break;
   case SBEMDB::Soma:
     p->drawEllipse(pc, 3*r, 3*r);
