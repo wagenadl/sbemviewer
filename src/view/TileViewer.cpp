@@ -228,28 +228,74 @@ void TileViewer::paintEvent(QPaintEvent *e) {
             b++;
           }
         }
-        if (sharp>0) {
-          uint8_t *dst = img.bits();
-          uint8_t const *src = img0.bits();
+        if (sharp < 0) {
+          uint8_t *dat = img.bits();
           int X = img.width();
           int Y = img.height();
-          for (int y=1; y<Y-1; y++) {
-            uint8_t *d = dst + (y*X) + 1;
-            uint8_t const *s = src + (y*X) + 1;
-            for (int x=1; x<X-1; x++) {
-              int v = 256*int(*d);
-              v -= sharp * (int(s[X]) + int(s[-X]) + int(s[1]) + int(s[-1])
-                            - 4*int(*s));
-              v /= 256;
-              if (v<0)
-                v = 0;
-              else if (v>255)
-                v = 255;
-              *d++ = v;
-              s++;
-            }
-          }
-        }
+	  int L = img.bytesPerLine();
+	  // we'll go back and forth twice to do a 2K order LP filter
+	  // in each direction
+	  const float blurfrac = -sharp/2560.;
+	  const float a = blurfrac;
+	  const float b = 1 - blurfrac;
+	  const int K = 1;
+	  // first, horizontal
+	  for (int y=0; y<Y; y++) {
+	    uint8_t *line = dat + L*y;
+	    float v0 = 128;
+	    for (int k=0; k<K; k++) {
+	      for (int x=0; x<X; x++) {
+		v0 = a*v0 + b * *line;
+		*line = v0;
+		line++;
+	      }
+	      for (int x=0; x<X; x++) {
+		--line;
+		v0 = a*v0 + b * *line;
+		*line = v0;
+	      }
+	    }
+	  }
+	  
+	  // then, vertical
+	  for (int x=0; x<X; x++) {
+	    uint8_t *col = dat + x;
+	    float v0 = 128;
+	    for (int k=0; k<K; k++) {
+	      for (int y=0; y<Y; y++) {
+		v0 = a * v0 + b * *col;
+		*col = v0;
+		col += L;
+	      }
+	      for (int y=0; y<Y; y++) {
+		col -= L;
+		v0 = a * v0 + b * *col;
+		*col = v0;
+	      }
+	    }
+	  }
+	} else if (sharp>0) {
+	  uint8_t *dst = img.bits();
+          uint8_t const *src = img0.bits();
+	  int X = img.width();
+	  int Y = img.height();
+	  for (int y=1; y<Y-1; y++) {
+	    uint8_t *d = dst + (y*X) + 1;
+	    uint8_t const *s = src + (y*X) + 1;
+	    for (int x=1; x<X-1; x++) {
+	      int v = 256*int(*d);
+	      v -= sharp * (int(s[X]) + int(s[-X]) + int(s[1]) + int(s[-1])
+			    - 4*int(*s));
+	      v /= 256;
+	      if (v<0)
+		v = 0;
+	      else if (v>255)
+		v = 255;
+	      *d++ = v;
+	      s++;
+	    }
+	  }
+	}
         ptr.drawImage(QPoint((c-vi.c0)*ViewInfo::TILESIZE - vi.dx,
                              (r-vi.r0)*ViewInfo::TILESIZE - vi.dy), img);
       }
