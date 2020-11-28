@@ -24,6 +24,7 @@ public:
   double synapseDiameter;
   double somaDiameter;
   double shadow;
+  double fontsize;
 };
 
 #endif

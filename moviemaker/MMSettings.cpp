@@ -5,14 +5,15 @@
 MMSettings::MMSettings() {
   theta = 270;
   phi = 90;
-  alsoPresynaptic = true;
+  alsoPresynaptic = false;//true;
   alsoPostsynaptic = false;
   buildup = true;
-  resolution = QSize(720, 480);
-  frameCount = 360;
-  lineWidth = 1;
-  keyWidth = 2;
-  synapseDiameter = 4;
-  somaDiameter = 10;
-  shadow = 0;
+  resolution = QSize(1152, 720);
+  frameCount = 180;
+  lineWidth = 1.5;
+  keyWidth = 2.5;
+  synapseDiameter = 5;
+  somaDiameter = 20;
+  shadow = 10;
+  fontsize = 20;
 }

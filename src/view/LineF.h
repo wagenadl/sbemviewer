@@ -5,6 +5,7 @@
 #define LINEF_H
 
 #include <QDebug>
+#include <QPointF>
 
 struct PointF {
   double x, y, z;
@@ -23,6 +24,7 @@ struct PointF {
     x /= b; y /= b; z /= b;
     return *this;
   }
+  QPointF toQPointF() const { return QPointF(x,y); }
 };
 
 inline PointF operator-(PointF const &a, PointF const &b) {

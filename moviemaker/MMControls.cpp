@@ -93,6 +93,8 @@ MMControls::MMControls(QWidget *parent):
 	  [this]() { settingsChanged(); });
   connect(d->ui->somadiam, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
 	  [this]() { settingsChanged(); });
+  connect(d->ui->fontsize, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+	  [this]() { settingsChanged(); });
   connect(d->ui->shadow, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
 	  [this]() { settingsChanged(); });
   connect(d->ui->preview, &QSlider::sliderMoved,
@@ -132,6 +134,7 @@ void MMControls::reset() {
   d->ui->syndiam->setValue(s.synapseDiameter);
   d->ui->somadiam->setValue(s.somaDiameter);
   d->ui->shadow->setValue(s.shadow);
+  d->ui->fontsize->setValue(s.fontsize);
   d->ui->preview->setValue(0);
 }
 
@@ -155,6 +158,7 @@ MMSettings MMControls::settings() const {
   s.keyWidth = d->ui->keywidth->value();
   s.synapseDiameter = d->ui->syndiam->value();
   s.somaDiameter = d->ui->somadiam->value();
+  s.fontsize = d->ui->fontsize->value();
   s.shadow = d->ui->shadow->value();
   return s;
 }

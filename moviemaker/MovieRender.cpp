@@ -11,11 +11,12 @@
 #include <QRegularExpression>
 #include <cmath>
 
-static void applyGapShift(PointF &p) {
-  if (p.z>=328.7) {
-    p.x -= 4.285;
-    p.y += 25.857;
-  }
+static QString nicelen(double um) {
+  QString num = QString("%1").arg(um, 0, 'f', 1);
+  int L = num.length();
+  if (L>5)
+    num = num.left(L-5) + "," + num.right(5);
+  return num + " μm";
 }
 
 struct MRD_Segment {
@@ -131,7 +132,6 @@ MRD_Tree const &MR_Data::tree(quint64 tid, quint64 fromnid) {
     PointF p(q.value(1).toInt()*dx,
 	     q.value(2).toInt()*dy,
 	     q.value(3).toInt()*dz);
-    applyGapShift(p);
     tree.nodes[nid] = p;
     switch (SBEMDB::NodeType(q.value(4).toInt())) {
     case SBEMDB::PresynTerm:
@@ -294,6 +294,10 @@ QImage MR_Data::render(int n) {
   double l0 = 0;
   int keylen = keyBuildupLength();
   int partnerlen = partnerBuildupLength();
+
+  QMap<quint64, double> objlen;
+  double prelen=0, postlen=0;
+  
   for (quint64 tid: s.keyTrees) {
     PointF color(1, 1, 1);
     MRD_Tree const &t{tree(tid)};
@@ -317,6 +321,7 @@ QImage MR_Data::render(int n) {
       allobjs << MR_Object(p, color, 1);
     double l1 = MR_Object::totalLength(objs);
     qDebug() << "Neurite length in object" << tid << "is" << l1 - l0;
+    objlen[tid] = l1 - l0;
     l0 = l1;
   }
 
@@ -356,6 +361,7 @@ QImage MR_Data::render(int n) {
     qDebug() << "Found" << ppcount << "presynaptic partners";
     double l1 = MR_Object::totalLength(objs);
     qDebug() << "Neurite length in presynaptic partners is" << l1 - l0;
+    prelen = l1 - l0;
     l0 = l1;
   }
   
@@ -382,6 +388,7 @@ QImage MR_Data::render(int n) {
     qDebug() << "Found" << ppcount << "postsynaptic partners";
     double l1 = MR_Object::totalLength(objs);
     qDebug() << "Neurite length in postsynaptic partners is" << l1 - l0;
+    postlen = l1 - l0;
     l0 = l1;
   }
 
@@ -401,6 +408,10 @@ QImage MR_Data::render(int n) {
   xf.shift(s.resolution.width()/2, s.resolution.height()/2, 0);
   xf.flipy();
   xf.scale(s.resolution.width()/std::sqrt(L2)/2, 0, 0);
+
+  QPointF hundredum = (xf.apply(PointF(100,0,0)) - xf.apply(PointF(0,0,0)))
+    .toQPointF();
+
   if (n>keylen + partnerlen)
     xf.rotate((n-keylen-partnerlen) * 2 * 3.141592 / s.frameCount, 0, 0, 0);
   xf.rotate(3.141592/180 * s.theta, 3.141592/180 * s.phi, 0, 0);
@@ -439,6 +450,57 @@ QImage MR_Data::render(int n) {
 
   
   QPainter ptr(&img);
+
+  if (s.fontsize>0) {
+    double fs = s.fontsize;
+    QPointF right = QPointF(s.resolution.width(), s.resolution.height())
+      - QPointF(20, 20 + fs*1.5);
+    QPointF left = right - hundredum;
+    ptr.setPen(QPen(QColor(255,255,255), s.keyWidth));
+    ptr.drawLine(QLineF(left, right));
+    QFont f(ptr.font());
+    f.setPixelSize(fs);
+    ptr.setFont(f);
+    ptr.drawText(QRectF(left,right + QPointF(0, fs*1.5)),
+                 Qt::AlignHCenter | Qt::AlignBottom, "100 μm");
+    QPointF c = left + QPointF(s.somaDiameter, -4*s.somaDiameter);
+    QPointF r = c; r.setX(right.x());
+    if (objlen.contains(444)) {
+      ptr.drawLine(c, c + (r-c)*.3);
+      ptr.drawText(QRectF(c + (r-c)*.35 - QPointF(0,fs),
+                          r + QPointF(0,fs)),
+                   Qt::AlignLeft | Qt::AlignVCenter, "DE-3R");
+      double len = objlen[444];
+      if (len > 0) {
+        ptr.drawText(QRectF(c + QPointF(0,fs),
+                            c + (r-c) + QPointF(0,2.5*fs)),
+                     Qt::AlignRight | Qt::AlignVCenter,
+                     nicelen(len));
+      }
+    }
+    if (prelen>0) {
+      ptr.setPen(QPen(QColor(255,255,0), s.lineWidth));
+      QPointF c1 = c - QPointF(0,4*fs);
+      QPointF r1 = c1; r1.setX(right.x());
+      ptr.drawLine(c1, c1 + (r1-c1)*.3);
+      ptr.drawText(QRectF(c1 + (r1-c1)*.35 - QPointF(0,fs),
+                          c1 + (r1-c1) + QPointF(0,fs)),
+                   Qt::AlignLeft | Qt::AlignVCenter, "Partners");
+      ptr.drawText(QRectF(c1 + QPointF(0,fs),
+                           r1 + QPointF(0,2.5*fs)),
+                   Qt::AlignRight | Qt::AlignVCenter,
+                   nicelen(prelen));
+      ptr.setPen(QPen(Qt::NoPen));
+      ptr.setBrush(QColor(255,255,0));
+      ptr.drawEllipse(c1, s.somaDiameter, s.somaDiameter);
+    }
+    if (objlen.contains(444)) {
+      ptr.setPen(QPen(Qt::NoPen));
+      ptr.setBrush(QColor(255,255,255));
+      ptr.drawEllipse(c, s.somaDiameter, s.somaDiameter);
+    }
+  }
+  
   for (MR_Object const &obj: objs) {
     if (obj.isline) {
       if (s.shadow>0) {
