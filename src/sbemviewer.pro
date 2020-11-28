@@ -9,6 +9,7 @@ INCLUDEPATH += view
 INCLUDEPATH += db
 INCLUDEPATH += edit
 INCLUDEPATH += miniball
+INCLUDEPATH += /usr/include/opencv4
 QT += gui widgets network sql
 CONFIG += debug_and_release
 LIBS += -lsqlite3
