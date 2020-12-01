@@ -13,7 +13,7 @@
 #include "UDPSocket.h"
 #include <stdlib.h>
 
-const QString defaultServer = "http://leechem.caltech.edu:9090";
+const QString defaultServer = "http://leechem.caltech.edu:9092";
 
 QString getServer(QString dflt) {
   QString server = QInputDialog::getText(0, "SBEM Viewer", "Server name",
@@ -21,10 +21,13 @@ QString getServer(QString dflt) {
   if (server.isEmpty()) {
     exit(1);
   }
-  if (!server.startsWith("http://") && !server.startsWith("https://"))
-    server = "http://" + server;
-  if (server.lastIndexOf(":") <= server.indexOf(":"))
-    server += ":9090";
+  if (server.startsWith("http://"))
+    server = "https://" + server.mid(7);
+  if (!server.startsWith("https://"))
+    server = "https://" + server;
+  if (server.lastIndexOf(":") <= server.indexOf(":")
+      && server.mid(10).indexOf("/")<0)
+    server += ":9092";
   return server;
 }
 

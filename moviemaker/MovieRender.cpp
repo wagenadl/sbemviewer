@@ -456,48 +456,69 @@ QImage MR_Data::render(int n) {
     QPointF right = QPointF(s.resolution.width(), s.resolution.height())
       - QPointF(20, 20 + fs*1.5);
     QPointF left = right - hundredum;
-    ptr.setPen(QPen(QColor(255,255,255), s.keyWidth));
+    ptr.setPen(QPen(QColor(255,255,64), s.keyWidth));
     ptr.drawLine(QLineF(left, right));
     QFont f(ptr.font());
     f.setPixelSize(fs);
     ptr.setFont(f);
     ptr.drawText(QRectF(left,right + QPointF(0, fs*1.5)),
                  Qt::AlignHCenter | Qt::AlignBottom, "100 μm");
-    QPointF c = left + QPointF(s.somaDiameter, -4*s.somaDiameter);
-    QPointF r = c; r.setX(right.x());
+
+    ptr.setPen(QPen(QColor(255,255,255), s.keyWidth));
+
+    QPointF l = left - QPointF(0, 4*s.somaDiameter);
+    QPointF c = l + QPointF(s.somaDiameter, 0);
+    QPointF r = right - QPointF(0, 4*s.somaDiameter);
+    QPointF m = l + (r-l)*.4;
     if (objlen.contains(444)) {
-      ptr.drawLine(c, c + (r-c)*.3);
-      ptr.drawText(QRectF(c + (r-c)*.35 - QPointF(0,fs),
-                          r + QPointF(0,fs)),
+      ptr.drawLine(c, m);
+      ptr.drawText(QRectF(m + QPointF(fs, -fs),
+                          r + QPointF(0, fs)),
                    Qt::AlignLeft | Qt::AlignVCenter, "DE-3R");
       double len = objlen[444];
       if (len > 0) {
         ptr.drawText(QRectF(c + QPointF(0,fs),
-                            c + (r-c) + QPointF(0,2.5*fs)),
+                            c + (r-c) + QPointF(0,2.2*fs)),
                      Qt::AlignRight | Qt::AlignVCenter,
                      nicelen(len));
       }
+      if (len>1000) {
+        QPointF l = left - QPointF(0, 6.5*s.somaDiameter);
+        QPointF r = right - QPointF(0, 6.5*s.somaDiameter);
+        QPointF m = l + (r-l)*.4;
+        ptr.drawLine(l, m);
+        ptr.drawText(QRectF(m + QPointF(fs, -fs*1.5),
+                            r + QPointF(0, fs*1.5)),
+                     Qt::AlignLeft | Qt::AlignVCenter, "Input\nsynapses");
+      }
     }
     if (prelen>0) {
-      ptr.setPen(QPen(QColor(255,255,0), s.lineWidth));
-      QPointF c1 = c - QPointF(0,4*fs);
-      QPointF r1 = c1; r1.setX(right.x());
-      ptr.drawLine(c1, c1 + (r1-c1)*.3);
-      ptr.drawText(QRectF(c1 + (r1-c1)*.35 - QPointF(0,fs),
-                          c1 + (r1-c1) + QPointF(0,fs)),
+      ptr.setPen(QPen(QColor(128,192,255), s.lineWidth));
+      QPointF l = left - QPointF(0, 10.5*s.somaDiameter);
+      QPointF c = l + QPointF(s.somaDiameter, 0);
+      QPointF r = right - QPointF(0, 10.5*s.somaDiameter);
+      QPointF m = l + (r-l)*.4;
+      ptr.drawLine(c, m);
+      ptr.drawText(QRectF(m + QPointF(fs, -fs),
+                          r + QPointF(0,fs)),
                    Qt::AlignLeft | Qt::AlignVCenter, "Partners");
-      ptr.drawText(QRectF(c1 + QPointF(0,fs),
-                           r1 + QPointF(0,2.5*fs)),
+      ptr.drawText(QRectF(l + QPointF(0, fs),
+                          r + QPointF(0, 2.2*fs)),
                    Qt::AlignRight | Qt::AlignVCenter,
                    nicelen(prelen));
       ptr.setPen(QPen(Qt::NoPen));
-      ptr.setBrush(QColor(255,255,0));
-      ptr.drawEllipse(c1, s.somaDiameter, s.somaDiameter);
+      ptr.setBrush(QColor(128,192,255));
+      ptr.drawEllipse(c, s.somaDiameter, s.somaDiameter);
     }
     if (objlen.contains(444)) {
       ptr.setPen(QPen(Qt::NoPen));
       ptr.setBrush(QColor(255,255,255));
       ptr.drawEllipse(c, s.somaDiameter, s.somaDiameter);
+      double len = objlen[444];
+      if (len>1000) {
+        QPointF c = (l+m)/2 + QPointF(0, -2.5*fs);
+        ptr.drawEllipse(c, s.synapseDiameter, s.synapseDiameter);
+      }
     }
   }
   

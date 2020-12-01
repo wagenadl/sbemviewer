@@ -37,7 +37,9 @@ void TileCacheData::processPrePending() {
       .arg(id.y)
       .arg(id.x);
     urlmap[url] = id;
-    pending[id] = nam->get(QNetworkRequest(url));
+    QNetworkRequest rq(url);
+    // rq.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
+    pending[id] = nam->get(rq);
     connect(pending[id], &QNetworkReply::readyRead,
 	    [this, id]() { gotsome[id] = true; });
   }
@@ -240,7 +242,9 @@ void TileCache::requestTile(TileID id, bool lowprio) {
 void TileCache::findRS(int r, int s) {
   QUrl url = QString("%1/findRS/R%2/S%3").arg(d->urlroot)
     .arg(r).arg(s);
-  d->nam->get(QNetworkRequest(url));
+  QNetworkRequest rq(url);
+  rq.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
+  d->nam->get(rq);
 }
 
 QString TileCache::urlRoot() const {

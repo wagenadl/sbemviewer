@@ -96,7 +96,9 @@ void ServerInfo::update() {
     d->nam = new QNetworkAccessManager;
     QObject::connect(d->nam, &QNetworkAccessManager::finished,
                      [this](QNetworkReply *r) { d->respond(r); });
-    d->nam->get(QNetworkRequest(d->urlroot + "/info"));
+    QNetworkRequest rq(d->urlroot + "/info");
+    rq.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
+    d->nam->get(rq);
   }
 }
 
